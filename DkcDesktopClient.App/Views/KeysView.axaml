@@ -3,19 +3,77 @@
              xmlns:vm="using:DkcDesktopClient.App.ViewModels"
              x:Class="DkcDesktopClient.App.Views.KeysView"
              x:DataType="vm:KeysViewModel">
-  <Grid RowDefinitions="Auto, Auto, *" Margin="16" RowSpacing="8">
+  <Grid RowDefinitions="Auto, Auto, Auto, Auto, *" Margin="16" RowSpacing="8">
+
+    <!-- Toolbar -->
     <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
       <TextBlock Text="Keys Management" FontSize="24" FontWeight="Bold" VerticalAlignment="Center"/>
       <Button Content="Refresh" Command="{Binding LoadDataCommand}"/>
+      <Separator Width="1" Background="#CCCCCC" Margin="4,0"/>
+      <Button Content="New Key" Command="{Binding ShowCreateKeyFormCommand}"/>
+      <Button Content="Edit Key" Command="{Binding ShowEditKeyFormCommand}"/>
+      <Button Content="Issue Key" Command="{Binding ShowIssueFormCommand}"/>
+      <Separator Width="1" Background="#CCCCCC" Margin="4,0"/>
+      <Button Content="Return Selected" Command="{Binding ReturnKeyCommand}"/>
+      <Button Content="Delete Issued" Command="{Binding DeleteIssuedCommand}" Foreground="Red"/>
     </StackPanel>
 
+    <!-- Error / Progress -->
     <TextBlock Grid.Row="1" Text="{Binding ErrorMessage}" Foreground="Red"
                IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
     <ProgressBar Grid.Row="1" IsIndeterminate="True" IsVisible="{Binding IsLoading}" Height="4" VerticalAlignment="Bottom"/>
 
-    <TabControl Grid.Row="2" SelectedIndex="{Binding SelectedTabIndex}">
+    <!-- Key create/edit form -->
+    <Border Grid.Row="2" IsVisible="{Binding IsKeyFormVisible}"
+            Background="#F0F4F8" BorderThickness="1" BorderBrush="#CBD5E0" CornerRadius="4" Padding="12">
+      <StackPanel Spacing="8">
+        <TextBlock Text="Key Type" FontSize="15" FontWeight="SemiBold"/>
+        <TextBlock Text="{Binding KeyFormError}" Foreground="Red"
+                   IsVisible="{Binding KeyFormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+        <Grid ColumnDefinitions="100,8,*,16,80,8,Auto" RowDefinitions="Auto,8,Auto" RowSpacing="0">
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="Name *" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding FormKeyName}" PlaceholderText="Key name (required)"/>
+          <TextBlock Grid.Row="0" Grid.Column="4" Text="Total" VerticalAlignment="Center"/>
+          <NumericUpDown Grid.Row="0" Grid.Column="6" Value="{Binding FormKeyTotal}" Minimum="1" Maximum="999" Width="80"/>
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="Description" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="5" Text="{Binding FormKeyDescription}" PlaceholderText="Optional description"/>
+        </Grid>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Button Content="Save" Command="{Binding SaveKeyCommand}"/>
+          <Button Content="Cancel" Command="{Binding CancelKeyFormCommand}"/>
+          <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSavingKey}" Width="80" Height="16" VerticalAlignment="Center"/>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- Issue form -->
+    <Border Grid.Row="3" IsVisible="{Binding IsIssueFormVisible}"
+            Background="#FFF9E6" BorderThickness="1" BorderBrush="#F6C90E" CornerRadius="4" Padding="12">
+      <StackPanel Spacing="8">
+        <TextBlock Text="{Binding SelectedInventoryItem.Name, StringFormat='Issue: {0}'}" FontSize="15" FontWeight="SemiBold"/>
+        <TextBlock Text="{Binding IssueFormError}" Foreground="Red"
+                   IsVisible="{Binding IssueFormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+        <Grid ColumnDefinitions="100,8,*,16,100,8,*" RowDefinitions="Auto,8,Auto" RowSpacing="0">
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="Issued To *" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding FormIssuedTo}" PlaceholderText="Person name (required)"/>
+          <TextBlock Grid.Row="0" Grid.Column="4" Text="Date *" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="0" Grid.Column="6" Text="{Binding FormIssuedAt}" PlaceholderText="YYYY-MM-DD"/>
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="Notes" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="5" Text="{Binding FormIssueNotes}" PlaceholderText="Optional notes"/>
+        </Grid>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Button Content="Issue Key" Command="{Binding IssueKeyCommand}"/>
+          <Button Content="Cancel" Command="{Binding CancelIssueFormCommand}"/>
+          <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSavingIssue}" Width="80" Height="16" VerticalAlignment="Center"/>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- Tabs -->
+    <TabControl Grid.Row="4" SelectedIndex="{Binding SelectedTabIndex}">
       <TabItem Header="Inventory">
-        <DataGrid ItemsSource="{Binding Inventory}" IsReadOnly="True" AutoGenerateColumns="False">
+        <DataGrid ItemsSource="{Binding Inventory}" SelectedItem="{Binding SelectedInventoryItem}"
+                  IsReadOnly="True" AutoGenerateColumns="False">
           <DataGrid.Columns>
             <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60"/>
             <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
@@ -26,7 +84,8 @@
         </DataGrid>
       </TabItem>
       <TabItem Header="Issued Keys">
-        <DataGrid ItemsSource="{Binding IssuedKeys}" IsReadOnly="True" AutoGenerateColumns="False">
+        <DataGrid ItemsSource="{Binding IssuedKeys}" SelectedItem="{Binding SelectedIssuedItem}"
+                  IsReadOnly="True" AutoGenerateColumns="False">
           <DataGrid.Columns>
             <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60"/>
             <DataGridTextColumn Header="Key Name" Binding="{Binding KeyName}" Width="*"/>
@@ -37,5 +96,6 @@
         </DataGrid>
       </TabItem>
     </TabControl>
+
   </Grid>
 </UserControl>

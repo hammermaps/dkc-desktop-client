@@ -321,3 +321,203 @@ public record DashboardDataResponse(
 public record ApiError(
     [property: JsonPropertyName("success")] bool Success,
     [property: JsonPropertyName("error")] string? Error);
+
+// Generic create responses
+public record CreateIdResponse(
+    [property: JsonPropertyName("success")] bool Success,
+    [property: JsonPropertyName("id")] int? Id,
+    [property: JsonPropertyName("error")] string? Error);
+
+public record CreateUidResponse(
+    [property: JsonPropertyName("success")] bool Success,
+    [property: JsonPropertyName("uid")] string? Uid,
+    [property: JsonPropertyName("error")] string? Error);
+
+// NEA write requests
+public record NeaSystemSaveRequest(
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("description")] string? Description,
+    [property: JsonPropertyName("location")] string? Location,
+    [property: JsonPropertyName("manufacturer")] string? Manufacturer,
+    [property: JsonPropertyName("model")] string? Model,
+    [property: JsonPropertyName("serial_number")] string? SerialNumber,
+    [property: JsonPropertyName("installation_date")] string? InstallationDate,
+    [property: JsonPropertyName("enabled")] bool Enabled,
+    [property: JsonPropertyName("project_id")] int? ProjectId);
+
+public record NeaInspectionSaveRequest(
+    [property: JsonPropertyName("nea_system_id")] int NeaSystemId,
+    [property: JsonPropertyName("inspection_type")] string InspectionType,
+    [property: JsonPropertyName("inspection_date")] string InspectionDate,
+    [property: JsonPropertyName("status")] string Status,
+    [property: JsonPropertyName("overall_result")] string OverallResult,
+    [property: JsonPropertyName("runtime_hours")] int? RuntimeHours,
+    [property: JsonPropertyName("notes")] string? Notes,
+    [property: JsonPropertyName("defects_found")] string? DefectsFound,
+    [property: JsonPropertyName("corrective_actions")] string? CorrectiveActions);
+
+public record NeaInspectionCompleteRequest(
+    [property: JsonPropertyName("overall_result")] string OverallResult,
+    [property: JsonPropertyName("notes")] string? Notes);
+
+public record NeaChecklistUpdateItem(
+    [property: JsonPropertyName("checkpoint_id")] int CheckpointId,
+    [property: JsonPropertyName("status")] string Status,
+    [property: JsonPropertyName("note")] string? Note,
+    [property: JsonPropertyName("comment")] string? Comment);
+
+public record NeaChecklistUpdateRequest(
+    [property: JsonPropertyName("items")] List<NeaChecklistUpdateItem> Items);
+
+// MM write requests
+public record MmSaveRequest(
+    [property: JsonPropertyName("betreff")] string Betreff,
+    [property: JsonPropertyName("meldung_massage")] string? MeldungMassage,
+    [property: JsonPropertyName("street")] string? Street,
+    [property: JsonPropertyName("whg")] string? Whg,
+    [property: JsonPropertyName("melder")] string? Melder,
+    [property: JsonPropertyName("tel")] string? Tel,
+    [property: JsonPropertyName("email")] string? Email,
+    [property: JsonPropertyName("dringlichkeit")] string? Dringlichkeit,
+    [property: JsonPropertyName("nachunternehmer")] string? Nachunternehmer,
+    [property: JsonPropertyName("zugeh")] string? Zugeh);
+
+public record MmStatusUpdateRequest(
+    [property: JsonPropertyName("status")] int Status,
+    [property: JsonPropertyName("comment")] string? Comment);
+
+public record MmAssignContractorRequest(
+    [property: JsonPropertyName("nachunternehmer")] string Nachunternehmer);
+
+// Building write requests
+public record BuildingSaveRequest(
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("address")] string? Address,
+    [property: JsonPropertyName("description")] string? Description,
+    [property: JsonPropertyName("enabled")] bool Enabled,
+    [property: JsonPropertyName("project_id")] int? ProjectId);
+
+public record BuildingInspectionSaveRequest(
+    [property: JsonPropertyName("building_id")] int BuildingId,
+    [property: JsonPropertyName("title")] string? Title,
+    [property: JsonPropertyName("inspection_date")] string? InspectionDate,
+    [property: JsonPropertyName("status")] string? Status,
+    [property: JsonPropertyName("weather")] string? Weather,
+    [property: JsonPropertyName("attendees")] string? Attendees,
+    [property: JsonPropertyName("general_notes")] string? GeneralNotes);
+
+public record BuildingInspectionCompleteRequest(
+    [property: JsonPropertyName("overall_result")] string OverallResult,
+    [property: JsonPropertyName("general_notes")] string? GeneralNotes);
+
+public record BuildingCheckpointUpdateRequest(
+    [property: JsonPropertyName("checkpoint_id")] int CheckpointId,
+    [property: JsonPropertyName("status")] string Status,
+    [property: JsonPropertyName("note")] string? Note,
+    [property: JsonPropertyName("comment")] string? Comment);
+
+public record CheckpointListItem(
+    [property: JsonPropertyName("id")] int Id,
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("category")] string? Category,
+    [property: JsonPropertyName("sort")] int Sort);
+
+public record BuildingCheckpointsResponse(
+    [property: JsonPropertyName("success")] bool Success,
+    [property: JsonPropertyName("checkpoints")] List<CheckpointListItem>? Checkpoints,
+    [property: JsonPropertyName("error")] string? Error);
+
+// Klima write/control requests + realtime response
+public record KlimaDeviceControlRequest(
+    [property: JsonPropertyName("address")] int Address,
+    [property: JsonPropertyName("power")] bool? Power,
+    [property: JsonPropertyName("mode")] string? Mode,
+    [property: JsonPropertyName("setpoint")] double? Setpoint,
+    [property: JsonPropertyName("fan_speed")] string? FanSpeed);
+
+public record KlimaGroupControlRequest(
+    [property: JsonPropertyName("group_id")] int GroupId,
+    [property: JsonPropertyName("power")] bool? Power,
+    [property: JsonPropertyName("mode")] string? Mode,
+    [property: JsonPropertyName("setpoint")] double? Setpoint,
+    [property: JsonPropertyName("fan_speed")] string? FanSpeed);
+
+public record KlimaDeviceUpdateRequest(
+    [property: JsonPropertyName("name")] string? Name,
+    [property: JsonPropertyName("group_id")] int? GroupId,
+    [property: JsonPropertyName("enabled")] bool? Enabled,
+    [property: JsonPropertyName("sort")] int? Sort);
+
+public record KlimaDeviceStatus(
+    [property: JsonPropertyName("address")] int Address,
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("online")] bool Online,
+    [property: JsonPropertyName("power")] bool Power,
+    [property: JsonPropertyName("mode")] string? Mode,
+    [property: JsonPropertyName("setpoint")] double? Setpoint,
+    [property: JsonPropertyName("current_temp")] double? CurrentTemp,
+    [property: JsonPropertyName("fan_speed")] string? FanSpeed,
+    [property: JsonPropertyName("error_code")] string? ErrorCode);
+
+public record KlimaRealtimeStatusResponse(
+    [property: JsonPropertyName("success")] bool Success,
+    [property: JsonPropertyName("timestamp")] string? Timestamp,
+    [property: JsonPropertyName("devices")] List<KlimaDeviceStatus>? Devices,
+    [property: JsonPropertyName("error")] string? Error);
+
+public record KlimaGroup(
+    [property: JsonPropertyName("id")] int Id,
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("device_count")] int DeviceCount);
+
+public record KlimaGroupsResponse(
+    [property: JsonPropertyName("success")] bool Success,
+    [property: JsonPropertyName("groups")] List<KlimaGroup>? Groups,
+    [property: JsonPropertyName("error")] string? Error);
+
+// Keys write requests
+public record KeyInventorySaveRequest(
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("description")] string? Description,
+    [property: JsonPropertyName("total")] int Total);
+
+public record KeyIssueRequest(
+    [property: JsonPropertyName("key_id")] int KeyId,
+    [property: JsonPropertyName("issued_to")] string IssuedTo,
+    [property: JsonPropertyName("issued_at")] string IssuedAt,
+    [property: JsonPropertyName("notes")] string? Notes);
+
+public record KeyReturnRequest(
+    [property: JsonPropertyName("returned_at")] string ReturnedAt,
+    [property: JsonPropertyName("notes")] string? Notes);
+
+// Projects write requests
+public record ProjectSaveRequest(
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("description")] string? Description);
+
+public record ProjectSetActiveRequest(
+    [property: JsonPropertyName("project_id")] int ProjectId);
+
+// Admin users
+public record AdminUser(
+    [property: JsonPropertyName("id")] int Id,
+    [property: JsonPropertyName("username")] string Username,
+    [property: JsonPropertyName("vname")] string? Vname,
+    [property: JsonPropertyName("nname")] string? Nname,
+    [property: JsonPropertyName("email")] string? Email,
+    [property: JsonPropertyName("is_admin")] bool IsAdmin,
+    [property: JsonPropertyName("active_project_id")] int? ActiveProjectId);
+
+public record AdminUsersListResponse(
+    [property: JsonPropertyName("success")] bool Success,
+    [property: JsonPropertyName("users")] List<AdminUser>? Users,
+    [property: JsonPropertyName("error")] string? Error);
+
+public record UserSaveRequest(
+    [property: JsonPropertyName("username")] string Username,
+    [property: JsonPropertyName("password")] string? Password,
+    [property: JsonPropertyName("vname")] string? Vname,
+    [property: JsonPropertyName("nname")] string? Nname,
+    [property: JsonPropertyName("email")] string? Email,
+    [property: JsonPropertyName("is_admin")] bool IsAdmin);
