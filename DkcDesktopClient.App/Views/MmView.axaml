@@ -32,8 +32,10 @@
     <Border Grid.Row="3" IsVisible="{Binding IsFormVisible}"
             Background="#F0F4F8" BorderThickness="1" BorderBrush="#CBD5E0" CornerRadius="4" Padding="12">
       <StackPanel Spacing="8">
-        <TextBlock Text="{Binding IsEditingMessage, Converter={x:Static BoolConverters.Not}, ConverterParameter='New Meldung'}"
-                   FontSize="16" FontWeight="SemiBold"/>
+        <TextBlock Text="New Meldung" FontSize="16" FontWeight="SemiBold"
+                   IsVisible="{Binding IsEditingMessage, Converter={x:Static BoolConverters.Not}}"/>
+        <TextBlock Text="Meldung bearbeiten" FontSize="16" FontWeight="SemiBold"
+                   IsVisible="{Binding IsEditingMessage}"/>
         <TextBlock Text="{Binding FormError}" Foreground="Red"
                    IsVisible="{Binding FormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
         <Grid ColumnDefinitions="120,8,*,16,120,8,*" RowDefinitions="Auto,8,Auto,8,Auto,8,Auto,8,Auto" RowSpacing="0">

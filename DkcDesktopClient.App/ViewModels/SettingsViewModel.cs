@@ -54,6 +54,13 @@ public partial class SettingsViewModel : ViewModelBase
         _authService = authService;
         _tokenStore = tokenStore;
         ServerUrl = tokenStore.LoadServerUrl() ?? string.Empty;
+        _authService.AuthStateChanged += OnAuthStateChanged;
+    }
+
+    private void OnAuthStateChanged(object? sender, EventArgs e)
+    {
+        OnPropertyChanged(nameof(IsAdmin));
+        OnPropertyChanged(nameof(CurrentUsername));
     }
 
     [RelayCommand]

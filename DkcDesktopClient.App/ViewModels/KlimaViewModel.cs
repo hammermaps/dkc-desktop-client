@@ -124,7 +124,14 @@ public partial class KlimaViewModel : ViewModelBase
         {
             while (!ct.IsCancellationRequested)
             {
-                await RefreshStatusAsync();
+                try
+                {
+                    await RefreshStatusAsync();
+                }
+                catch (Exception ex)
+                {
+                    ErrorMessage = $"Polling error: {ex.Message}";
+                }
                 await Task.Delay(TimeSpan.FromSeconds(10), ct);
             }
         }
