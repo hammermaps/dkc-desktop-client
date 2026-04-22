@@ -1,0 +1,49 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:DkcDesktopClient.App.ViewModels"
+             x:Class="DkcDesktopClient.App.Views.DashboardView"
+             x:DataType="vm:DashboardViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="16">
+      <TextBlock Text="Dashboard" FontSize="24" FontWeight="Bold"/>
+
+      <TextBlock Text="{Binding ErrorMessage}" Foreground="Red"
+                 IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+      <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}" Height="4"/>
+
+      <Grid ColumnDefinitions="*, *" RowDefinitions="Auto" HorizontalAlignment="Left">
+        <Border Grid.Column="0" Background="#E3F2FD" CornerRadius="8" Padding="16" Margin="0,0,8,0" MinWidth="160">
+          <StackPanel>
+            <TextBlock Text="Total NEA Systems" FontSize="14"/>
+            <TextBlock Text="{Binding NeaTotalSystems}" FontSize="32" FontWeight="Bold"/>
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="1" Background="#FFEBEE" CornerRadius="8" Padding="16" MinWidth="160">
+          <StackPanel>
+            <TextBlock Text="Overdue Inspections" FontSize="14"/>
+            <TextBlock Text="{Binding NeaOverdueInspections}" FontSize="32" FontWeight="Bold" Foreground="Red"/>
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <TextBlock Text="Overdue Items" FontSize="18" FontWeight="SemiBold"/>
+      <DataGrid ItemsSource="{Binding OverdueItems}" IsReadOnly="True" AutoGenerateColumns="False" Height="200">
+        <DataGrid.Columns>
+          <DataGridTextColumn Header="System" Binding="{Binding SystemName}" Width="*"/>
+          <DataGridTextColumn Header="Days Overdue" Binding="{Binding DaysOverdue}" Width="120"/>
+          <DataGridTextColumn Header="Last Inspection" Binding="{Binding LastInspection}" Width="150"/>
+        </DataGrid.Columns>
+      </DataGrid>
+
+      <TextBlock Text="Recent Inspections" FontSize="18" FontWeight="SemiBold"/>
+      <DataGrid ItemsSource="{Binding RecentInspections}" IsReadOnly="True" AutoGenerateColumns="False" Height="200">
+        <DataGrid.Columns>
+          <DataGridTextColumn Header="Date" Binding="{Binding InspectionDate}" Width="120"/>
+          <DataGridTextColumn Header="Inspector" Binding="{Binding InspectorName}" Width="*"/>
+          <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
+          <DataGridTextColumn Header="Result" Binding="{Binding OverallResult}" Width="100"/>
+        </DataGrid.Columns>
+      </DataGrid>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

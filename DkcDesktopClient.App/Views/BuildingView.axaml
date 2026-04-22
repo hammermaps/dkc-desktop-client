@@ -1,0 +1,58 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:DkcDesktopClient.App.ViewModels"
+             x:Class="DkcDesktopClient.App.Views.BuildingView"
+             x:DataType="vm:BuildingViewModel">
+  <Grid RowDefinitions="Auto, *" Margin="16" RowSpacing="8">
+    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
+      <TextBlock Text="Buildings" FontSize="24" FontWeight="Bold" VerticalAlignment="Center"/>
+      <Button Content="Load" Command="{Binding LoadBuildingsCommand}"/>
+    </StackPanel>
+
+    <Grid Grid.Row="1" ColumnDefinitions="280, 8, *">
+      <StackPanel Grid.Column="0" Spacing="4">
+        <TextBlock Text="Buildings" FontWeight="SemiBold"/>
+        <DataGrid ItemsSource="{Binding Buildings}" SelectedItem="{Binding SelectedBuilding}" IsReadOnly="True" AutoGenerateColumns="False">
+          <DataGrid.Columns>
+            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+            <DataGridTextColumn Header="Address" Binding="{Binding Address}" Width="140"/>
+          </DataGrid.Columns>
+        </DataGrid>
+      </StackPanel>
+      <GridSplitter Grid.Column="1" Width="4"/>
+      <Grid Grid.Column="2" RowDefinitions="*, 8, *">
+        <StackPanel Grid.Row="0" Spacing="4">
+          <TextBlock Text="Inspections" FontWeight="SemiBold"/>
+          <DataGrid ItemsSource="{Binding Inspections}" SelectedItem="{Binding SelectedInspection}" IsReadOnly="True" AutoGenerateColumns="False">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="Title" Binding="{Binding Title}" Width="*"/>
+              <DataGridTextColumn Header="Date" Binding="{Binding InspectionDate}" Width="110"/>
+              <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90"/>
+              <DataGridTextColumn Header="Result" Binding="{Binding OverallResult}" Width="90"/>
+            </DataGrid.Columns>
+          </DataGrid>
+        </StackPanel>
+        <GridSplitter Grid.Row="1" Height="4"/>
+        <ScrollViewer Grid.Row="2">
+          <StackPanel Margin="4" Spacing="8" IsVisible="{Binding InspectionDetail, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <TextBlock Text="Inspection Detail" FontSize="16" FontWeight="SemiBold"/>
+            <DataGrid ItemsSource="{Binding InspectionDetail.Results}" IsReadOnly="True" AutoGenerateColumns="False">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="Checkpoint" Binding="{Binding CheckpointName}" Width="*"/>
+                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90"/>
+                <DataGridTextColumn Header="Note" Binding="{Binding Note}" Width="150"/>
+                <DataGridTextColumn Header="Comment" Binding="{Binding Comment}" Width="150"/>
+                <DataGridTextColumn Header="Editor" Binding="{Binding EditedByName}" Width="120"/>
+              </DataGrid.Columns>
+            </DataGrid>
+          </StackPanel>
+        </ScrollViewer>
+      </Grid>
+    </Grid>
+
+    <TextBlock Grid.Row="0" Text="{Binding ErrorMessage}" Foreground="Red"
+               IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+               VerticalAlignment="Bottom"/>
+    <ProgressBar Grid.Row="0" IsIndeterminate="True" IsVisible="{Binding IsLoading}" Height="4" VerticalAlignment="Bottom"/>
+  </Grid>
+</UserControl>

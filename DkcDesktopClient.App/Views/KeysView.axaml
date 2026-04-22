@@ -1,0 +1,41 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:DkcDesktopClient.App.ViewModels"
+             x:Class="DkcDesktopClient.App.Views.KeysView"
+             x:DataType="vm:KeysViewModel">
+  <Grid RowDefinitions="Auto, Auto, *" Margin="16" RowSpacing="8">
+    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
+      <TextBlock Text="Keys Management" FontSize="24" FontWeight="Bold" VerticalAlignment="Center"/>
+      <Button Content="Refresh" Command="{Binding LoadDataCommand}"/>
+    </StackPanel>
+
+    <TextBlock Grid.Row="1" Text="{Binding ErrorMessage}" Foreground="Red"
+               IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+    <ProgressBar Grid.Row="1" IsIndeterminate="True" IsVisible="{Binding IsLoading}" Height="4" VerticalAlignment="Bottom"/>
+
+    <TabControl Grid.Row="2" SelectedIndex="{Binding SelectedTabIndex}">
+      <TabItem Header="Inventory">
+        <DataGrid ItemsSource="{Binding Inventory}" IsReadOnly="True" AutoGenerateColumns="False">
+          <DataGrid.Columns>
+            <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60"/>
+            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+            <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*"/>
+            <DataGridTextColumn Header="Total" Binding="{Binding Total}" Width="70"/>
+            <DataGridTextColumn Header="Available" Binding="{Binding Available}" Width="80"/>
+          </DataGrid.Columns>
+        </DataGrid>
+      </TabItem>
+      <TabItem Header="Issued Keys">
+        <DataGrid ItemsSource="{Binding IssuedKeys}" IsReadOnly="True" AutoGenerateColumns="False">
+          <DataGrid.Columns>
+            <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60"/>
+            <DataGridTextColumn Header="Key Name" Binding="{Binding KeyName}" Width="*"/>
+            <DataGridTextColumn Header="Issued To" Binding="{Binding IssuedTo}" Width="*"/>
+            <DataGridTextColumn Header="Issued At" Binding="{Binding IssuedAt}" Width="130"/>
+            <DataGridTextColumn Header="Returned At" Binding="{Binding ReturnedAt}" Width="130"/>
+          </DataGrid.Columns>
+        </DataGrid>
+      </TabItem>
+    </TabControl>
+  </Grid>
+</UserControl>

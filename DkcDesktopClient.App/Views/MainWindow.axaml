@@ -1,0 +1,87 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:DkcDesktopClient.App.ViewModels"
+        xmlns:views="using:DkcDesktopClient.App.Views"
+        x:Class="DkcDesktopClient.App.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="DK-Control Desktop Client"
+        Width="1200" Height="800"
+        MinWidth="800" MinHeight="600">
+
+  <Window.DataTemplates>
+    <DataTemplate DataType="{x:Type vm:LoginViewModel}">
+      <views:LoginView/>
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
+      <views:DashboardView/>
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:NeaViewModel}">
+      <views:NeaView/>
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:MmViewModel}">
+      <views:MmView/>
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:BuildingViewModel}">
+      <views:BuildingView/>
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:KlimaViewModel}">
+      <views:KlimaView/>
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:KeysViewModel}">
+      <views:KeysView/>
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+      <views:SettingsView/>
+    </DataTemplate>
+  </Window.DataTemplates>
+
+  <Grid>
+    <ContentControl Content="{Binding CurrentView}" IsVisible="{Binding !IsLoggedIn}"/>
+
+    <SplitView IsPaneOpen="{Binding IsPaneOpen}"
+               DisplayMode="Inline"
+               PaneBackground="#2D3142"
+               OpenPaneLength="220"
+               IsVisible="{Binding IsLoggedIn}">
+      <SplitView.Pane>
+        <DockPanel LastChildFill="True">
+          <StackPanel DockPanel.Dock="Top" Margin="12,16,12,8">
+            <TextBlock Text="DK-Control" Foreground="White" FontSize="18" FontWeight="Bold"/>
+            <TextBlock Text="{Binding UserDisplayName}" Foreground="#9AAAB4" FontSize="12" Margin="0,4,0,0"/>
+          </StackPanel>
+
+          <StackPanel DockPanel.Dock="Bottom" Margin="8,8,8,16" Spacing="4">
+            <Button Content="Logout" Command="{Binding LogoutCommand}"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                    Background="#C0392B" Foreground="White"/>
+          </StackPanel>
+
+          <ListBox ItemsSource="{Binding NavItems}"
+                   SelectedItem="{Binding SelectedNavItem}"
+                   Background="Transparent"
+                   Margin="4">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:NavItem">
+                <TextBlock Text="{Binding Title}" Padding="8,4" Foreground="White"/>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+            <ListBox.Styles>
+              <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+                <Setter Property="Background" Value="#4A5568"/>
+              </Style>
+            </ListBox.Styles>
+          </ListBox>
+        </DockPanel>
+      </SplitView.Pane>
+
+      <Grid RowDefinitions="Auto, *">
+        <Border Grid.Row="0" Background="#F7F8FA" BorderThickness="0,0,0,1" BorderBrush="#E2E8F0" Padding="8,4">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button Content="=" Command="{Binding TogglePaneCommand}" Width="32" Height="32"/>
+          </StackPanel>
+        </Border>
+        <ContentControl Grid.Row="1" Content="{Binding CurrentView}"/>
+      </Grid>
+    </SplitView>
+  </Grid>
+</Window>

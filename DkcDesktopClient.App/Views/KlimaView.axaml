@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:DkcDesktopClient.App.ViewModels"
+             x:Class="DkcDesktopClient.App.Views.KlimaView"
+             x:DataType="vm:KlimaViewModel">
+  <Grid RowDefinitions="Auto, Auto, *" Margin="16" RowSpacing="8">
+    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
+      <TextBlock Text="Climate Devices" FontSize="24" FontWeight="Bold" VerticalAlignment="Center"/>
+      <Button Content="Refresh" Command="{Binding LoadDataCommand}"/>
+    </StackPanel>
+
+    <TextBlock Grid.Row="1" Text="{Binding ErrorMessage}" Foreground="Red"
+               IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+    <ProgressBar Grid.Row="1" IsIndeterminate="True" IsVisible="{Binding IsLoading}" Height="4" VerticalAlignment="Bottom"/>
+
+    <DataGrid Grid.Row="2" ItemsSource="{Binding Devices}" IsReadOnly="True" AutoGenerateColumns="False">
+      <DataGrid.Columns>
+        <DataGridTextColumn Header="Address" Binding="{Binding Address}" Width="80"/>
+        <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+        <DataGridTextColumn Header="Group" Binding="{Binding GroupId}" Width="80"/>
+        <DataGridCheckBoxColumn Header="Enabled" Binding="{Binding Enabled}" Width="80"/>
+        <DataGridTextColumn Header="Sort" Binding="{Binding Sort}" Width="60"/>
+      </DataGrid.Columns>
+    </DataGrid>
+  </Grid>
+</UserControl>
