@@ -3,24 +3,104 @@
              xmlns:vm="using:DkcDesktopClient.App.ViewModels"
              x:Class="DkcDesktopClient.App.Views.KlimaView"
              x:DataType="vm:KlimaViewModel">
-  <Grid RowDefinitions="Auto, Auto, *" Margin="16" RowSpacing="8">
+  <Grid RowDefinitions="Auto, Auto, Auto, *" Margin="16" RowSpacing="8">
+
+    <!-- Toolbar -->
     <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
-      <TextBlock Text="Climate Devices" FontSize="24" FontWeight="Bold" VerticalAlignment="Center"/>
-      <Button Content="Refresh" Command="{Binding LoadDataCommand}"/>
+      <TextBlock Text="Climate Control" FontSize="24" FontWeight="Bold" VerticalAlignment="Center"/>
+      <Button Content="Reload Devices" Command="{Binding LoadDataCommand}"/>
+      <Button Content="Refresh Status" Command="{Binding RefreshStatusCommand}"/>
+      <Button Content="Start Polling (10s)" Command="{Binding StartPollingCommand}"
+              IsVisible="{Binding IsPolling, Converter={x:Static BoolConverters.Not}}"/>
+      <Button Content="Stop Polling" Command="{Binding StopPollingCommand}"
+              IsVisible="{Binding IsPolling}"/>
+      <TextBlock IsVisible="{Binding IsPolling}" Text="● LIVE" Foreground="Green" VerticalAlignment="Center" FontWeight="Bold"/>
+      <TextBlock Text="{Binding LastStatusTimestamp, StringFormat='Last: {0}'}" VerticalAlignment="Center" Foreground="#666"/>
     </StackPanel>
 
+    <!-- Error -->
     <TextBlock Grid.Row="1" Text="{Binding ErrorMessage}" Foreground="Red"
                IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
     <ProgressBar Grid.Row="1" IsIndeterminate="True" IsVisible="{Binding IsLoading}" Height="4" VerticalAlignment="Bottom"/>
 
-    <DataGrid Grid.Row="2" ItemsSource="{Binding Devices}" IsReadOnly="True" AutoGenerateColumns="False">
-      <DataGrid.Columns>
-        <DataGridTextColumn Header="Address" Binding="{Binding Address}" Width="80"/>
-        <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
-        <DataGridTextColumn Header="Group" Binding="{Binding GroupId}" Width="80"/>
-        <DataGridCheckBoxColumn Header="Enabled" Binding="{Binding Enabled}" Width="80"/>
-        <DataGridTextColumn Header="Sort" Binding="{Binding Sort}" Width="60"/>
-      </DataGrid.Columns>
-    </DataGrid>
+    <!-- Control panel -->
+    <Border Grid.Row="2" IsVisible="{Binding IsControlPanelVisible}"
+            Background="#EBF8FF" BorderThickness="1" BorderBrush="#63B3ED" CornerRadius="4" Padding="12">
+      <StackPanel Spacing="8">
+        <TextBlock Text="Device Control" FontSize="15" FontWeight="SemiBold"/>
+        <TextBlock Text="{Binding ControlError}" Foreground="Red"
+                   IsVisible="{Binding ControlError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+        <StackPanel Orientation="Horizontal" Spacing="16">
+          <CheckBox IsChecked="{Binding ControlPower}" Content="Power On"/>
+          <StackPanel Orientation="Horizontal" Spacing="4">
+            <TextBlock Text="Mode" VerticalAlignment="Center"/>
+            <ComboBox ItemsSource="{x:Static vm:KlimaViewModel.ModeOptions}"
+                      SelectedItem="{Binding ControlMode}" MinWidth="100"/>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="4">
+            <TextBlock Text="Setpoint °C" VerticalAlignment="Center"/>
+            <NumericUpDown Value="{Binding ControlSetpoint}" Minimum="16" Maximum="30"
+                           Increment="0.5" Width="100"/>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="4">
+            <TextBlock Text="Fan Speed" VerticalAlignment="Center"/>
+            <ComboBox ItemsSource="{x:Static vm:KlimaViewModel.FanSpeedOptions}"
+                      SelectedItem="{Binding ControlFanSpeed}" MinWidth="90"/>
+          </StackPanel>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Button Content="Apply to Device" Command="{Binding ApplyDeviceControlCommand}"/>
+          <Button Content="Apply to Group" Command="{Binding ApplyGroupControlCommand}"/>
+          <Button Content="Close" Command="{Binding HideDeviceControlCommand}"/>
+          <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSendingControl}" Width="80" Height="16" VerticalAlignment="Center"/>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- Device status list + groups -->
+    <Grid Grid.Row="3" ColumnDefinitions="*, 8, 200">
+      <StackPanel Grid.Column="0" Spacing="4">
+        <TextBlock Text="Realtime Device Status" FontWeight="SemiBold"/>
+        <DataGrid ItemsSource="{Binding DeviceStatuses}" SelectedItem="{Binding SelectedDeviceStatus}"
+                  IsReadOnly="True" AutoGenerateColumns="False">
+          <DataGrid.Columns>
+            <DataGridTextColumn Header="Addr" Binding="{Binding Address}" Width="50"/>
+            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+            <DataGridCheckBoxColumn Header="Online" Binding="{Binding Online}" Width="60"/>
+            <DataGridCheckBoxColumn Header="Power" Binding="{Binding Power}" Width="55"/>
+            <DataGridTextColumn Header="Mode" Binding="{Binding Mode}" Width="80"/>
+            <DataGridTextColumn Header="Setpoint" Binding="{Binding Setpoint}" Width="70"/>
+            <DataGridTextColumn Header="Current °C" Binding="{Binding CurrentTemp}" Width="80"/>
+            <DataGridTextColumn Header="Fan" Binding="{Binding FanSpeed}" Width="70"/>
+            <DataGridTextColumn Header="Error" Binding="{Binding ErrorCode}" Width="80"/>
+          </DataGrid.Columns>
+        </DataGrid>
+        <Button Content="Control Selected Device" Command="{Binding ShowDeviceControlCommand}"
+                IsEnabled="{Binding SelectedDeviceStatus, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+        <TextBlock Text="Configured Devices" FontWeight="SemiBold" Margin="0,8,0,0"/>
+        <DataGrid ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice}"
+                  IsReadOnly="True" AutoGenerateColumns="False">
+          <DataGrid.Columns>
+            <DataGridTextColumn Header="Address" Binding="{Binding Address}" Width="70"/>
+            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+            <DataGridCheckBoxColumn Header="Enabled" Binding="{Binding Enabled}" Width="70"/>
+          </DataGrid.Columns>
+        </DataGrid>
+      </StackPanel>
+      <GridSplitter Grid.Column="1" Width="4"/>
+      <StackPanel Grid.Column="2" Spacing="4">
+        <TextBlock Text="Groups" FontWeight="SemiBold"/>
+        <DataGrid ItemsSource="{Binding Groups}" SelectedItem="{Binding SelectedGroup}"
+                  IsReadOnly="True" AutoGenerateColumns="False">
+          <DataGrid.Columns>
+            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+            <DataGridTextColumn Header="# Dev" Binding="{Binding DeviceCount}" Width="50"/>
+          </DataGrid.Columns>
+        </DataGrid>
+        <Button Content="Control Group" Command="{Binding ShowDeviceControlCommand}"
+                IsEnabled="{Binding SelectedGroup, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+      </StackPanel>
+    </Grid>
+
   </Grid>
 </UserControl>

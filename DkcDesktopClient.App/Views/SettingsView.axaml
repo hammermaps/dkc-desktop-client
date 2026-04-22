@@ -13,17 +13,19 @@
                  IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
       <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}" Height="4"/>
 
+      <!-- Server URL -->
       <Border BorderThickness="1" BorderBrush="#DDDDDD" CornerRadius="8" Padding="16">
         <StackPanel Spacing="8">
           <TextBlock Text="Server Configuration" FontSize="18" FontWeight="SemiBold"/>
           <TextBlock Text="Server URL"/>
           <Grid ColumnDefinitions="*, Auto">
-            <TextBox Grid.Column="0" Text="{Binding ServerUrl}" Watermark="https://your-server.example.com" Margin="0,0,8,0"/>
+            <TextBox Grid.Column="0" Text="{Binding ServerUrl}" PlaceholderText="https://your-server.example.com" Margin="0,0,8,0"/>
             <Button Grid.Column="1" Content="Save" Command="{Binding SaveServerUrlCommand}"/>
           </Grid>
         </StackPanel>
       </Border>
 
+      <!-- API Tokens -->
       <Border BorderThickness="1" BorderBrush="#DDDDDD" CornerRadius="8" Padding="16">
         <StackPanel Spacing="8">
           <StackPanel Orientation="Horizontal" Spacing="8">
@@ -31,7 +33,7 @@
             <Button Content="Refresh" Command="{Binding LoadTokensCommand}"/>
             <Button Content="Delete Selected" Command="{Binding DeleteTokenCommand}" Foreground="Red"/>
           </StackPanel>
-          <DataGrid ItemsSource="{Binding Tokens}" SelectedItem="{Binding SelectedToken}" IsReadOnly="True" AutoGenerateColumns="False" Height="250">
+          <DataGrid ItemsSource="{Binding Tokens}" SelectedItem="{Binding SelectedToken}" IsReadOnly="True" AutoGenerateColumns="False" Height="200">
             <DataGrid.Columns>
               <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60"/>
               <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
@@ -43,6 +45,103 @@
           </DataGrid>
         </StackPanel>
       </Border>
+
+      <!-- Projects -->
+      <Border BorderThickness="1" BorderBrush="#DDDDDD" CornerRadius="8" Padding="16">
+        <StackPanel Spacing="8">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Projects" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            <Button Content="Refresh" Command="{Binding LoadProjectsCommand}"/>
+            <Button Content="New Project" Command="{Binding ShowCreateProjectFormCommand}"/>
+            <Button Content="Edit Project" Command="{Binding ShowEditProjectFormCommand}"/>
+            <Button Content="Set Active" Command="{Binding SetActiveProjectCommand}"/>
+          </StackPanel>
+
+          <!-- Project form -->
+          <Border IsVisible="{Binding IsProjectFormVisible}"
+                  Background="#F0F4F8" BorderThickness="1" BorderBrush="#CBD5E0" CornerRadius="4" Padding="10">
+            <StackPanel Spacing="6">
+              <TextBlock Text="{Binding ProjectFormError}" Foreground="Red"
+                         IsVisible="{Binding ProjectFormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+              <Grid ColumnDefinitions="80,8,*,16,80,8,*">
+                <TextBlock Grid.Column="0" Text="Name *" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="2" Text="{Binding FormProjectName}" PlaceholderText="Project name (required)"/>
+                <TextBlock Grid.Column="4" Text="Description" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="6" Text="{Binding FormProjectDescription}" PlaceholderText="Description"/>
+              </Grid>
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="Save" Command="{Binding SaveProjectCommand}"/>
+                <Button Content="Cancel" Command="{Binding CancelProjectFormCommand}"/>
+                <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSavingProject}" Width="60" Height="14" VerticalAlignment="Center"/>
+              </StackPanel>
+            </StackPanel>
+          </Border>
+
+          <DataGrid ItemsSource="{Binding Projects}" SelectedItem="{Binding SelectedProject}" IsReadOnly="True" AutoGenerateColumns="False" Height="160">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60"/>
+              <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+              <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*"/>
+            </DataGrid.Columns>
+          </DataGrid>
+        </StackPanel>
+      </Border>
+
+      <!-- Admin: Users (only shown for admins) -->
+      <Border BorderThickness="1" BorderBrush="#DDDDDD" CornerRadius="8" Padding="16"
+              IsVisible="{Binding IsAdmin}">
+        <StackPanel Spacing="8">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Users (Admin)" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            <Button Content="Refresh" Command="{Binding LoadUsersCommand}"/>
+            <Button Content="New User" Command="{Binding ShowCreateUserFormCommand}"/>
+            <Button Content="Edit User" Command="{Binding ShowEditUserFormCommand}"/>
+            <Button Content="Delete User" Command="{Binding DeleteUserCommand}" Foreground="Red"/>
+          </StackPanel>
+
+          <!-- User form -->
+          <Border IsVisible="{Binding IsUserFormVisible}"
+                  Background="#FFF9E6" BorderThickness="1" BorderBrush="#F6C90E" CornerRadius="4" Padding="10">
+            <StackPanel Spacing="6">
+              <TextBlock Text="{Binding UserFormError}" Foreground="Red"
+                         IsVisible="{Binding UserFormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+              <Grid ColumnDefinitions="80,8,*,16,80,8,*" RowDefinitions="Auto,8,Auto,8,Auto" RowSpacing="0">
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Username *" VerticalAlignment="Center"/>
+                <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding FormUsername}" PlaceholderText="Username (required)"/>
+                <TextBlock Grid.Row="0" Grid.Column="4" Text="Password" VerticalAlignment="Center"/>
+                <TextBox Grid.Row="0" Grid.Column="6" Text="{Binding FormPassword}" PasswordChar="*" PlaceholderText="Leave blank to keep"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="First Name" VerticalAlignment="Center"/>
+                <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding FormVname}" PlaceholderText="First name"/>
+                <TextBlock Grid.Row="2" Grid.Column="4" Text="Last Name" VerticalAlignment="Center"/>
+                <TextBox Grid.Row="2" Grid.Column="6" Text="{Binding FormNname}" PlaceholderText="Last name"/>
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Email" VerticalAlignment="Center"/>
+                <TextBox Grid.Row="4" Grid.Column="2" Text="{Binding FormEmail}" PlaceholderText="Email address"/>
+                <TextBlock Grid.Row="4" Grid.Column="4" Text="Is Admin" VerticalAlignment="Center"/>
+                <CheckBox Grid.Row="4" Grid.Column="6" IsChecked="{Binding FormIsAdmin}"/>
+              </Grid>
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="Save" Command="{Binding SaveUserCommand}"/>
+                <Button Content="Cancel" Command="{Binding CancelUserFormCommand}"/>
+                <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSavingUser}" Width="60" Height="14" VerticalAlignment="Center"/>
+              </StackPanel>
+            </StackPanel>
+          </Border>
+
+          <DataGrid ItemsSource="{Binding Users}" SelectedItem="{Binding SelectedUser}" IsReadOnly="True" AutoGenerateColumns="False" Height="200">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60"/>
+              <DataGridTextColumn Header="Username" Binding="{Binding Username}" Width="*"/>
+              <DataGridTextColumn Header="First Name" Binding="{Binding Vname}" Width="120"/>
+              <DataGridTextColumn Header="Last Name" Binding="{Binding Nname}" Width="120"/>
+              <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="*"/>
+              <DataGridCheckBoxColumn Header="Admin" Binding="{Binding IsAdmin}" Width="60"/>
+            </DataGrid.Columns>
+          </DataGrid>
+        </StackPanel>
+      </Border>
+
     </StackPanel>
   </ScrollViewer>
 </UserControl>
