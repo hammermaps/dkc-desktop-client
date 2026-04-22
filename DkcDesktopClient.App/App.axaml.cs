@@ -52,11 +52,14 @@ public partial class App : Application
 
         services.AddLogging(b => b.AddSerilog(Log.Logger, dispose: true));
 
+        services.AddHttpClient();
+
         services.AddDataProtection()
             .PersistKeysToFileSystem(new System.IO.DirectoryInfo(Path.Combine(dataDir, "keys")));
 
         services.AddSingleton<TokenStore>();
         services.AddSingleton<DkcApiFactory>();
+        services.AddSingleton<UpdateService>();
         services.AddSingleton<AuthService>(sp =>
         {
             var factory = sp.GetRequiredService<DkcApiFactory>();

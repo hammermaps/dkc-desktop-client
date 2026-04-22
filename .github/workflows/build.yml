@@ -3,6 +3,7 @@ name: Build
 on:
   push:
     branches: [ main, develop ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
 
@@ -13,8 +14,10 @@ jobs:
         include:
           - os: ubuntu-latest
             rid: linux-x64
+            asset_name: DkcDesktopClient-linux-x64
           - os: windows-latest
             rid: win-x64
+            asset_name: DkcDesktopClient-win-x64.exe
 
     runs-on: ${{ matrix.os }}
 
@@ -38,8 +41,45 @@ jobs:
       - name: Publish
         run: dotnet publish DkcDesktopClient.App/DkcDesktopClient.App.csproj --configuration Release --runtime ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true --output ./publish/${{ matrix.rid }}
 
+      - name: Rename binary (Linux)
+        if: matrix.rid == 'linux-x64'
+        run: mv ./publish/${{ matrix.rid }}/DkcDesktopClient.App ./publish/${{ matrix.rid }}/${{ matrix.asset_name }}
+
+      - name: Rename binary (Windows)
+        if: matrix.rid == 'win-x64'
+        run: Rename-Item -Path ./publish/${{ matrix.rid }}/DkcDesktopClient.App.exe -NewName ${{ matrix.asset_name }}
+        shell: pwsh
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dkc-desktop-${{ matrix.rid }}
-          path: ./publish/${{ matrix.rid }}/
+          path: ./publish/${{ matrix.rid }}/${{ matrix.asset_name }}
+
+      - name: Upload release asset
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.rid }}
+          path: ./publish/${{ matrix.rid }}/${{ matrix.asset_name }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: ./release-assets
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./release-assets/*
+          generate_release_notes: true

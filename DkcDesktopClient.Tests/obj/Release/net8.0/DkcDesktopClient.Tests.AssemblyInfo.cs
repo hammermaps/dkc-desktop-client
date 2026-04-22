@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DkcDesktopClient.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+44fd8e9c0728d512aa205560a93963c2f9749b11")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+96cc1b0575a1c99a0cf66624b3081937b1f2712e")]
 [assembly: System.Reflection.AssemblyProductAttribute("DkcDesktopClient.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DkcDesktopClient.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
