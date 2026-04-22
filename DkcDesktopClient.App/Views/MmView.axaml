@@ -1,0 +1,55 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:DkcDesktopClient.App.ViewModels"
+             x:Class="DkcDesktopClient.App.Views.MmView"
+             x:DataType="vm:MmViewModel">
+  <Grid RowDefinitions="Auto, Auto, *, 8, Auto" Margin="16" RowSpacing="8">
+    <TextBlock Grid.Row="0" Text="Maengelmeldungen" FontSize="24" FontWeight="Bold"/>
+
+    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8">
+      <TextBlock Text="Status:" VerticalAlignment="Center"/>
+      <NumericUpDown Value="{Binding FilterStatus}" Minimum="0" Maximum="99" Width="80"/>
+      <TextBlock Text="Street:" VerticalAlignment="Center"/>
+      <TextBox Text="{Binding FilterStreet}" Watermark="Filter by street..." Width="200"/>
+      <Button Content="Search" Command="{Binding LoadMessagesCommand}"/>
+      <TextBlock Text="{Binding TotalMessages, StringFormat='Total: {0}'}" VerticalAlignment="Center"/>
+    </StackPanel>
+
+    <DataGrid Grid.Row="2" ItemsSource="{Binding Messages}" SelectedItem="{Binding SelectedMessage}" IsReadOnly="True" AutoGenerateColumns="False">
+      <DataGrid.Columns>
+        <DataGridTextColumn Header="UID" Binding="{Binding Uid}" Width="120"/>
+        <DataGridTextColumn Header="Subject" Binding="{Binding Betreff}" Width="*"/>
+        <DataGridTextColumn Header="Street" Binding="{Binding Street}" Width="150"/>
+        <DataGridTextColumn Header="Apt" Binding="{Binding Whg}" Width="60"/>
+        <DataGridTextColumn Header="Reporter" Binding="{Binding Melder}" Width="120"/>
+        <DataGridTextColumn Header="Date" Binding="{Binding Datetime}" Width="130"/>
+        <DataGridTextColumn Header="Priority" Binding="{Binding Dringlichkeit}" Width="90"/>
+      </DataGrid.Columns>
+    </DataGrid>
+
+    <GridSplitter Grid.Row="3" Height="4" HorizontalAlignment="Stretch"/>
+
+    <ScrollViewer Grid.Row="4" MaxHeight="200">
+      <StackPanel Margin="4" Spacing="8" IsVisible="{Binding SelectedDetail, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <TextBlock Text="Detail" FontSize="16" FontWeight="SemiBold"/>
+        <Grid ColumnDefinitions="Auto, 16, *" RowDefinitions="Auto, Auto, Auto, Auto, Auto" RowSpacing="4">
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="Subject:" FontWeight="SemiBold"/>
+          <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding SelectedDetail.Betreff}" TextWrapping="Wrap"/>
+          <TextBlock Grid.Row="1" Grid.Column="0" Text="Message:" FontWeight="SemiBold"/>
+          <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding SelectedDetail.MeldungMassage}" TextWrapping="Wrap"/>
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="Phone:" FontWeight="SemiBold"/>
+          <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding SelectedDetail.Tel}"/>
+          <TextBlock Grid.Row="3" Grid.Column="0" Text="Email:" FontWeight="SemiBold"/>
+          <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding SelectedDetail.Email}"/>
+          <TextBlock Grid.Row="4" Grid.Column="0" Text="Contractor:" FontWeight="SemiBold"/>
+          <TextBlock Grid.Row="4" Grid.Column="2" Text="{Binding SelectedDetail.Nachunternehmer}"/>
+        </Grid>
+      </StackPanel>
+    </ScrollViewer>
+
+    <TextBlock Grid.Row="0" Text="{Binding ErrorMessage}" Foreground="Red"
+               IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+               VerticalAlignment="Bottom"/>
+    <ProgressBar Grid.Row="1" IsIndeterminate="True" IsVisible="{Binding IsLoading}" Height="4" VerticalAlignment="Bottom"/>
+  </Grid>
+</UserControl>

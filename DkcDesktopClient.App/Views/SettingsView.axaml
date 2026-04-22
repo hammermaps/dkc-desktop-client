@@ -1,0 +1,48 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:DkcDesktopClient.App.ViewModels"
+             x:Class="DkcDesktopClient.App.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="16">
+      <TextBlock Text="Settings" FontSize="24" FontWeight="Bold"/>
+
+      <TextBlock Text="{Binding ErrorMessage}" Foreground="Red"
+                 IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+      <TextBlock Text="{Binding StatusMessage}" Foreground="Green"
+                 IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+      <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}" Height="4"/>
+
+      <Border BorderThickness="1" BorderBrush="#DDDDDD" CornerRadius="8" Padding="16">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Server Configuration" FontSize="18" FontWeight="SemiBold"/>
+          <TextBlock Text="Server URL"/>
+          <Grid ColumnDefinitions="*, Auto">
+            <TextBox Grid.Column="0" Text="{Binding ServerUrl}" Watermark="https://your-server.example.com" Margin="0,0,8,0"/>
+            <Button Grid.Column="1" Content="Save" Command="{Binding SaveServerUrlCommand}"/>
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <Border BorderThickness="1" BorderBrush="#DDDDDD" CornerRadius="8" Padding="16">
+        <StackPanel Spacing="8">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="API Tokens" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            <Button Content="Refresh" Command="{Binding LoadTokensCommand}"/>
+            <Button Content="Delete Selected" Command="{Binding DeleteTokenCommand}" Foreground="Red"/>
+          </StackPanel>
+          <DataGrid ItemsSource="{Binding Tokens}" SelectedItem="{Binding SelectedToken}" IsReadOnly="True" AutoGenerateColumns="False" Height="250">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60"/>
+              <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+              <DataGridTextColumn Header="Expires At" Binding="{Binding ExpiresAt}" Width="150"/>
+              <DataGridTextColumn Header="Last Used" Binding="{Binding LastUsedAt}" Width="150"/>
+              <DataGridTextColumn Header="Last IP" Binding="{Binding LastIp}" Width="120"/>
+              <DataGridTextColumn Header="Created" Binding="{Binding CreatedAt}" Width="150"/>
+            </DataGrid.Columns>
+          </DataGrid>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

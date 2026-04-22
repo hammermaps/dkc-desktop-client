@@ -1,0 +1,214 @@
+{
+  "format": 1,
+  "restore": {
+    "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Tests/DkcDesktopClient.Tests.csproj": {}
+  },
+  "projects": {
+    "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj",
+        "projectName": "DkcDesktopClient.Core",
+        "projectPath": "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj",
+        "packagesPath": "/home/runner/.nuget/packages/",
+        "outputPath": "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Core/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/runner/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.200"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "CommunityToolkit.Mvvm": {
+              "target": "Package",
+              "version": "[8.4.0, )"
+            },
+            "Microsoft.AspNetCore.DataProtection": {
+              "target": "Package",
+              "version": "[8.0.15, )"
+            },
+            "Microsoft.Extensions.Configuration.Json": {
+              "target": "Package",
+              "version": "[8.0.1, )"
+            },
+            "Microsoft.Extensions.DependencyInjection": {
+              "target": "Package",
+              "version": "[8.0.1, )"
+            },
+            "Microsoft.Extensions.Http": {
+              "target": "Package",
+              "version": "[8.0.1, )"
+            },
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.3, )"
+            },
+            "Refit": {
+              "target": "Package",
+              "version": "[7.2.22, )"
+            },
+            "Serilog": {
+              "target": "Package",
+              "version": "[4.2.0, )"
+            },
+            "Serilog.Extensions.Logging": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Serilog.Sinks.File": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            },
+            "System.Security.Cryptography.Xml": {
+              "target": "Package",
+              "version": "[8.0.3, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.201/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Tests/DkcDesktopClient.Tests.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Tests/DkcDesktopClient.Tests.csproj",
+        "projectName": "DkcDesktopClient.Tests",
+        "projectPath": "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Tests/DkcDesktopClient.Tests.csproj",
+        "packagesPath": "/home/runner/.nuget/packages/",
+        "outputPath": "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Tests/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/runner/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj": {
+                "projectPath": "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.200"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.AspNetCore.DataProtection": {
+              "target": "Package",
+              "version": "[8.0.15, )"
+            },
+            "Microsoft.Extensions.DependencyInjection": {
+              "target": "Package",
+              "version": "[8.0.1, )"
+            },
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.3, )"
+            },
+            "Microsoft.NET.Test.Sdk": {
+              "target": "Package",
+              "version": "[17.8.0, )"
+            },
+            "Moq": {
+              "target": "Package",
+              "version": "[4.20.72, )"
+            },
+            "System.Security.Cryptography.Xml": {
+              "target": "Package",
+              "version": "[8.0.3, )"
+            },
+            "coverlet.collector": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            },
+            "xunit": {
+              "target": "Package",
+              "version": "[2.5.3, )"
+            },
+            "xunit.runner.visualstudio": {
+              "target": "Package",
+              "version": "[2.5.3, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.201/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

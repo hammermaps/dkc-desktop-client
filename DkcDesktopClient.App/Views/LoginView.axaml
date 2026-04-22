@@ -1,0 +1,40 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:DkcDesktopClient.App.ViewModels"
+             x:Class="DkcDesktopClient.App.Views.LoginView"
+             x:DataType="vm:LoginViewModel">
+  <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Width="400">
+    <StackPanel Spacing="16" Margin="32">
+      <TextBlock Text="DK-Control Login" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,16"/>
+
+      <StackPanel Spacing="4">
+        <TextBlock Text="Server URL"/>
+        <TextBox Text="{Binding ServerUrl}" Watermark="https://your-server.example.com"/>
+      </StackPanel>
+
+      <StackPanel Spacing="4">
+        <TextBlock Text="Username"/>
+        <TextBox Text="{Binding Username}" Watermark="Username"/>
+      </StackPanel>
+
+      <StackPanel Spacing="4">
+        <TextBlock Text="Password"/>
+        <TextBox Text="{Binding Password}" PasswordChar="*" Watermark="Password"/>
+      </StackPanel>
+
+      <StackPanel Spacing="4">
+        <TextBlock Text="Token Name"/>
+        <TextBox Text="{Binding TokenName}" Watermark="DKC Desktop"/>
+      </StackPanel>
+
+      <TextBlock Text="{Binding ErrorMessage}" Foreground="Red"
+                 IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                 TextWrapping="Wrap"/>
+
+      <Button Content="Login" Command="{Binding LoginCommand}"
+              HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+
+      <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}" Height="4"/>
+    </StackPanel>
+  </Grid>
+</UserControl>
