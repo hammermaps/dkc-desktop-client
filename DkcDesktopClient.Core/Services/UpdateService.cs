@@ -23,8 +23,41 @@ public class UpdateService
     private readonly ILogger<UpdateService> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
 
-    public static Version CurrentVersion { get; } =
-        Assembly.GetEntryAssembly()?.GetName().Version ?? new Version(1, 0, 0, 0);
+    public static Version CurrentVersion { get; } = GetCurrentVersion();
+
+    private static Version GetCurrentVersion()
+    {
+        var assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
+
+        var informationalVersion = assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion;
+
+        if (TryParseProductVersion(informationalVersion, out var productVersion))
+            return productVersion;
+
+        return assembly.GetName().Version ?? new Version(1, 0, 0, 0);
+    }
+
+    private static bool TryParseProductVersion(string? versionString, out Version version)
+    {
+        version = new Version(1, 0, 0, 0);
+
+        if (string.IsNullOrWhiteSpace(versionString))
+            return false;
+
+        var normalizedVersion = versionString.Trim().TrimStart('v');
+
+        var plusIndex = normalizedVersion.IndexOf('+');
+        if (plusIndex >= 0)
+            normalizedVersion = normalizedVersion[..plusIndex];
+
+        var dashIndex = normalizedVersion.IndexOf('-');
+        if (dashIndex >= 0)
+            normalizedVersion = normalizedVersion[..dashIndex];
+
+        return Version.TryParse(normalizedVersion, out version!);
+    }
 
     public UpdateService(ILogger<UpdateService> logger, IHttpClientFactory httpClientFactory)
     {
@@ -75,6 +108,12 @@ public class UpdateService
                         break;
                     }
                 }
+            }
+
+            if (string.IsNullOrEmpty(downloadUrl))
+            {
+                _logger.LogWarning("No matching asset found for platform: {AssetName}", assetName);
+                return null;
             }
 
             var releaseNotes = root.TryGetProperty("body", out var body)
