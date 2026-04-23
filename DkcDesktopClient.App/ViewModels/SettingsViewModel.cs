@@ -105,7 +105,7 @@ public partial class SettingsViewModel : ViewModelBase
         try
         {
             var api = _apiFactory.Create(_authService.CurrentToken);
-            var result = await api.DeleteTokenAsync(SelectedToken.Id);
+            var result = await api.DeleteTokenAsync(new TokenDeleteRequest(SelectedToken.Id));
             if (result.Success)
             {
                 Tokens.Remove(SelectedToken);

@@ -19,8 +19,8 @@ public interface IDkcApi
     [Get("/api.php?action=user_tokens_list")]
     Task<TokensListResponse> GetTokensListAsync(CancellationToken ct = default);
 
-    [Delete("/api.php?action=user_token_delete")]
-    Task<ApiError> DeleteTokenAsync([Query] int id, CancellationToken ct = default);
+    [Post("/api.php?action=user_token_delete")]
+    Task<ApiError> DeleteTokenAsync([Body] TokenDeleteRequest request, CancellationToken ct = default);
 
     [Get("/api.php?action=nea_dashboard")]
     Task<NeaDashboardResponse> GetNeaDashboardAsync(CancellationToken ct = default);
@@ -145,7 +145,7 @@ public interface IDkcApi
     Task<BuildingCheckpointsResponse> GetBuildingCheckpointsAsync([Query("building_id")] int? buildingId = null, CancellationToken ct = default);
 
     // Klima write/control
-    [Get("/api.php?action=klima_realtime_status")]
+    [Get("/api.php?action=klima_status")]
     Task<KlimaRealtimeStatusResponse> GetKlimaRealtimeStatusAsync(CancellationToken ct = default);
 
     [Post("/api.php?action=klima_device_control")]

@@ -64,9 +64,17 @@ public partial class KeysViewModel : ViewModelBase
                     Inventory.Add(k);
 
             IssuedKeys.Clear();
-            if (issuedTask.Result.Success && issuedTask.Result.Keys != null)
-                foreach (var k in issuedTask.Result.Keys)
-                    IssuedKeys.Add(k);
+            if (issuedTask.Result.Success)
+            {
+                var issued = issuedTask.Result.Keys ?? issuedTask.Result.Issued;
+                if (issued != null)
+                {
+                    foreach (var k in issued)
+                    {
+                        IssuedKeys.Add(k with { IssuedTo = k.IssuedTo ?? k.RecipientName });
+                    }
+                }
+            }
         }
         catch (Exception ex)
         {

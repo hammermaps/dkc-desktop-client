@@ -11,3 +11,16 @@
 /home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Core/obj/Debug/net8.0/refint/DkcDesktopClient.Core.dll
 /home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Core/obj/Debug/net8.0/DkcDesktopClient.Core.pdb
 /home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Core/obj/Debug/net8.0/ref/DkcDesktopClient.Core.dll
+/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/bin/Debug/net8.0/DkcDesktopClient.Core.deps.json
+/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/bin/Debug/net8.0/DkcDesktopClient.Core.dll
+/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/bin/Debug/net8.0/DkcDesktopClient.Core.pdb
+/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/obj/Debug/net8.0/DkcDesktopClient.Core.csproj.AssemblyReference.cache
+/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/obj/Debug/net8.0/DkcDesktopClient.Core.GeneratedMSBuildEditorConfig.editorconfig
+/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/obj/Debug/net8.0/DkcDesktopClient.Core.AssemblyInfoInputs.cache
+/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/obj/Debug/net8.0/DkcDesktopClient.Core.AssemblyInfo.cs
+/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/obj/Debug/net8.0/DkcDesktopClient.Core.csproj.CoreCompileInputs.cache
+/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/obj/Debug/net8.0/DkcDesktopClient.Core.sourcelink.json
+/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/obj/Debug/net8.0/DkcDesktopClient.Core.dll
+/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/obj/Debug/net8.0/refint/DkcDesktopClient.Core.dll
+/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/obj/Debug/net8.0/DkcDesktopClient.Core.pdb
+/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/obj/Debug/net8.0/ref/DkcDesktopClient.Core.dll

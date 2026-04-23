@@ -60,7 +60,16 @@ public record LogoutResponse(
 public record NeaDashboardResponse(
     [property: JsonPropertyName("success")] bool Success,
     [property: JsonPropertyName("dashboard")] NeaDashboardData? Dashboard,
+    [property: JsonPropertyName("stats")] NeaDashboardStats? Stats,
+    [property: JsonPropertyName("due_tests")] List<NeaOverdueItem>? DueTests,
+    [property: JsonPropertyName("recent_inspections")] List<NeaRecentInspection>? RecentInspections,
     [property: JsonPropertyName("error")] string? Error);
+
+public record NeaDashboardStats(
+    [property: JsonPropertyName("total_systems")] int TotalSystems,
+    [property: JsonPropertyName("inspections_this_week")] int InspectionsThisWeek,
+    [property: JsonPropertyName("inspections_this_month")] int InspectionsThisMonth,
+    [property: JsonPropertyName("failed_last_30_days")] int FailedLast30Days);
 
 public record NeaDashboardData(
     [property: JsonPropertyName("total_systems")] int TotalSystems,
@@ -69,7 +78,8 @@ public record NeaDashboardData(
     [property: JsonPropertyName("recent_inspections")] List<NeaRecentInspection>? RecentInspections);
 
 public record NeaOverdueItem(
-    [property: JsonPropertyName("id")] int Id,
+    [property: JsonPropertyName("id")] int? Id,
+    [property: JsonPropertyName("system_id")] int? SystemId,
     [property: JsonPropertyName("system_name")] string SystemName,
     [property: JsonPropertyName("days_overdue")] int DaysOverdue,
     [property: JsonPropertyName("last_inspection")] string? LastInspection);
@@ -280,7 +290,7 @@ public record KeyInventoryItem(
     [property: JsonPropertyName("id")] int Id,
     [property: JsonPropertyName("name")] string? Name,
     [property: JsonPropertyName("description")] string? Description,
-    [property: JsonPropertyName("total")] int? Total,
+    [property: JsonPropertyName("total_count")] int? Total,
     [property: JsonPropertyName("available")] int? Available);
 
 public record KeysInventoryResponse(
@@ -293,12 +303,14 @@ public record KeyIssuedItem(
     [property: JsonPropertyName("key_id")] int KeyId,
     [property: JsonPropertyName("key_name")] string? KeyName,
     [property: JsonPropertyName("issued_to")] string? IssuedTo,
+    [property: JsonPropertyName("recipient_name")] string? RecipientName,
     [property: JsonPropertyName("issued_at")] string? IssuedAt,
     [property: JsonPropertyName("returned_at")] string? ReturnedAt);
 
 public record KeysIssuedResponse(
     [property: JsonPropertyName("success")] bool Success,
     [property: JsonPropertyName("keys")] List<KeyIssuedItem>? Keys,
+    [property: JsonPropertyName("issued")] List<KeyIssuedItem>? Issued,
     [property: JsonPropertyName("error")] string? Error);
 
 // Dashboard
@@ -321,6 +333,9 @@ public record DashboardDataResponse(
 public record ApiError(
     [property: JsonPropertyName("success")] bool Success,
     [property: JsonPropertyName("error")] string? Error);
+
+public record TokenDeleteRequest(
+    [property: JsonPropertyName("token_id")] int TokenId);
 
 // Generic create responses
 public record CreateIdResponse(
@@ -453,7 +468,7 @@ public record KlimaDeviceStatus(
     [property: JsonPropertyName("name")] string Name,
     [property: JsonPropertyName("online")] bool Online,
     [property: JsonPropertyName("power")] bool Power,
-    [property: JsonPropertyName("mode")] string? Mode,
+    [property: JsonPropertyName("operating_mode")] string? Mode,
     [property: JsonPropertyName("setpoint")] double? Setpoint,
     [property: JsonPropertyName("current_temp")] double? CurrentTemp,
     [property: JsonPropertyName("fan_speed")] string? FanSpeed,

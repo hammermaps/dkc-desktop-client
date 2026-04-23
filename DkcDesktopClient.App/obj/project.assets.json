@@ -334,16 +334,17 @@
           "Microsoft.IO.RecyclableMemoryStream": "3.0.1"
         },
         "compile": {
-          "lib/net8.0/_._": {}
+          "lib/net8.0/AvaloniaUI.DiagnosticsSupport.Avalonia.dll": {}
         },
         "runtime": {
-          "lib/net8.0/_._": {}
+          "lib/net8.0/AvaloniaUI.DiagnosticsSupport.Avalonia.dll": {}
         },
         "build": {
-          "buildTransitive/_._": {}
+          "buildTransitive/AvaloniaUI.DiagnosticsSupport.props": {},
+          "buildTransitive/AvaloniaUI.DiagnosticsSupport.targets": {}
         },
         "buildMultiTargeting": {
-          "buildMultiTargeting/_._": {}
+          "buildMultiTargeting/AvaloniaUI.DiagnosticsSupport.props": {}
         }
       },
       "CommunityToolkit.Mvvm/8.4.0": {
@@ -1157,12 +1158,12 @@
       "Microsoft.IO.RecyclableMemoryStream/3.0.1": {
         "type": "package",
         "compile": {
-          "lib/net6.0/_._": {
+          "lib/net6.0/Microsoft.IO.RecyclableMemoryStream.dll": {
             "related": ".xml"
           }
         },
         "runtime": {
-          "lib/net6.0/_._": {
+          "lib/net6.0/Microsoft.IO.RecyclableMemoryStream.dll": {
             "related": ".xml"
           }
         }
@@ -3584,19 +3585,19 @@
     ]
   },
   "packageFolders": {
-    "/home/runner/.nuget/packages/": {}
+    "/home/masterbee/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.App/DkcDesktopClient.App.csproj",
+      "projectUniqueName": "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.App/DkcDesktopClient.App.csproj",
       "projectName": "DkcDesktopClient.App",
-      "projectPath": "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.App/DkcDesktopClient.App.csproj",
-      "packagesPath": "/home/runner/.nuget/packages/",
-      "outputPath": "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.App/obj/",
+      "projectPath": "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.App/DkcDesktopClient.App.csproj",
+      "packagesPath": "/home/masterbee/.nuget/packages/",
+      "outputPath": "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.App/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/home/runner/.nuget/NuGet/NuGet.Config"
+        "/home/masterbee/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
@@ -3608,8 +3609,8 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj": {
-              "projectPath": "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj"
+            "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj": {
+              "projectPath": "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj"
             }
           }
         }
@@ -3622,9 +3623,9 @@
       "restoreAuditProperties": {
         "enableAudit": "true",
         "auditLevel": "low",
-        "auditMode": "direct"
+        "auditMode": "all"
       },
-      "SdkAnalysisLevel": "10.0.200"
+      "SdkAnalysisLevel": "9.0.100"
     },
     "frameworks": {
       "net8.0": {
@@ -3651,8 +3652,6 @@
             "version": "[12.0.0, )"
           },
           "AvaloniaUI.DiagnosticsSupport": {
-            "include": "None",
-            "suppressParent": "All",
             "target": "Package",
             "version": "[2.2.1, )"
           },
@@ -3697,8 +3696,20 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.201/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/home/masterbee/.dotnet/sdk/9.0.100/PortableRuntimeIdentifierGraph.json"
       }
     }
-  }
+  },
+  "logs": [
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Package 'Tmds.DBus.Protocol' 0.90.3 has a known high severity vulnerability, https://github.com/advisories/GHSA-xrw6-gwf8-vvr9",
+      "libraryId": "Tmds.DBus.Protocol",
+      "targetGraphs": [
+        "net8.0"
+      ]
+    }
+  ]
 }
