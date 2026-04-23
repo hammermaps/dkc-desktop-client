@@ -9,6 +9,9 @@ out/
 
 # Visual Studio
 .vs/
+
+# JetBrains Rider
+.idea/
 *.user
 *.suo
 *.userprefs
