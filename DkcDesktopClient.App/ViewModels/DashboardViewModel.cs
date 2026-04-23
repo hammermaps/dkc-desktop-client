@@ -43,18 +43,20 @@ public partial class DashboardViewModel : ViewModelBase
                 foreach (var p in projectsTask.Result.Projects)
                     Projects.Add(p);
 
-            if (dashboardTask.Result.Success && dashboardTask.Result.Dashboard != null)
+            if (dashboardTask.Result.Success)
             {
                 var d = dashboardTask.Result.Dashboard;
-                NeaTotalSystems = d.TotalSystems;
-                NeaOverdueInspections = d.OverdueInspections;
+                NeaTotalSystems = d?.TotalSystems ?? dashboardTask.Result.Stats?.TotalSystems ?? 0;
+                var overdueItems = d?.OverdueItems ?? dashboardTask.Result.DueTests;
+                NeaOverdueInspections = d?.OverdueInspections ?? overdueItems?.Count ?? 0;
                 OverdueItems.Clear();
-                if (d.OverdueItems != null)
-                    foreach (var item in d.OverdueItems)
+                if (overdueItems != null)
+                    foreach (var item in overdueItems)
                         OverdueItems.Add(item);
                 RecentInspections.Clear();
-                if (d.RecentInspections != null)
-                    foreach (var item in d.RecentInspections)
+                var recentInspections = d?.RecentInspections ?? dashboardTask.Result.RecentInspections;
+                if (recentInspections != null)
+                    foreach (var item in recentInspections)
                         RecentInspections.Add(item);
             }
         }

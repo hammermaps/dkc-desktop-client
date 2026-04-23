@@ -3,16 +3,108 @@
              xmlns:vm="using:DkcDesktopClient.App.ViewModels"
              x:Class="DkcDesktopClient.App.Views.NeaView"
              x:DataType="vm:NeaViewModel">
-  <Grid RowDefinitions="Auto, *, 8, *" Margin="16" RowSpacing="8">
-    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
+  <Grid RowDefinitions="Auto, Auto, Auto, Auto, *, 8, *" Margin="16" RowSpacing="8">
+
+    <!-- Toolbar -->
+    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" FlowDirection="LeftToRight">
       <TextBlock Text="NEA Inspections" FontSize="24" FontWeight="Bold" VerticalAlignment="Center"/>
       <Button Content="Refresh" Command="{Binding LoadSystemsCommand}"/>
+      <Separator Width="1" Background="#CCCCCC" Margin="4,0"/>
+      <Button Content="New System" Command="{Binding ShowCreateSystemFormCommand}"/>
+      <Button Content="Edit System" Command="{Binding ShowEditSystemFormCommand}"/>
+      <Button Content="Delete System" Command="{Binding DeleteSystemCommand}" Foreground="Red"/>
+      <Separator Width="1" Background="#CCCCCC" Margin="4,0"/>
+      <Button Content="New Inspection" Command="{Binding ShowCreateInspectionFormCommand}"/>
+      <Button Content="Edit Inspection" Command="{Binding ShowEditInspectionFormCommand}"/>
+      <Button Content="Complete" Command="{Binding CompleteInspectionCommand}"/>
     </StackPanel>
 
-    <Grid Grid.Row="1" ColumnDefinitions="300, 8, *">
+    <!-- Error / Progress -->
+    <TextBlock Grid.Row="1" Text="{Binding ErrorMessage}" Foreground="Red"
+               IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+    <ProgressBar Grid.Row="1" IsIndeterminate="True" IsVisible="{Binding IsLoading}" Height="4" VerticalAlignment="Bottom"/>
+
+    <!-- System form -->
+    <Border Grid.Row="2" IsVisible="{Binding IsSystemFormVisible}"
+            Background="#F0F4F8" BorderThickness="1" BorderBrush="#CBD5E0" CornerRadius="4" Padding="12">
+      <StackPanel Spacing="8">
+        <TextBlock Text="NEA System" FontSize="15" FontWeight="SemiBold"/>
+        <TextBlock Text="{Binding SystemFormError}" Foreground="Red"
+                   IsVisible="{Binding SystemFormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+        <Grid ColumnDefinitions="110,8,*,16,110,8,*" RowDefinitions="Auto,8,Auto,8,Auto,8,Auto" RowSpacing="0">
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="Name *" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding FormSystemName}" PlaceholderText="System name (required)"/>
+          <TextBlock Grid.Row="0" Grid.Column="4" Text="Location" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="0" Grid.Column="6" Text="{Binding FormSystemLocation}" PlaceholderText="Location"/>
+
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="Manufacturer" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding FormSystemManufacturer}" PlaceholderText="Manufacturer"/>
+          <TextBlock Grid.Row="2" Grid.Column="4" Text="Model" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="2" Grid.Column="6" Text="{Binding FormSystemModel}" PlaceholderText="Model"/>
+
+          <TextBlock Grid.Row="4" Grid.Column="0" Text="Serial No." VerticalAlignment="Center"/>
+          <TextBox Grid.Row="4" Grid.Column="2" Text="{Binding FormSystemSerialNumber}" PlaceholderText="Serial number"/>
+          <TextBlock Grid.Row="4" Grid.Column="4" Text="Install Date" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="4" Grid.Column="6" Text="{Binding FormSystemInstallationDate}" PlaceholderText="YYYY-MM-DD"/>
+
+          <TextBlock Grid.Row="6" Grid.Column="0" Text="Description" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="6" Grid.Column="2" Text="{Binding FormSystemDescription}" PlaceholderText="Description"/>
+          <TextBlock Grid.Row="6" Grid.Column="4" Text="Enabled" VerticalAlignment="Center"/>
+          <CheckBox Grid.Row="6" Grid.Column="6" IsChecked="{Binding FormSystemEnabled}"/>
+        </Grid>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Button Content="Save" Command="{Binding SaveSystemCommand}"/>
+          <Button Content="Cancel" Command="{Binding CancelSystemFormCommand}"/>
+          <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSavingSystem}" Width="80" Height="16" VerticalAlignment="Center"/>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- Inspection form -->
+    <Border Grid.Row="3" IsVisible="{Binding IsInspectionFormVisible}"
+            Background="#FFF9E6" BorderThickness="1" BorderBrush="#F6C90E" CornerRadius="4" Padding="12">
+      <StackPanel Spacing="8">
+        <TextBlock Text="NEA Inspection" FontSize="15" FontWeight="SemiBold"/>
+        <TextBlock Text="{Binding InspectionFormError}" Foreground="Red"
+                   IsVisible="{Binding InspectionFormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+        <Grid ColumnDefinitions="110,8,*,16,110,8,*" RowDefinitions="Auto,8,Auto,8,Auto,8,Auto" RowSpacing="0">
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="Date *" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding FormInspectionDate}" PlaceholderText="YYYY-MM-DD"/>
+          <TextBlock Grid.Row="0" Grid.Column="4" Text="Type" VerticalAlignment="Center"/>
+          <ComboBox Grid.Row="0" Grid.Column="6" ItemsSource="{x:Static vm:NeaViewModel.InspectionTypeOptions}"
+                    SelectedItem="{Binding FormInspectionType}" MinWidth="120"/>
+
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="Status" VerticalAlignment="Center"/>
+          <ComboBox Grid.Row="2" Grid.Column="2" ItemsSource="{x:Static vm:NeaViewModel.StatusOptions}"
+                    SelectedItem="{Binding FormInspectionStatus}" MinWidth="120"/>
+          <TextBlock Grid.Row="2" Grid.Column="4" Text="Result" VerticalAlignment="Center"/>
+          <ComboBox Grid.Row="2" Grid.Column="6" ItemsSource="{x:Static vm:NeaViewModel.ResultOptions}"
+                    SelectedItem="{Binding FormInspectionResult}" MinWidth="120"/>
+
+          <TextBlock Grid.Row="4" Grid.Column="0" Text="Runtime h" VerticalAlignment="Center"/>
+          <NumericUpDown Grid.Row="4" Grid.Column="2" Value="{Binding FormRuntimeHours}" Minimum="0" Maximum="999999"/>
+          <TextBlock Grid.Row="4" Grid.Column="4" Text="Notes" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="4" Grid.Column="6" Text="{Binding FormInspectionNotes}" PlaceholderText="Notes"/>
+
+          <TextBlock Grid.Row="6" Grid.Column="0" Text="Defects" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="6" Grid.Column="2" Text="{Binding FormDefectsFound}" PlaceholderText="Defects found"/>
+          <TextBlock Grid.Row="6" Grid.Column="4" Text="Actions" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="6" Grid.Column="6" Text="{Binding FormCorrectiveActions}" PlaceholderText="Corrective actions"/>
+        </Grid>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Button Content="Save" Command="{Binding SaveInspectionCommand}"/>
+          <Button Content="Cancel" Command="{Binding CancelInspectionFormCommand}"/>
+          <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSavingInspection}" Width="80" Height="16" VerticalAlignment="Center"/>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- Systems + Inspections lists -->
+    <Grid Grid.Row="4" ColumnDefinitions="300, 8, *">
       <StackPanel Grid.Column="0" Spacing="4">
         <TextBlock Text="Systems" FontWeight="SemiBold"/>
-        <DataGrid ItemsSource="{Binding Systems}" SelectedItem="{Binding SelectedSystem}" IsReadOnly="True" AutoGenerateColumns="False">
+        <DataGrid ItemsSource="{Binding Systems}" SelectedItem="{Binding SelectedSystem}"
+                  IsReadOnly="True" AutoGenerateColumns="False">
           <DataGrid.Columns>
             <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
             <DataGridTextColumn Header="Location" Binding="{Binding Location}" Width="120"/>
@@ -23,11 +115,12 @@
       <StackPanel Grid.Column="2" Spacing="4">
         <StackPanel Orientation="Horizontal" Spacing="8">
           <TextBlock Text="Inspections" FontWeight="SemiBold" VerticalAlignment="Center"/>
-          <TextBox Watermark="Filter status..." Text="{Binding FilterStatus}" Width="120"/>
-          <NumericUpDown Value="{Binding FilterYear}" Minimum="2000" Maximum="2099" Width="100" Watermark="Year"/>
+          <TextBox PlaceholderText="Filter status..." Text="{Binding FilterStatus}" Width="120"/>
+          <NumericUpDown Value="{Binding FilterYear}" Minimum="2000" Maximum="2099" Width="100" PlaceholderText="Year"/>
           <Button Content="Filter" Command="{Binding LoadInspectionsCommand}"/>
         </StackPanel>
-        <DataGrid ItemsSource="{Binding Inspections}" SelectedItem="{Binding SelectedInspection}" IsReadOnly="True" AutoGenerateColumns="False">
+        <DataGrid ItemsSource="{Binding Inspections}" SelectedItem="{Binding SelectedInspection}"
+                  IsReadOnly="True" AutoGenerateColumns="False">
           <DataGrid.Columns>
             <DataGridTextColumn Header="Date" Binding="{Binding InspectionDate}" Width="110"/>
             <DataGridTextColumn Header="Type" Binding="{Binding InspectionType}" Width="100"/>
@@ -39,9 +132,10 @@
       </StackPanel>
     </Grid>
 
-    <GridSplitter Grid.Row="2" Height="4" HorizontalAlignment="Stretch"/>
+    <GridSplitter Grid.Row="5" Height="4" HorizontalAlignment="Stretch"/>
 
-    <ScrollViewer Grid.Row="3">
+    <!-- Inspection detail -->
+    <ScrollViewer Grid.Row="6">
       <StackPanel Margin="4" Spacing="8" IsVisible="{Binding InspectionDetail, Converter={x:Static ObjectConverters.IsNotNull}}">
         <TextBlock Text="Inspection Detail" FontSize="18" FontWeight="SemiBold"/>
         <Grid ColumnDefinitions="Auto, 16, *" RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto" RowSpacing="4">
@@ -61,9 +155,5 @@
       </StackPanel>
     </ScrollViewer>
 
-    <TextBlock Grid.Row="0" Text="{Binding ErrorMessage}" Foreground="Red"
-               IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-               VerticalAlignment="Bottom"/>
-    <ProgressBar Grid.Row="0" IsIndeterminate="True" IsVisible="{Binding IsLoading}" Height="4" VerticalAlignment="Bottom"/>
   </Grid>
 </UserControl>
