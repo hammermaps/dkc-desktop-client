@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DkcDesktopClient.App")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cc6d3056ab46a3998cfd7d8d4320b13682fbaf93")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+14e482615e20c7a24e61038ea093d668b1616c86")]
 [assembly: System.Reflection.AssemblyProductAttribute("DkcDesktopClient.App")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DkcDesktopClient.App")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

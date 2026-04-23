@@ -49,8 +49,9 @@ public class AuthService
         return false;
     }
 
-    public async Task<LoginResponse> LoginAsync(string serverUrl, string username, string password, string tokenName, CancellationToken ct = default)
+    public async Task<LoginResponse> LoginAsync(string serverUrl, string username, string password, CancellationToken ct = default)
     {
+        const string tokenName = "DKC Desktop Client";
         _tokenStore.SaveServerUrl(serverUrl);
         var api = _apiFactory.Create(null, serverUrl);
         var response = await api.LoginAsync(new LoginRequest(username, password, tokenName), ct);
@@ -59,6 +60,7 @@ public class AuthService
             CurrentToken = response.Token;
             CurrentUser = response.User;
             _tokenStore.SaveToken(response.Token);
+            _tokenStore.SaveUsername(username);
             var authedApi = _apiFactory.Create(response.Token, serverUrl);
             await LoadPermissionsAsync(authedApi, ct);
             AuthStateChanged?.Invoke(this, EventArgs.Empty);
