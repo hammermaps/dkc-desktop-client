@@ -7129,19 +7129,19 @@
     ]
   },
   "packageFolders": {
-    "/home/masterbee/.nuget/packages/": {}
+    "/home/runner/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Tests/DkcDesktopClient.Tests.csproj",
+      "projectUniqueName": "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Tests/DkcDesktopClient.Tests.csproj",
       "projectName": "DkcDesktopClient.Tests",
-      "projectPath": "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Tests/DkcDesktopClient.Tests.csproj",
-      "packagesPath": "/home/masterbee/.nuget/packages/",
-      "outputPath": "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Tests/obj/",
+      "projectPath": "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Tests/DkcDesktopClient.Tests.csproj",
+      "packagesPath": "/home/runner/.nuget/packages/",
+      "outputPath": "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Tests/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/home/masterbee/.nuget/NuGet/NuGet.Config"
+        "/home/runner/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
@@ -7153,8 +7153,8 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj": {
-              "projectPath": "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj"
+            "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj": {
+              "projectPath": "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj"
             }
           }
         }
@@ -7167,9 +7167,9 @@
       "restoreAuditProperties": {
         "enableAudit": "true",
         "auditLevel": "low",
-        "auditMode": "all"
+        "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.100"
+      "SdkAnalysisLevel": "10.0.200"
     },
     "frameworks": {
       "net8.0": {
@@ -7228,30 +7228,8 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/home/masterbee/.dotnet/sdk/9.0.100/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.201/PortableRuntimeIdentifierGraph.json"
       }
     }
-  },
-  "logs": [
-    {
-      "code": "NU1903",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Package 'System.Net.Http' 4.3.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-7jgj-8wvc-jh57",
-      "libraryId": "System.Net.Http",
-      "targetGraphs": [
-        "net8.0"
-      ]
-    },
-    {
-      "code": "NU1903",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Package 'System.Text.RegularExpressions' 4.3.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-cmhx-cq75-c4mj",
-      "libraryId": "System.Text.RegularExpressions",
-      "targetGraphs": [
-        "net8.0"
-      ]
-    }
-  ]
+  }
 }
