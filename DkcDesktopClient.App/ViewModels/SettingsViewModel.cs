@@ -480,6 +480,15 @@ public partial class SettingsViewModel : ViewModelBase
     private bool HasSelectedProject() => SelectedProject != null;
     private bool HasSelectedUser() => SelectedUser != null;
 
+    partial void OnServerUrlChanged(string value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            _tokenStore.SaveServerUrl(value);
+            StatusMessage = "Server-URL gespeichert.";
+        }
+    }
+
     partial void OnSelectedTokenChanged(TokenListItem? value) => DeleteTokenCommand.NotifyCanExecuteChanged();
     partial void OnIsLoadingChanged(bool value) => DeleteTokenCommand.NotifyCanExecuteChanged();
     partial void OnSelectedProjectChanged(Project? value)

@@ -8,6 +8,7 @@ public class TokenStore
     private const string Purpose = "DkcDesktopClient.Token";
     private const string TokenFileName = "dkc_token.dat";
     private const string ServerUrlFileName = "dkc_server.dat";
+    private const string UsernameFileName = "dkc_user.dat";
     private readonly IDataProtector _protector;
     private readonly ILogger<TokenStore> _logger;
     private readonly string _dataDir;
@@ -62,5 +63,23 @@ public class TokenStore
     {
         var path = Path.Combine(_dataDir, ServerUrlFileName);
         return File.Exists(path) ? File.ReadAllText(path) : null;
+    }
+
+    public void SaveUsername(string username)
+    {
+        var path = Path.Combine(_dataDir, UsernameFileName);
+        File.WriteAllText(path, username);
+    }
+
+    public string? LoadUsername()
+    {
+        var path = Path.Combine(_dataDir, UsernameFileName);
+        return File.Exists(path) ? File.ReadAllText(path) : null;
+    }
+
+    public void DeleteUsername()
+    {
+        var path = Path.Combine(_dataDir, UsernameFileName);
+        if (File.Exists(path)) File.Delete(path);
     }
 }

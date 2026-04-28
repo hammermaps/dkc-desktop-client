@@ -11,13 +11,14 @@ public partial class LoginViewModel : ViewModelBase
     [ObservableProperty] private string _serverUrl = "https://";
     [ObservableProperty] private string _username = string.Empty;
     [ObservableProperty] private string _password = string.Empty;
-    [ObservableProperty] private string _tokenName = "DKC Desktop";
     [ObservableProperty] private string? _errorMessage;
     [ObservableProperty] private bool _isLoading;
 
-    public LoginViewModel(AuthService authService)
+    public LoginViewModel(AuthService authService, TokenStore tokenStore)
     {
         _authService = authService;
+        ServerUrl = tokenStore.LoadServerUrl() ?? "https://";
+        Username  = tokenStore.LoadUsername()  ?? string.Empty;
     }
 
     [RelayCommand(CanExecute = nameof(CanLogin))]
@@ -27,7 +28,7 @@ public partial class LoginViewModel : ViewModelBase
         IsLoading = true;
         try
         {
-            var result = await _authService.LoginAsync(ServerUrl, Username, Password, TokenName);
+            var result = await _authService.LoginAsync(ServerUrl, Username, Password);
             if (!result.Success)
                 ErrorMessage = result.Error ?? "Login failed.";
         }
@@ -48,7 +49,7 @@ public partial class LoginViewModel : ViewModelBase
         !IsLoading;
 
     partial void OnServerUrlChanged(string value) => LoginCommand.NotifyCanExecuteChanged();
-    partial void OnUsernameChanged(string value) => LoginCommand.NotifyCanExecuteChanged();
-    partial void OnPasswordChanged(string value) => LoginCommand.NotifyCanExecuteChanged();
-    partial void OnIsLoadingChanged(bool value) => LoginCommand.NotifyCanExecuteChanged();
+    partial void OnUsernameChanged(string value)  => LoginCommand.NotifyCanExecuteChanged();
+    partial void OnPasswordChanged(string value)  => LoginCommand.NotifyCanExecuteChanged();
+    partial void OnIsLoadingChanged(bool value)   => LoginCommand.NotifyCanExecuteChanged();
 }
