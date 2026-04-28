@@ -8,12 +8,14 @@ namespace DkcDesktopClient.App.ViewModels;
 public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly AuthService _authService;
+    private readonly UpdateService _updateService;
 
     [ObservableProperty] private ViewModelBase? _currentView;
     [ObservableProperty] private bool _isLoggedIn;
     [ObservableProperty] private string _userDisplayName = string.Empty;
     [ObservableProperty] private bool _isPaneOpen = true;
     [ObservableProperty] private NavItem? _selectedNavItem;
+    [ObservableProperty] private UpdateInfo? _availableUpdate;
 
     public LoginViewModel LoginViewModel { get; }
     public DashboardViewModel DashboardViewModel { get; }
@@ -28,6 +30,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public MainWindowViewModel(
         AuthService authService,
+        UpdateService updateService,
         LoginViewModel loginViewModel,
         DashboardViewModel dashboardViewModel,
         NeaViewModel neaViewModel,
@@ -38,6 +41,7 @@ public partial class MainWindowViewModel : ViewModelBase
         SettingsViewModel settingsViewModel)
     {
         _authService = authService;
+        _updateService = updateService;
         LoginViewModel = loginViewModel;
         DashboardViewModel = dashboardViewModel;
         NeaViewModel = neaViewModel;
@@ -105,6 +109,32 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (!await _authService.TryAutoLoginAsync())
             CurrentView = LoginViewModel;
+
+        _ = CheckForUpdateAsync();
+    }
+
+    private async Task CheckForUpdateAsync()
+    {
+        try
+        {
+            AvailableUpdate = await _updateService.CheckForUpdateAsync();
+        }
+        catch
+        {
+            // silently ignore update check failures on startup
+        }
+    }
+
+    [RelayCommand]
+    private void DismissUpdate()
+    {
+        AvailableUpdate = null;
+    }
+
+    [RelayCommand]
+    private void ShowUpdateInSettings()
+    {
+        SelectedNavItem = NavItems.FirstOrDefault(n => n.ViewModel == SettingsViewModel);
     }
 }
 

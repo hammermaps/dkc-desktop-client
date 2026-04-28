@@ -1,2 +1,5 @@
 <Solution>
+  <Project Path="DkcDesktopClient.App/DkcDesktopClient.App.csproj" />
+  <Project Path="DkcDesktopClient.Core/DkcDesktopClient.Core.csproj" />
+  <Project Path="DkcDesktopClient.Tests/DkcDesktopClient.Tests.csproj" />
 </Solution>

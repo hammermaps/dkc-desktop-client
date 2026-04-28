@@ -11,6 +11,7 @@ public partial class SettingsViewModel : ViewModelBase
     private readonly DkcApiFactory _apiFactory;
     private readonly AuthService _authService;
     private readonly TokenStore _tokenStore;
+    private readonly UpdateService _updateService;
 
     [ObservableProperty] private bool _isLoading;
     [ObservableProperty] private string? _errorMessage;
@@ -45,14 +46,22 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty] private string _formEmail = string.Empty;
     [ObservableProperty] private bool _formIsAdmin;
 
+    // Update
+    [ObservableProperty] private bool _isCheckingForUpdates;
+    [ObservableProperty] private bool _isDownloadingUpdate;
+    [ObservableProperty] private double _downloadProgress;
+    [ObservableProperty] private UpdateInfo? _availableUpdate;
+
     public bool IsAdmin => _authService.CurrentUser?.IsAdmin ?? false;
+    public string CurrentVersion => UpdateService.CurrentVersion.ToString(3);
     public string? CurrentUsername => _authService.CurrentUser?.Username;
 
-    public SettingsViewModel(DkcApiFactory apiFactory, AuthService authService, TokenStore tokenStore)
+    public SettingsViewModel(DkcApiFactory apiFactory, AuthService authService, TokenStore tokenStore, UpdateService updateService)
     {
         _apiFactory = apiFactory;
         _authService = authService;
         _tokenStore = tokenStore;
+        _updateService = updateService;
         ServerUrl = tokenStore.LoadServerUrl() ?? string.Empty;
         _authService.AuthStateChanged += OnAuthStateChanged;
     }
@@ -406,6 +415,65 @@ public partial class SettingsViewModel : ViewModelBase
         }
     }
 
+    // — Update —
+    [RelayCommand(CanExecute = nameof(CanCheckForUpdates))]
+    public async Task CheckForUpdatesAsync()
+    {
+        IsCheckingForUpdates = true;
+        ErrorMessage = null;
+        StatusMessage = null;
+        try
+        {
+            var update = await _updateService.CheckForUpdateAsync();
+            if (update != null)
+            {
+                AvailableUpdate = update;
+            }
+            else
+            {
+                AvailableUpdate = null;
+                StatusMessage = "You are running the latest version.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Update check failed: {ex.Message}";
+        }
+        finally
+        {
+            IsCheckingForUpdates = false;
+        }
+    }
+
+    private bool CanCheckForUpdates() => !IsCheckingForUpdates && !IsDownloadingUpdate;
+
+    [RelayCommand(CanExecute = nameof(CanDownloadUpdate))]
+    public async Task DownloadUpdateAsync()
+    {
+        if (AvailableUpdate == null) return;
+
+        IsDownloadingUpdate = true;
+        DownloadProgress = 0;
+        ErrorMessage = null;
+        try
+        {
+            var progress = new Progress<double>(p => DownloadProgress = p * 100);
+            var success = await _updateService.DownloadAndInstallAsync(AvailableUpdate, progress);
+            if (!success)
+                ErrorMessage = "Download failed. Please try again or update manually.";
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Update failed: {ex.Message}";
+        }
+        finally
+        {
+            IsDownloadingUpdate = false;
+        }
+    }
+
+    private bool CanDownloadUpdate() => AvailableUpdate != null && !IsDownloadingUpdate && !IsCheckingForUpdates;
+
     private bool CanDeleteToken() => SelectedToken != null && !IsLoading;
     private bool CanSaveProject() => !IsSavingProject;
     private bool CanSaveUser() => !IsSavingUser;
@@ -435,4 +503,15 @@ public partial class SettingsViewModel : ViewModelBase
     }
     partial void OnIsSavingProjectChanged(bool value) => SaveProjectCommand.NotifyCanExecuteChanged();
     partial void OnIsSavingUserChanged(bool value) => SaveUserCommand.NotifyCanExecuteChanged();
+    partial void OnIsCheckingForUpdatesChanged(bool value)
+    {
+        CheckForUpdatesCommand.NotifyCanExecuteChanged();
+        DownloadUpdateCommand.NotifyCanExecuteChanged();
+    }
+    partial void OnIsDownloadingUpdateChanged(bool value)
+    {
+        CheckForUpdatesCommand.NotifyCanExecuteChanged();
+        DownloadUpdateCommand.NotifyCanExecuteChanged();
+    }
+    partial void OnAvailableUpdateChanged(UpdateInfo? value) => DownloadUpdateCommand.NotifyCanExecuteChanged();
 }
