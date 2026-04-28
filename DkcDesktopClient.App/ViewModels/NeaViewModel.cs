@@ -41,6 +41,8 @@ public partial class NeaViewModel : ViewModelBase
     [ObservableProperty] private string _formSystemSerialNumber = string.Empty;
     [ObservableProperty] private string _formSystemInstallationDate = string.Empty;
     [ObservableProperty] private bool _formSystemEnabled = true;
+    [ObservableProperty] private double? _formSystemRatedPower;
+    [ObservableProperty] private string _formSystemFuelType = "Diesel";
 
     // Inspection form state
     [ObservableProperty] private bool _isInspectionFormVisible;
@@ -65,6 +67,8 @@ public partial class NeaViewModel : ViewModelBase
         new[] { "open", "in_progress", "completed" };
     public static IReadOnlyList<string> ResultOptions { get; } =
         new[] { "ok", "defects_found", "failed" };
+    public static IReadOnlyList<string> FuelTypeOptions { get; } =
+        new[] { "Diesel", "Gas", "Hybrid", "Benzin", "Erdgas" };
 
     public NeaViewModel(DkcApiFactory apiFactory, AuthService authService)
     {
@@ -163,6 +167,8 @@ public partial class NeaViewModel : ViewModelBase
         FormSystemSerialNumber = string.Empty;
         FormSystemInstallationDate = string.Empty;
         FormSystemEnabled = true;
+        FormSystemRatedPower = null;
+        FormSystemFuelType = "Diesel";
         SystemFormError = null;
         IsSystemFormVisible = true;
     }
@@ -181,6 +187,8 @@ public partial class NeaViewModel : ViewModelBase
         FormSystemSerialNumber = SelectedSystem.SerialNumber ?? string.Empty;
         FormSystemInstallationDate = SelectedSystem.InstallationDate ?? string.Empty;
         FormSystemEnabled = SelectedSystem.Enabled;
+        FormSystemRatedPower = SelectedSystem.RatedPower;
+        FormSystemFuelType = SelectedSystem.FuelType ?? "Diesel";
         SystemFormError = null;
         IsSystemFormVisible = true;
     }
@@ -214,7 +222,9 @@ public partial class NeaViewModel : ViewModelBase
                 Nz(FormSystemSerialNumber),
                 Nz(FormSystemInstallationDate),
                 FormSystemEnabled,
-                null);
+                null,
+                FormSystemRatedPower,
+                Nz(FormSystemFuelType));
 
             ApiError result;
             if (IsEditingSystem && _editingSystemId.HasValue)

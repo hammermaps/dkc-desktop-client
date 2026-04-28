@@ -6,6 +6,8 @@ using DkcDesktopClient.Core.Services;
 
 namespace DkcDesktopClient.App.ViewModels;
 
+public record StatusOption(string? Value, string Label);
+
 public partial class MmViewModel : ViewModelBase
 {
     private readonly DkcApiFactory _apiFactory;
@@ -18,7 +20,7 @@ public partial class MmViewModel : ViewModelBase
     [ObservableProperty] private ObservableCollection<MmMessage> _messages = new();
     [ObservableProperty] private MmMessage? _selectedMessage;
     [ObservableProperty] private MmDetail? _selectedDetail;
-    [ObservableProperty] private int? _filterStatus;
+    [ObservableProperty] private string? _filterStatus;
     [ObservableProperty] private string? _filterStreet;
     [ObservableProperty] private int _totalMessages;
     [ObservableProperty] private int _currentOffset;
@@ -43,11 +45,34 @@ public partial class MmViewModel : ViewModelBase
     [ObservableProperty] private string _formZugeh = string.Empty;
 
     // Status/contractor quick-edit on detail
-    [ObservableProperty] private int _detailStatus;
+    [ObservableProperty] private string _detailStatus = "0";
     [ObservableProperty] private string _detailNachunternehmer = string.Empty;
 
     public static IReadOnlyList<string> DringlichkeitOptions { get; } =
-        new[] { "normal", "dringend", "notfall" };
+        new[] { "normal", "hoch", "kritisch" };
+
+    public static IReadOnlyList<StatusOption> StatusFilterOptions { get; } =
+        new StatusOption[]
+        {
+            new(null, "Alle"),
+            new("-2", "Zur Prüfung"),
+            new("-1", "Abgelehnt"),
+            new("0", "Freigabe erforderlich"),
+            new("1", "Freigegeben"),
+            new("2", "Nachunternehmer"),
+            new("3", "Erledigt"),
+        };
+
+    public static string StatusToLabel(int status) => status switch
+    {
+        -2 => "Zur Prüfung",
+        -1 => "Abgelehnt",
+        0  => "Freigabe erforderlich",
+        1  => "Freigegeben",
+        2  => "Nachunternehmer",
+        3  => "Erledigt",
+        _  => status.ToString()
+    };
 
     public MmViewModel(DkcApiFactory apiFactory, AuthService authService)
     {
@@ -65,7 +90,7 @@ public partial class MmViewModel : ViewModelBase
         {
             var api = _apiFactory.Create(_authService.CurrentToken);
             var result = await api.GetMmListAsync(
-                status: FilterStatus,
+                status: int.TryParse(FilterStatus, out var fs) ? fs : (int?)null,
                 street: FilterStreet,
                 limit: PageSize,
                 offset: 0);
@@ -97,8 +122,8 @@ public partial class MmViewModel : ViewModelBase
             if (result.Success && result.Message != null)
             {
                 SelectedDetail = result.Message;
-                DetailStatus = result.Message.Status;
-                DetailNachunternehmer = result.Message.Nachunternehmer ?? string.Empty;
+                DetailStatus = result.Message.Status.ToString();
+                DetailNachunternehmer = result.Message.Nachunternehmer?.ToString() ?? string.Empty;
             }
         }
         catch (Exception ex)
@@ -140,13 +165,13 @@ public partial class MmViewModel : ViewModelBase
         _editingUid = SelectedDetail.Uid;
         FormBetreff = SelectedDetail.Betreff ?? string.Empty;
         FormMeldung = SelectedDetail.MeldungMassage ?? string.Empty;
-        FormStreet = SelectedDetail.Street ?? string.Empty;
+        FormStreet = SelectedDetail.Street?.ToString() ?? string.Empty;
         FormWhg = SelectedDetail.Whg ?? string.Empty;
         FormMelder = SelectedDetail.Melder ?? string.Empty;
         FormTel = SelectedDetail.Tel ?? string.Empty;
         FormEmail = SelectedDetail.Email ?? string.Empty;
         FormDringlichkeit = SelectedDetail.Dringlichkeit ?? "normal";
-        FormNachunternehmer = SelectedDetail.Nachunternehmer ?? string.Empty;
+        FormNachunternehmer = SelectedDetail.Nachunternehmer?.ToString() ?? string.Empty;
         FormZugeh = SelectedDetail.Zugeh ?? string.Empty;
         FormError = null;
         IsFormVisible = true;
@@ -256,7 +281,7 @@ public partial class MmViewModel : ViewModelBase
         {
             var api = _apiFactory.Create(_authService.CurrentToken);
             var result = await api.UpdateMmStatusAsync(SelectedDetail.Uid,
-                new MmStatusUpdateRequest(DetailStatus, null));
+                new MmStatusUpdateRequest(int.TryParse(DetailStatus, out var ds) ? ds : 0, null));
             if (result.Success)
                 await LoadDetailAsync();
             else

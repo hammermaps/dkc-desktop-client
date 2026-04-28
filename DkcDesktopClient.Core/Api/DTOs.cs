@@ -104,7 +104,9 @@ public record NeaSystem(
     [property: JsonPropertyName("enabled")] bool Enabled,
     [property: JsonPropertyName("project_id")] int ProjectId,
     [property: JsonPropertyName("last_inspection_date")] string? LastInspectionDate,
-    [property: JsonPropertyName("last_inspection_result")] string? LastInspectionResult);
+    [property: JsonPropertyName("last_inspection_result")] string? LastInspectionResult,
+    [property: JsonPropertyName("rated_power")] double? RatedPower,
+    [property: JsonPropertyName("fuel_type")] string? FuelType);
 
 public record NeaSystemsResponse(
     [property: JsonPropertyName("success")] bool Success,
@@ -162,12 +164,12 @@ public record MmMessage(
     [property: JsonPropertyName("uid")] string Uid,
     [property: JsonPropertyName("status")] int Status,
     [property: JsonPropertyName("betreff")] string? Betreff,
-    [property: JsonPropertyName("street")] string? Street,
+    [property: JsonPropertyName("street")] int? Street,
     [property: JsonPropertyName("whg")] string? Whg,
     [property: JsonPropertyName("melder")] string? Melder,
     [property: JsonPropertyName("datetime")] string? Datetime,
     [property: JsonPropertyName("dringlichkeit")] string? Dringlichkeit,
-    [property: JsonPropertyName("nachunternehmer")] string? Nachunternehmer,
+    [property: JsonPropertyName("nachunternehmer")] int? Nachunternehmer,
     [property: JsonPropertyName("scanned")] bool Scanned,
     [property: JsonPropertyName("zugeh")] string? Zugeh);
 
@@ -184,14 +186,14 @@ public record MmDetail(
     [property: JsonPropertyName("status")] int Status,
     [property: JsonPropertyName("betreff")] string? Betreff,
     [property: JsonPropertyName("meldung_massage")] string? MeldungMassage,
-    [property: JsonPropertyName("street")] string? Street,
+    [property: JsonPropertyName("street")] int? Street,
     [property: JsonPropertyName("whg")] string? Whg,
     [property: JsonPropertyName("melder")] string? Melder,
     [property: JsonPropertyName("tel")] string? Tel,
     [property: JsonPropertyName("email")] string? Email,
     [property: JsonPropertyName("datetime")] string? Datetime,
     [property: JsonPropertyName("dringlichkeit")] string? Dringlichkeit,
-    [property: JsonPropertyName("nachunternehmer")] string? Nachunternehmer,
+    [property: JsonPropertyName("nachunternehmer")] int? Nachunternehmer,
     [property: JsonPropertyName("scanned")] bool Scanned,
     [property: JsonPropertyName("zugeh")] string? Zugeh);
 
@@ -358,7 +360,9 @@ public record NeaSystemSaveRequest(
     [property: JsonPropertyName("serial_number")] string? SerialNumber,
     [property: JsonPropertyName("installation_date")] string? InstallationDate,
     [property: JsonPropertyName("enabled")] bool Enabled,
-    [property: JsonPropertyName("project_id")] int? ProjectId);
+    [property: JsonPropertyName("project_id")] int? ProjectId,
+    [property: JsonPropertyName("rated_power")] double? RatedPower,
+    [property: JsonPropertyName("fuel_type")] string? FuelType);
 
 public record NeaInspectionSaveRequest(
     [property: JsonPropertyName("nea_system_id")] int NeaSystemId,

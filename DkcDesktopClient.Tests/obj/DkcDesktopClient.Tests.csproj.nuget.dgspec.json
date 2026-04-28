@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Tests/DkcDesktopClient.Tests.csproj": {}
+    "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Tests/DkcDesktopClient.Tests.csproj": {}
   },
   "projects": {
-    "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj": {
+    "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj",
+        "projectUniqueName": "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj",
         "projectName": "DkcDesktopClient.Core",
-        "projectPath": "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj",
-        "packagesPath": "/home/runner/.nuget/packages/",
-        "outputPath": "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Core/obj/",
+        "projectPath": "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj",
+        "packagesPath": "/home/masterbee/.nuget/packages/",
+        "outputPath": "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/runner/.nuget/NuGet/NuGet.Config"
+          "/home/masterbee/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -36,9 +36,9 @@
         "restoreAuditProperties": {
           "enableAudit": "true",
           "auditLevel": "low",
-          "auditMode": "direct"
+          "auditMode": "all"
         },
-        "SdkAnalysisLevel": "10.0.200"
+        "SdkAnalysisLevel": "9.0.100"
       },
       "frameworks": {
         "net8.0": {
@@ -105,21 +105,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.201/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/home/masterbee/.dotnet/sdk/9.0.100/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Tests/DkcDesktopClient.Tests.csproj": {
+    "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Tests/DkcDesktopClient.Tests.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Tests/DkcDesktopClient.Tests.csproj",
+        "projectUniqueName": "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Tests/DkcDesktopClient.Tests.csproj",
         "projectName": "DkcDesktopClient.Tests",
-        "projectPath": "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Tests/DkcDesktopClient.Tests.csproj",
-        "packagesPath": "/home/runner/.nuget/packages/",
-        "outputPath": "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Tests/obj/",
+        "projectPath": "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Tests/DkcDesktopClient.Tests.csproj",
+        "packagesPath": "/home/masterbee/.nuget/packages/",
+        "outputPath": "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Tests/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/runner/.nuget/NuGet/NuGet.Config"
+          "/home/masterbee/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -131,8 +131,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj": {
-                "projectPath": "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj"
+              "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj": {
+                "projectPath": "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj"
               }
             }
           }
@@ -145,9 +145,9 @@
         "restoreAuditProperties": {
           "enableAudit": "true",
           "auditLevel": "low",
-          "auditMode": "direct"
+          "auditMode": "all"
         },
-        "SdkAnalysisLevel": "10.0.200"
+        "SdkAnalysisLevel": "9.0.100"
       },
       "frameworks": {
         "net8.0": {
@@ -206,7 +206,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.201/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/home/masterbee/.dotnet/sdk/9.0.100/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

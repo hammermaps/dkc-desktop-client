@@ -3,7 +3,7 @@
              xmlns:vm="using:DkcDesktopClient.App.ViewModels"
              x:Class="DkcDesktopClient.App.Views.KeysView"
              x:DataType="vm:KeysViewModel">
-  <Grid RowDefinitions="Auto, Auto, Auto, Auto, *" Margin="16" RowSpacing="8">
+  <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, *" Margin="16" RowSpacing="8">
 
     <!-- Toolbar -->
     <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
@@ -18,14 +18,42 @@
       <Button Content="Delete Issued" Command="{Binding DeleteIssuedCommand}" Foreground="Red"/>
     </StackPanel>
 
+    <!-- Stats tiles -->
+    <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,0">
+      <Border Background="#90CDF4" BorderBrush="#63B3ED" BorderThickness="1" CornerRadius="4" Padding="12" Margin="0,0,8,0">
+        <StackPanel HorizontalAlignment="Center">
+          <TextBlock Text="Schlüsseltypen" FontSize="12" Foreground="#4A5568" HorizontalAlignment="Center"/>
+          <TextBlock Text="{Binding StatTotalKeyTypes}" FontSize="28" FontWeight="Bold" HorizontalAlignment="Center"/>
+        </StackPanel>
+      </Border>
+      <Border Background="#9AE6B4" BorderBrush="#68D391" BorderThickness="1" CornerRadius="4" Padding="12" Margin="0,0,8,0">
+        <StackPanel HorizontalAlignment="Center">
+          <TextBlock Text="Gesamt" FontSize="12" Foreground="#4A5568" HorizontalAlignment="Center"/>
+          <TextBlock Text="{Binding StatTotalKeys}" FontSize="28" FontWeight="Bold" HorizontalAlignment="Center"/>
+        </StackPanel>
+      </Border>
+      <Border Background="#FBD38D" BorderBrush="#F6AD55" BorderThickness="1" CornerRadius="4" Padding="12" Margin="0,0,8,0">
+        <StackPanel HorizontalAlignment="Center">
+          <TextBlock Text="Ausgegeben" FontSize="12" Foreground="#4A5568" HorizontalAlignment="Center"/>
+          <TextBlock Text="{Binding StatIssuedKeys}" FontSize="28" FontWeight="Bold" HorizontalAlignment="Center"/>
+        </StackPanel>
+      </Border>
+      <Border Background="#D6BCFA" BorderBrush="#B794F4" BorderThickness="1" CornerRadius="4" Padding="12">
+        <StackPanel HorizontalAlignment="Center">
+          <TextBlock Text="Verfügbar" FontSize="12" Foreground="#4A5568" HorizontalAlignment="Center"/>
+          <TextBlock Text="{Binding StatAvailableKeys}" FontSize="28" FontWeight="Bold" HorizontalAlignment="Center"/>
+        </StackPanel>
+      </Border>
+    </UniformGrid>
+
     <!-- Error / Progress -->
-    <TextBlock Grid.Row="1" Text="{Binding ErrorMessage}" Foreground="Red"
+    <TextBlock Grid.Row="2" Text="{Binding ErrorMessage}" Foreground="Red"
                IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-    <ProgressBar Grid.Row="1" IsIndeterminate="True" IsVisible="{Binding IsLoading}" Height="4" VerticalAlignment="Bottom"/>
+    <ProgressBar Grid.Row="2" IsIndeterminate="True" IsVisible="{Binding IsLoading}" Height="4" VerticalAlignment="Bottom"/>
 
     <!-- Key create/edit form -->
-    <Border Grid.Row="2" IsVisible="{Binding IsKeyFormVisible}"
-            Background="#F0F4F8" BorderThickness="1" BorderBrush="#CBD5E0" CornerRadius="4" Padding="12">
+    <Border Grid.Row="3" IsVisible="{Binding IsKeyFormVisible}"
+            Background="#CBD5E0" BorderThickness="1" BorderBrush="#CBD5E0" CornerRadius="4" Padding="12">
       <StackPanel Spacing="8">
         <TextBlock Text="Key Type" FontSize="15" FontWeight="SemiBold"/>
         <TextBlock Text="{Binding KeyFormError}" Foreground="Red"
@@ -47,8 +75,8 @@
     </Border>
 
     <!-- Issue form -->
-    <Border Grid.Row="3" IsVisible="{Binding IsIssueFormVisible}"
-            Background="#FFF9E6" BorderThickness="1" BorderBrush="#F6C90E" CornerRadius="4" Padding="12">
+    <Border Grid.Row="4" IsVisible="{Binding IsIssueFormVisible}"
+            Background="#FAF089" BorderThickness="1" BorderBrush="#F6C90E" CornerRadius="4" Padding="12">
       <StackPanel Spacing="8">
         <TextBlock Text="{Binding SelectedInventoryItem.Name, StringFormat='Issue: {0}'}" FontSize="15" FontWeight="SemiBold"/>
         <TextBlock Text="{Binding IssueFormError}" Foreground="Red"
@@ -70,7 +98,7 @@
     </Border>
 
     <!-- Tabs -->
-    <TabControl Grid.Row="4" SelectedIndex="{Binding SelectedTabIndex}">
+    <TabControl Grid.Row="5" SelectedIndex="{Binding SelectedTabIndex}">
       <TabItem Header="Inventory">
         <DataGrid ItemsSource="{Binding Inventory}" SelectedItem="{Binding SelectedInventoryItem}"
                   IsReadOnly="True" AutoGenerateColumns="False">

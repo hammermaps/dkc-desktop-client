@@ -38,7 +38,7 @@
             <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsCheckingForUpdates}" Width="120" Height="16" VerticalAlignment="Center"/>
           </StackPanel>
           <Border IsVisible="{Binding AvailableUpdate, Converter={x:Static ObjectConverters.IsNotNull}}"
-                  Background="#EBF8FF" BorderBrush="#3182CE" BorderThickness="1" CornerRadius="6" Padding="12">
+                  Background="#90CDF4" BorderBrush="#3182CE" BorderThickness="1" CornerRadius="6" Padding="12">
             <StackPanel Spacing="8">
               <StackPanel Orientation="Horizontal" Spacing="8">
                 <TextBlock Text="New version available:" VerticalAlignment="Center"/>
@@ -98,7 +98,7 @@
 
           <!-- Project form -->
           <Border IsVisible="{Binding IsProjectFormVisible}"
-                  Background="#F0F4F8" BorderThickness="1" BorderBrush="#CBD5E0" CornerRadius="4" Padding="10">
+                  Background="#CBD5E0" BorderThickness="1" BorderBrush="#CBD5E0" CornerRadius="4" Padding="10">
             <StackPanel Spacing="6">
               <TextBlock Text="{Binding ProjectFormError}" Foreground="Red"
                          IsVisible="{Binding ProjectFormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
@@ -140,7 +140,7 @@
 
           <!-- User form -->
           <Border IsVisible="{Binding IsUserFormVisible}"
-                  Background="#FFF9E6" BorderThickness="1" BorderBrush="#F6C90E" CornerRadius="4" Padding="10">
+                  Background="#FAF089" BorderThickness="1" BorderBrush="#F6C90E" CornerRadius="4" Padding="10">
             <StackPanel Spacing="6">
               <TextBlock Text="{Binding UserFormError}" Foreground="Red"
                          IsVisible="{Binding UserFormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>

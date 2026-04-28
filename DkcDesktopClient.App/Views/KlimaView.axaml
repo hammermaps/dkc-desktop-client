@@ -3,7 +3,7 @@
              xmlns:vm="using:DkcDesktopClient.App.ViewModels"
              x:Class="DkcDesktopClient.App.Views.KlimaView"
              x:DataType="vm:KlimaViewModel">
-  <Grid RowDefinitions="Auto, Auto, Auto, *" Margin="16" RowSpacing="8">
+  <Grid RowDefinitions="Auto, Auto, Auto, Auto, *" Margin="16" RowSpacing="8">
 
     <!-- Toolbar -->
     <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
@@ -18,14 +18,26 @@
       <TextBlock Text="{Binding LastStatusTimestamp, StringFormat='Last: {0}'}" VerticalAlignment="Center" Foreground="#666"/>
     </StackPanel>
 
+    <!-- Global control buttons -->
+    <Border Grid.Row="1" Background="#9AE6B4" BorderThickness="1" BorderBrush="#68D391" CornerRadius="4" Padding="8">
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <Button Content="Alle AN" Command="{Binding AllDevicesOnCommand}" Background="#48BB78" Foreground="White"/>
+        <Button Content="Alle AUS" Command="{Binding AllDevicesOffCommand}" Background="#FC8181" Foreground="White"/>
+        <Button Content="Status speichern" Command="{Binding SaveStateCommand}"/>
+        <Button Content="Letzten Status" Command="{Binding RestoreLastStateCommand}"/>
+        <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSendingControl}" Width="60" Height="16" VerticalAlignment="Center"/>
+        <TextBlock Text="{Binding GlobalControlResult}" VerticalAlignment="Center" Foreground="#2D3748"/>
+      </StackPanel>
+    </Border>
+
     <!-- Error -->
-    <TextBlock Grid.Row="1" Text="{Binding ErrorMessage}" Foreground="Red"
+    <TextBlock Grid.Row="2" Text="{Binding ErrorMessage}" Foreground="Red"
                IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-    <ProgressBar Grid.Row="1" IsIndeterminate="True" IsVisible="{Binding IsLoading}" Height="4" VerticalAlignment="Bottom"/>
+    <ProgressBar Grid.Row="2" IsIndeterminate="True" IsVisible="{Binding IsLoading}" Height="4" VerticalAlignment="Bottom"/>
 
     <!-- Control panel -->
-    <Border Grid.Row="2" IsVisible="{Binding IsControlPanelVisible}"
-            Background="#EBF8FF" BorderThickness="1" BorderBrush="#63B3ED" CornerRadius="4" Padding="12">
+    <Border Grid.Row="3" IsVisible="{Binding IsControlPanelVisible}"
+            Background="#90CDF4" BorderThickness="1" BorderBrush="#63B3ED" CornerRadius="4" Padding="12">
       <StackPanel Spacing="8">
         <TextBlock Text="Device Control" FontSize="15" FontWeight="SemiBold"/>
         <TextBlock Text="{Binding ControlError}" Foreground="Red"
@@ -58,7 +70,7 @@
     </Border>
 
     <!-- Device status list + groups -->
-    <Grid Grid.Row="3" ColumnDefinitions="*, 8, 200">
+    <Grid Grid.Row="4" ColumnDefinitions="*, 8, 200">
       <StackPanel Grid.Column="0" Spacing="4">
         <TextBlock Text="Realtime Device Status" FontWeight="SemiBold"/>
         <DataGrid ItemsSource="{Binding DeviceStatuses}" SelectedItem="{Binding SelectedDeviceStatus}"

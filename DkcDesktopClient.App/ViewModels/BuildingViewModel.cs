@@ -24,6 +24,12 @@ public partial class BuildingViewModel : ViewModelBase
     [ObservableProperty] private int? _filterYear;
     [ObservableProperty] private int _totalInspections;
 
+    // Stats tiles
+    [ObservableProperty] private int _statTotalBuildings;
+    [ObservableProperty] private int _statTotalInspections;
+    [ObservableProperty] private int _statOpenInspections;
+    [ObservableProperty] private int _statCompletedInspections;
+
     // Building form state
     [ObservableProperty] private bool _isBuildingFormVisible;
     [ObservableProperty] private bool _isSavingBuilding;
@@ -80,6 +86,7 @@ public partial class BuildingViewModel : ViewModelBase
             if (result.Success && result.Buildings != null)
                 foreach (var b in result.Buildings)
                     Buildings.Add(b);
+            StatTotalBuildings = Buildings.Count;
         }
         catch (Exception ex)
         {
@@ -111,6 +118,9 @@ public partial class BuildingViewModel : ViewModelBase
             if (result.Success && result.Inspections != null)
                 foreach (var i in result.Inspections)
                     Inspections.Add(i);
+            StatTotalInspections = TotalInspections;
+            StatOpenInspections = Inspections.Count(i => i.Status == "open" || i.Status == "in_progress");
+            StatCompletedInspections = Inspections.Count(i => i.Status == "completed");
         }
         catch (Exception ex)
         {

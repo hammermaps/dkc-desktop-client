@@ -20,6 +20,12 @@ public partial class KeysViewModel : ViewModelBase
     [ObservableProperty] private KeyIssuedItem? _selectedIssuedItem;
     [ObservableProperty] private int _selectedTabIndex;
 
+    // Stats tiles
+    [ObservableProperty] private int _statTotalKeyTypes;
+    [ObservableProperty] private int _statTotalKeys;
+    [ObservableProperty] private int _statIssuedKeys;
+    [ObservableProperty] private int _statAvailableKeys;
+
     // Key create/edit form
     [ObservableProperty] private bool _isKeyFormVisible;
     [ObservableProperty] private bool _isSavingKey;
@@ -83,6 +89,10 @@ public partial class KeysViewModel : ViewModelBase
         finally
         {
             IsLoading = false;
+            StatTotalKeyTypes = Inventory.Count;
+            StatTotalKeys = Inventory.Sum(k => k.Total ?? 0);
+            StatIssuedKeys = IssuedKeys.Count(k => k.ReturnedAt == null);
+            StatAvailableKeys = Inventory.Sum(k => k.Available ?? 0);
         }
     }
 

@@ -35,6 +35,9 @@ public partial class KlimaViewModel : ViewModelBase
     [ObservableProperty] private string _controlFanSpeed = "auto";
     [ObservableProperty] private bool _isSendingControl;
     [ObservableProperty] private string? _controlError;
+    [ObservableProperty] private string? _globalControlResult;
+
+    private List<KlimaDeviceStatus>? _savedState;
 
     public static IReadOnlyList<string> ModeOptions { get; } =
         new[] { "cooling", "heating", "fan", "auto", "dry" };
@@ -251,4 +254,94 @@ public partial class KlimaViewModel : ViewModelBase
 
     partial void OnIsSendingControlChanged(bool value) =>
         ApplyDeviceControlCommand.NotifyCanExecuteChanged();
+
+    [RelayCommand]
+    public async Task AllDevicesOnAsync()
+    {
+        IsSendingControl = true;
+        GlobalControlResult = null;
+        try
+        {
+            var api = _apiFactory.Create(_authService.CurrentToken);
+            foreach (var s in DeviceStatuses)
+            {
+                await api.ControlKlimaDeviceAsync(new KlimaDeviceControlRequest(
+                    s.Address, true, ControlMode, ControlSetpoint, ControlFanSpeed));
+            }
+            GlobalControlResult = $"Alle {DeviceStatuses.Count} Geräte eingeschaltet.";
+            await RefreshStatusAsync();
+        }
+        catch (Exception ex)
+        {
+            GlobalControlResult = $"Fehler: {ex.Message}";
+        }
+        finally
+        {
+            IsSendingControl = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task AllDevicesOffAsync()
+    {
+        IsSendingControl = true;
+        GlobalControlResult = null;
+        try
+        {
+            var api = _apiFactory.Create(_authService.CurrentToken);
+            foreach (var s in DeviceStatuses)
+            {
+                await api.ControlKlimaDeviceAsync(new KlimaDeviceControlRequest(
+                    s.Address, false, null, null, null));
+            }
+            GlobalControlResult = $"Alle {DeviceStatuses.Count} Geräte ausgeschaltet.";
+            await RefreshStatusAsync();
+        }
+        catch (Exception ex)
+        {
+            GlobalControlResult = $"Fehler: {ex.Message}";
+        }
+        finally
+        {
+            IsSendingControl = false;
+        }
+    }
+
+    [RelayCommand]
+    public void SaveState()
+    {
+        _savedState = new List<KlimaDeviceStatus>(DeviceStatuses);
+        GlobalControlResult = $"Status gespeichert ({_savedState.Count} Geräte).";
+    }
+
+    [RelayCommand]
+    public async Task RestoreLastStateAsync()
+    {
+        if (_savedState == null || _savedState.Count == 0)
+        {
+            GlobalControlResult = "Kein gespeicherter Status vorhanden.";
+            return;
+        }
+        IsSendingControl = true;
+        GlobalControlResult = null;
+        try
+        {
+            var api = _apiFactory.Create(_authService.CurrentToken);
+            foreach (var s in _savedState)
+            {
+                await api.ControlKlimaDeviceAsync(new KlimaDeviceControlRequest(
+                    s.Address, s.Power, s.Mode, s.Setpoint, s.FanSpeed));
+            }
+            GlobalControlResult = $"Letzter Status auf {_savedState.Count} Geräten wiederhergestellt.";
+            await RefreshStatusAsync();
+        }
+        catch (Exception ex)
+        {
+            GlobalControlResult = $"Fehler: {ex.Message}";
+        }
+        finally
+        {
+            IsSendingControl = false;
+        }
+    }
 }
