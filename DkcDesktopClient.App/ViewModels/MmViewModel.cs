@@ -61,6 +61,9 @@ public partial class MmViewModel : ViewModelBase
     /// <summary>User full-names loaded from users_list (admin only). Used for the Melder ComboBox.</summary>
     [ObservableProperty] private ObservableCollection<string> _melderOptions = new();
 
+    // Guards against triggering LoadUserInfoAsync more than once concurrently
+    private bool _userInfoLoading;
+
     // ── Static option lists ───────────────────────────────────────────────────
     /// <summary>Status options for the filter ComboBox (includes "Alle" = null).</summary>
     public static IReadOnlyList<MmStatusOption> StatusFilterOptions { get; } =
@@ -133,8 +136,9 @@ public partial class MmViewModel : ViewModelBase
             IsLoading = false;
         }
 
-        // Lazily populate the Melder dropdown the first time messages are loaded
-        if (MelderOptions.Count == 0)
+        // Lazily populate the Melder dropdown the first time messages are loaded;
+        // the flag prevents duplicate concurrent loads if LoadMessagesAsync is called again before the first completes.
+        if (MelderOptions.Count == 0 && !_userInfoLoading)
             _ = LoadUserInfoAsync();
     }
 
@@ -177,6 +181,7 @@ public partial class MmViewModel : ViewModelBase
         if (!_authService.HasPermission("admin"))
             return;
 
+        _userInfoLoading = true;
         try
         {
             var api = _apiFactory.Create(_authService.CurrentToken);
@@ -199,6 +204,10 @@ public partial class MmViewModel : ViewModelBase
         {
             // Surface unexpected errors (network, deserialization, etc.) as a non-blocking warning
             ErrorMessage = $"Benutzerliste konnte nicht geladen werden: {ex.Message}";
+        }
+        finally
+        {
+            _userInfoLoading = false;
         }
     }
 
