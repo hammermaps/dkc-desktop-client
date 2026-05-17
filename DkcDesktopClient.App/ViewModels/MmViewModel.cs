@@ -387,15 +387,18 @@ public partial class MmViewModel : ViewModelBase
 
     /// <summary>
     /// Refreshes the street and contractor suggestion lists from the currently
-    /// loaded message batch — only adds entries not yet present.
+    /// loaded message batch.  Uses a HashSet for O(1) duplicate detection.
     /// </summary>
     private void RefreshDropdownSuggestions(IEnumerable<MmMessage> loaded)
     {
+        var existingStreets     = new HashSet<string>(StreetOptions,     StringComparer.OrdinalIgnoreCase);
+        var existingContractors = new HashSet<string>(ContractorOptions, StringComparer.OrdinalIgnoreCase);
+
         foreach (var m in loaded)
         {
-            if (!string.IsNullOrWhiteSpace(m.Street) && !StreetOptions.Contains(m.Street))
+            if (!string.IsNullOrWhiteSpace(m.Street) && existingStreets.Add(m.Street))
                 StreetOptions.Add(m.Street);
-            if (!string.IsNullOrWhiteSpace(m.Nachunternehmer) && !ContractorOptions.Contains(m.Nachunternehmer))
+            if (!string.IsNullOrWhiteSpace(m.Nachunternehmer) && existingContractors.Add(m.Nachunternehmer))
                 ContractorOptions.Add(m.Nachunternehmer);
         }
     }

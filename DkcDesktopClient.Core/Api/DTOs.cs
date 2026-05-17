@@ -158,6 +158,19 @@ public record NeaInspectionDetailResponse(
     [property: JsonPropertyName("error")] string? Error);
 
 // MM
+/// <summary>Shared helper for converting an MM status integer to a human-readable German label.</summary>
+public static class MmStatusHelper
+{
+    public static string StatusLabel(int status) => status switch
+    {
+        0 => "Offen",
+        1 => "In Bearbeitung",
+        2 => "Geschlossen",
+        3 => "Abgebrochen",
+        _ => status.ToString()
+    };
+}
+
 public record MmMessage(
     [property: JsonPropertyName("uid")] string Uid,
     [property: JsonPropertyName("status")] int Status,
@@ -171,14 +184,7 @@ public record MmMessage(
     [property: JsonPropertyName("scanned")] bool Scanned,
     [property: JsonPropertyName("zugeh")] string? Zugeh)
 {
-    public string StatusText => Status switch
-    {
-        0 => "Offen",
-        1 => "In Bearbeitung",
-        2 => "Geschlossen",
-        3 => "Abgebrochen",
-        _ => Status.ToString()
-    };
+    public string StatusText => MmStatusHelper.StatusLabel(Status);
 
     public string DringlichkeitText => Dringlichkeit switch
     {
@@ -218,14 +224,7 @@ public record MmDetail(
     [property: JsonPropertyName("zeit")] string? Zeit,
     [property: JsonPropertyName("planon")] string? Planon)
 {
-    public string StatusText => Status switch
-    {
-        0 => "Offen",
-        1 => "In Bearbeitung",
-        2 => "Geschlossen",
-        3 => "Abgebrochen",
-        _ => Status.ToString()
-    };
+    public string StatusText => MmStatusHelper.StatusLabel(Status);
 }
 
 public record MmDetailResponse(
