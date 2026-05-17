@@ -3,122 +3,235 @@
              xmlns:vm="using:DkcDesktopClient.App.ViewModels"
              x:Class="DkcDesktopClient.App.Views.MmView"
              x:DataType="vm:MmViewModel">
-  <Grid RowDefinitions="Auto, Auto, Auto, Auto, *, 8, Auto" Margin="16" RowSpacing="8">
 
-    <!-- Toolbar -->
+  <Grid RowDefinitions="Auto, Auto, Auto, Auto, *, 6, Auto" Margin="16" RowSpacing="8">
+
+    <!-- ═══════════════════════════════════  Toolbar  ═══════════════════════════════════ -->
     <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
-      <TextBlock Text="Maengelmeldungen" FontSize="24" FontWeight="Bold" VerticalAlignment="Center"/>
-      <Button Content="New" Command="{Binding ShowCreateFormCommand}"/>
-      <Button Content="Edit" Command="{Binding ShowEditFormCommand}"/>
-      <Button Content="Delete" Command="{Binding DeleteCommand}" Foreground="Red"/>
+      <TextBlock Text="Mängelmeldungen" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
+      <Button Content="Laden" Command="{Binding LoadMessagesCommand}"/>
+      <Button Content="Neue Meldung" Command="{Binding ShowCreateFormCommand}"/>
+      <Button Content="Bearbeiten" Command="{Binding ShowEditFormCommand}"/>
+      <Button Content="Löschen" Command="{Binding DeleteCommand}" Foreground="Red"/>
     </StackPanel>
 
-    <!-- Status bar -->
-    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8">
-      <TextBlock Text="Status:" VerticalAlignment="Center"/>
-      <NumericUpDown Value="{Binding FilterStatus}" Minimum="0" Maximum="99" Width="80"/>
-      <TextBlock Text="Street:" VerticalAlignment="Center"/>
-      <TextBox Text="{Binding FilterStreet}" PlaceholderText="Filter by street..." Width="200"/>
-      <Button Content="Search" Command="{Binding LoadMessagesCommand}"/>
-      <TextBlock Text="{Binding TotalMessages, StringFormat='Total: {0}'}" VerticalAlignment="Center"/>
-    </StackPanel>
+    <!-- ═══════════════════════════════  Filter-Leiste  ════════════════════════════════ -->
+    <Border Grid.Row="1" Background="#F7F8FA" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="8,6">
+      <StackPanel Orientation="Horizontal" Spacing="8">
 
-    <!-- Error / Progress -->
-    <TextBlock Grid.Row="2" Text="{Binding ErrorMessage}" Foreground="Red"
-               IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-    <ProgressBar Grid.Row="2" IsIndeterminate="True" IsVisible="{Binding IsLoading}" Height="4" VerticalAlignment="Bottom"/>
+        <!-- Status-Filter -->
+        <TextBlock Text="Status:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+        <ComboBox ItemsSource="{x:Static vm:MmViewModel.StatusFilterOptions}"
+                  SelectedItem="{Binding FilterStatusOption}"
+                  MinWidth="150">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:MmStatusOption">
+              <TextBlock Text="{Binding Label}"/>
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
 
-    <!-- Inline create/edit form -->
-    <Border Grid.Row="3" IsVisible="{Binding IsFormVisible}"
-            Background="#F0F4F8" BorderThickness="1" BorderBrush="#CBD5E0" CornerRadius="4" Padding="12">
-      <StackPanel Spacing="8">
-        <TextBlock Text="New Meldung" FontSize="16" FontWeight="SemiBold"
-                   IsVisible="{Binding IsEditingMessage, Converter={x:Static BoolConverters.Not}}"/>
-        <TextBlock Text="Meldung bearbeiten" FontSize="16" FontWeight="SemiBold"
-                   IsVisible="{Binding IsEditingMessage}"/>
-        <TextBlock Text="{Binding FormError}" Foreground="Red"
-                   IsVisible="{Binding FormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-        <Grid ColumnDefinitions="120,8,*,16,120,8,*" RowDefinitions="Auto,8,Auto,8,Auto,8,Auto,8,Auto" RowSpacing="0">
-          <TextBlock Grid.Row="0" Grid.Column="0" Text="Betreff *" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="0" Grid.Column="2" Grid.ColumnSpan="5" Text="{Binding FormBetreff}" PlaceholderText="Subject (required)"/>
+        <!-- Straße-Filter -->
+        <TextBlock Text="Straße:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+        <TextBox Text="{Binding FilterStreet}" PlaceholderText="Straße filtern…" Width="180"/>
 
-          <TextBlock Grid.Row="2" Grid.Column="0" Text="Street" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding FormStreet}" PlaceholderText="Street"/>
-          <TextBlock Grid.Row="2" Grid.Column="4" Text="Apt/Whg" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="2" Grid.Column="6" Text="{Binding FormWhg}" PlaceholderText="Apartment"/>
-
-          <TextBlock Grid.Row="4" Grid.Column="0" Text="Melder" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="4" Grid.Column="2" Text="{Binding FormMelder}" PlaceholderText="Reporter"/>
-          <TextBlock Grid.Row="4" Grid.Column="4" Text="Dringlichkeit" VerticalAlignment="Center"/>
-          <ComboBox Grid.Row="4" Grid.Column="6" ItemsSource="{x:Static vm:MmViewModel.DringlichkeitOptions}"
-                    SelectedItem="{Binding FormDringlichkeit}" MinWidth="100"/>
-
-          <TextBlock Grid.Row="6" Grid.Column="0" Text="Tel" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="6" Grid.Column="2" Text="{Binding FormTel}" PlaceholderText="Phone"/>
-          <TextBlock Grid.Row="6" Grid.Column="4" Text="Email" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="6" Grid.Column="6" Text="{Binding FormEmail}" PlaceholderText="Email"/>
-
-          <TextBlock Grid.Row="8" Grid.Column="0" Text="Nachunternehmer" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="8" Grid.Column="2" Text="{Binding FormNachunternehmer}" PlaceholderText="Contractor"/>
-          <TextBlock Grid.Row="8" Grid.Column="4" Text="Zugeh" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="8" Grid.Column="6" Text="{Binding FormZugeh}" PlaceholderText="Related"/>
-        </Grid>
-        <TextBlock Text="Meldung / Message" FontWeight="SemiBold"/>
-        <TextBox Text="{Binding FormMeldung}" PlaceholderText="Full message text..." Height="60" AcceptsReturn="True" TextWrapping="Wrap"/>
-        <StackPanel Orientation="Horizontal" Spacing="8">
-          <Button Content="Save" Command="{Binding SaveCommand}"/>
-          <Button Content="Cancel" Command="{Binding CancelFormCommand}"/>
-          <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSaving}" Width="80" Height="16" VerticalAlignment="Center"/>
-        </StackPanel>
+        <Button Content="Suchen" Command="{Binding LoadMessagesCommand}"/>
+        <TextBlock Text="{Binding TotalMessages, StringFormat='Gesamt: {0}'}"
+                   VerticalAlignment="Center" Foreground="#4A5568"/>
       </StackPanel>
     </Border>
 
-    <!-- Messages list -->
-    <DataGrid Grid.Row="4" ItemsSource="{Binding Messages}" SelectedItem="{Binding SelectedMessage}"
-              IsReadOnly="True" AutoGenerateColumns="False">
+    <!-- ════════════════════════════  Fehler / Fortschritt  ════════════════════════════ -->
+    <Grid Grid.Row="2">
+      <TextBlock Text="{Binding ErrorMessage}" Foreground="Red"
+                 IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+      <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}" Height="3" VerticalAlignment="Bottom"/>
+    </Grid>
+
+    <!-- ═══════════════════════════════  Eingabe-Formular  ═════════════════════════════ -->
+    <Border Grid.Row="3" IsVisible="{Binding IsFormVisible}"
+            Background="#F0F4F8" BorderThickness="1" BorderBrush="#CBD5E0" CornerRadius="6" Padding="14">
+      <StackPanel Spacing="10">
+
+        <!-- Formular-Titel -->
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <TextBlock FontSize="15" FontWeight="SemiBold"
+                     Text="Neue Mängelmeldung"
+                     IsVisible="{Binding IsEditingMessage, Converter={x:Static BoolConverters.Not}}"/>
+          <TextBlock FontSize="15" FontWeight="SemiBold"
+                     Text="Mängelmeldung bearbeiten"
+                     IsVisible="{Binding IsEditingMessage}"/>
+        </StackPanel>
+
+        <!-- Fehlermeldung -->
+        <TextBlock Text="{Binding FormError}" Foreground="Red"
+                   IsVisible="{Binding FormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+        <!-- Zeile 1: Betreff (volle Breite) -->
+        <Grid ColumnDefinitions="130,8,*">
+          <TextBlock Grid.Column="0" Text="Betreff *" VerticalAlignment="Center" FontWeight="SemiBold"/>
+          <TextBox   Grid.Column="2" Text="{Binding FormBetreff}" PlaceholderText="Betreff der Meldung (Pflichtfeld)"/>
+        </Grid>
+
+        <!-- Zeile 2: Straße + Wohnung -->
+        <Grid ColumnDefinitions="130,8,*,16,130,8,*">
+          <TextBlock Grid.Column="0" Text="Straße" VerticalAlignment="Center"/>
+          <ComboBox  Grid.Column="2"
+                     ItemsSource="{Binding StreetOptions}"
+                     SelectedItem="{Binding FormStreet}"
+                     IsTextSearchEnabled="True"
+                     HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="x:String">
+                <TextBlock Text="{Binding}"/>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <TextBlock Grid.Column="4" Text="Wohnung" VerticalAlignment="Center"/>
+          <TextBox   Grid.Column="6" Text="{Binding FormWhg}" PlaceholderText="z. B. 3 OG links"/>
+        </Grid>
+
+        <!-- Zeile 3: Melder + Dringlichkeit -->
+        <Grid ColumnDefinitions="130,8,*,16,130,8,*">
+          <TextBlock Grid.Column="0" Text="Melder" VerticalAlignment="Center"/>
+          <ComboBox  Grid.Column="2"
+                     ItemsSource="{Binding MelderOptions}"
+                     SelectedItem="{Binding FormMelder}"
+                     IsTextSearchEnabled="True"
+                     HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="x:String">
+                <TextBlock Text="{Binding}"/>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <TextBlock Grid.Column="4" Text="Dringlichkeit" VerticalAlignment="Center"/>
+          <ComboBox  Grid.Column="6"
+                     ItemsSource="{x:Static vm:MmViewModel.DringlichkeitOptions}"
+                     SelectedItem="{Binding FormDringlichkeit}"
+                     MinWidth="120"/>
+        </Grid>
+
+        <!-- Zeile 4: Telefon + E-Mail -->
+        <Grid ColumnDefinitions="130,8,*,16,130,8,*">
+          <TextBlock Grid.Column="0" Text="Telefon" VerticalAlignment="Center"/>
+          <TextBox   Grid.Column="2" Text="{Binding FormTel}" PlaceholderText="Rückrufnummer"/>
+          <TextBlock Grid.Column="4" Text="E-Mail" VerticalAlignment="Center"/>
+          <TextBox   Grid.Column="6" Text="{Binding FormEmail}" PlaceholderText="E-Mail-Adresse"/>
+        </Grid>
+
+        <!-- Zeile 5: Nachunternehmer + Zugehörigkeit -->
+        <Grid ColumnDefinitions="130,8,*,16,130,8,*">
+          <TextBlock Grid.Column="0" Text="Nachunternehmer" VerticalAlignment="Center"/>
+          <ComboBox  Grid.Column="2"
+                     ItemsSource="{Binding ContractorOptions}"
+                     SelectedItem="{Binding FormNachunternehmer}"
+                     IsTextSearchEnabled="True"
+                     HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="x:String">
+                <TextBlock Text="{Binding}"/>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <TextBlock Grid.Column="4" Text="Zugehörigkeit" VerticalAlignment="Center"/>
+          <TextBox   Grid.Column="6" Text="{Binding FormZugeh}" PlaceholderText="Zugehörigkeit"/>
+        </Grid>
+
+        <!-- Zeile 6: Meldungstext -->
+        <TextBlock Text="Meldungstext" FontWeight="SemiBold"/>
+        <TextBox Text="{Binding FormMeldung}"
+                 PlaceholderText="Beschreibung der Mängelmeldung…"
+                 Height="70" AcceptsReturn="True" TextWrapping="Wrap"/>
+
+        <!-- Aktions-Buttons -->
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Button Content="Speichern" Command="{Binding SaveCommand}"/>
+          <Button Content="Abbrechen" Command="{Binding CancelFormCommand}"/>
+          <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSaving}" Width="80" Height="16" VerticalAlignment="Center"/>
+        </StackPanel>
+
+      </StackPanel>
+    </Border>
+
+    <!-- ═══════════════════════════════  Meldungs-Liste  ═══════════════════════════════ -->
+    <DataGrid Grid.Row="4"
+              ItemsSource="{Binding Messages}"
+              SelectedItem="{Binding SelectedMessage}"
+              IsReadOnly="True"
+              AutoGenerateColumns="False"
+              GridLinesVisibility="Horizontal">
       <DataGrid.Columns>
-        <DataGridTextColumn Header="UID" Binding="{Binding Uid}" Width="120"/>
-        <DataGridTextColumn Header="Subject" Binding="{Binding Betreff}" Width="*"/>
-        <DataGridTextColumn Header="Street" Binding="{Binding Street}" Width="150"/>
-        <DataGridTextColumn Header="Apt" Binding="{Binding Whg}" Width="60"/>
-        <DataGridTextColumn Header="Reporter" Binding="{Binding Melder}" Width="120"/>
-        <DataGridTextColumn Header="Date" Binding="{Binding Datetime}" Width="130"/>
-        <DataGridTextColumn Header="Priority" Binding="{Binding Dringlichkeit}" Width="90"/>
+        <DataGridTextColumn Header="UID"          Binding="{Binding Uid}"             Width="130"/>
+        <DataGridTextColumn Header="Betreff"      Binding="{Binding Betreff}"         Width="*"/>
+        <DataGridTextColumn Header="Straße"       Binding="{Binding Street}"          Width="160"/>
+        <DataGridTextColumn Header="Whg"          Binding="{Binding Whg}"             Width="60"/>
+        <DataGridTextColumn Header="Melder"       Binding="{Binding Melder}"          Width="130"/>
+        <DataGridTextColumn Header="Datum"        Binding="{Binding Datetime}"        Width="140"/>
+        <DataGridTextColumn Header="Status"       Binding="{Binding StatusText}"      Width="120"/>
+        <DataGridTextColumn Header="Dringlichkeit" Binding="{Binding DringlichkeitText}" Width="110"/>
       </DataGrid.Columns>
     </DataGrid>
 
     <GridSplitter Grid.Row="5" Height="4" HorizontalAlignment="Stretch"/>
 
-    <!-- Detail panel with quick-edit controls -->
-    <ScrollViewer Grid.Row="6" MaxHeight="220">
-      <StackPanel Margin="4" Spacing="8" IsVisible="{Binding SelectedDetail, Converter={x:Static ObjectConverters.IsNotNull}}">
-        <TextBlock Text="Detail" FontSize="16" FontWeight="SemiBold"/>
-        <Grid ColumnDefinitions="Auto,16,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="4">
-          <TextBlock Grid.Row="0" Grid.Column="0" Text="Subject:" FontWeight="SemiBold"/>
-          <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding SelectedDetail.Betreff}" TextWrapping="Wrap"/>
-          <TextBlock Grid.Row="1" Grid.Column="0" Text="Message:" FontWeight="SemiBold"/>
-          <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding SelectedDetail.MeldungMassage}" TextWrapping="Wrap"/>
-          <TextBlock Grid.Row="2" Grid.Column="0" Text="Phone:" FontWeight="SemiBold"/>
-          <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding SelectedDetail.Tel}"/>
-          <TextBlock Grid.Row="3" Grid.Column="0" Text="Email:" FontWeight="SemiBold"/>
-          <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding SelectedDetail.Email}"/>
+    <!-- ═══════════════════════════════  Detail-Panel  ══════════════════════════════════ -->
+    <ScrollViewer Grid.Row="6" MaxHeight="240">
+      <StackPanel Margin="4" Spacing="10"
+                  IsVisible="{Binding SelectedDetail, Converter={x:Static ObjectConverters.IsNotNull}}">
 
-          <!-- Status quick-edit -->
-          <TextBlock Grid.Row="4" Grid.Column="0" Text="Status:" FontWeight="SemiBold" VerticalAlignment="Center"/>
-          <StackPanel Grid.Row="4" Grid.Column="2" Orientation="Horizontal" Spacing="8">
-            <NumericUpDown Value="{Binding DetailStatus}" Minimum="0" Maximum="9" Width="80"/>
-            <Button Content="Save Status" Command="{Binding UpdateStatusCommand}"/>
+        <TextBlock Text="Detail" FontSize="15" FontWeight="SemiBold"/>
+
+        <Grid ColumnDefinitions="160,16,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="5">
+
+          <!-- UID + Datum -->
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="UID:" FontWeight="SemiBold"/>
+          <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding SelectedDetail.Uid}"/>
+
+          <TextBlock Grid.Row="1" Grid.Column="0" Text="Erfasst am:" FontWeight="SemiBold"/>
+          <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding SelectedDetail.Datetime}"/>
+
+          <!-- Betreff + Meldungstext -->
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="Betreff:" FontWeight="SemiBold"/>
+          <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding SelectedDetail.Betreff}" TextWrapping="Wrap"/>
+
+          <TextBlock Grid.Row="3" Grid.Column="0" Text="Meldungstext:" FontWeight="SemiBold"/>
+          <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding SelectedDetail.MeldungMassage}" TextWrapping="Wrap"/>
+
+          <!-- Kontakt -->
+          <TextBlock Grid.Row="4" Grid.Column="0" Text="Telefon / E-Mail:" FontWeight="SemiBold"/>
+          <StackPanel Grid.Row="4" Grid.Column="2" Orientation="Horizontal" Spacing="12">
+            <TextBlock Text="{Binding SelectedDetail.Tel}"/>
+            <TextBlock Text="{Binding SelectedDetail.Email}" Foreground="#2B6CB0"/>
           </StackPanel>
 
-          <!-- Contractor quick-edit -->
-          <TextBlock Grid.Row="5" Grid.Column="0" Text="Contractor:" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          <!-- Status-Schnellbearbeitung -->
+          <TextBlock Grid.Row="5" Grid.Column="0" Text="Status ändern:" FontWeight="SemiBold" VerticalAlignment="Center"/>
           <StackPanel Grid.Row="5" Grid.Column="2" Orientation="Horizontal" Spacing="8">
-            <TextBox Text="{Binding DetailNachunternehmer}" PlaceholderText="Contractor name..." Width="200"/>
-            <Button Content="Assign" Command="{Binding AssignContractorCommand}"/>
+            <ComboBox ItemsSource="{x:Static vm:MmViewModel.StatusEditOptions}"
+                      SelectedItem="{Binding DetailStatusOption}"
+                      MinWidth="160">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:MmStatusOption">
+                  <TextBlock Text="{Binding Label}"/>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+            <Button Content="Status speichern" Command="{Binding UpdateStatusCommand}"/>
           </StackPanel>
 
-          <TextBlock Grid.Row="6" Grid.Column="0" Text="Contractor (current):" FontWeight="SemiBold"/>
-          <TextBlock Grid.Row="6" Grid.Column="2" Text="{Binding SelectedDetail.Nachunternehmer}"/>
+          <!-- Nachunternehmer-Schnellzuweisung -->
+          <TextBlock Grid.Row="6" Grid.Column="0" Text="Nachunternehmer:" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          <StackPanel Grid.Row="6" Grid.Column="2" Orientation="Horizontal" Spacing="8">
+            <TextBox Text="{Binding DetailNachunternehmer}" PlaceholderText="Name des Nachunternehmers…" Width="220"/>
+            <Button Content="Zuweisen" Command="{Binding AssignContractorCommand}"/>
+            <TextBlock Text="{Binding SelectedDetail.Nachunternehmer}" Foreground="#2D3748" VerticalAlignment="Center"/>
+          </StackPanel>
+
+          <!-- Aktueller Status (Anzeige) -->
+          <TextBlock Grid.Row="7" Grid.Column="0" Text="Aktueller Status:" FontWeight="SemiBold"/>
+          <TextBlock Grid.Row="7" Grid.Column="2" Text="{Binding SelectedDetail.StatusText}" FontWeight="SemiBold"/>
+
         </Grid>
       </StackPanel>
     </ScrollViewer>
