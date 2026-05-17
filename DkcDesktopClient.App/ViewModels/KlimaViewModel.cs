@@ -57,20 +57,31 @@ public partial class KlimaViewModel : ViewModelBase
         try
         {
             var api = _apiFactory.Create(_authService.CurrentToken);
-            var devicesResult = await api.GetKlimaDevicesAsync();
+            var devicesTask = api.GetKlimaDevicesAsync();
+            var groupsTask = api.GetKlimaGroupsAsync();
+            await Task.WhenAll(devicesTask, groupsTask);
 
             Devices.Clear();
-            if (devicesResult.Success && devicesResult.Devices != null)
-                foreach (var d in devicesResult.Devices)
+            if (devicesTask.Result.Success && devicesTask.Result.Devices != null)
+                foreach (var d in devicesTask.Result.Devices)
                     Devices.Add(d);
 
             Groups.Clear();
-            var grouped = Devices
-                .Where(d => d.GroupId.HasValue)
-                .GroupBy(d => d.GroupId!.Value)
-                .OrderBy(g => g.Key);
-            foreach (var g in grouped)
-                Groups.Add(new KlimaGroup(g.Key, $"Gruppe {g.Key}", g.Count()));
+            if (groupsTask.Result.Success && groupsTask.Result.Groups != null && groupsTask.Result.Groups.Count > 0)
+            {
+                foreach (var g in groupsTask.Result.Groups)
+                    Groups.Add(g);
+            }
+            else
+            {
+                // Fallback: build groups from device group IDs
+                var grouped = Devices
+                    .Where(d => d.GroupId.HasValue)
+                    .GroupBy(d => d.GroupId!.Value)
+                    .OrderBy(g => g.Key);
+                foreach (var g in grouped)
+                    Groups.Add(new KlimaGroup(g.Key, $"Gruppe {g.Key}", g.Count()));
+            }
         }
         catch (Exception ex)
         {
@@ -152,6 +163,18 @@ public partial class KlimaViewModel : ViewModelBase
         ControlMode = SelectedDeviceStatus.Mode ?? "cooling";
         ControlSetpoint = SelectedDeviceStatus.Setpoint ?? 22.0;
         ControlFanSpeed = SelectedDeviceStatus.FanSpeed ?? "auto";
+        ControlError = null;
+        IsControlPanelVisible = true;
+    }
+
+    [RelayCommand(CanExecute = nameof(HasSelectedGroup))]
+    public void ShowGroupControl()
+    {
+        if (SelectedGroup == null) return;
+        ControlPower = true;
+        ControlMode = "cooling";
+        ControlSetpoint = 22.0;
+        ControlFanSpeed = "auto";
         ControlError = null;
         IsControlPanelVisible = true;
     }
@@ -246,8 +269,11 @@ public partial class KlimaViewModel : ViewModelBase
         ApplyDeviceControlCommand.NotifyCanExecuteChanged();
     }
 
-    partial void OnSelectedGroupChanged(KlimaGroup? value) =>
+    partial void OnSelectedGroupChanged(KlimaGroup? value)
+    {
         ApplyGroupControlCommand.NotifyCanExecuteChanged();
+        ShowGroupControlCommand.NotifyCanExecuteChanged();
+    }
 
     partial void OnIsSendingControlChanged(bool value) =>
         ApplyDeviceControlCommand.NotifyCanExecuteChanged();
