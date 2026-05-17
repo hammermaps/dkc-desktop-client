@@ -67,20 +67,20 @@ public partial class MmViewModel : ViewModelBase
         new[]
         {
             new MmStatusOption(null, "— Alle —"),
-            new MmStatusOption(0,    "Offen"),
-            new MmStatusOption(1,    "In Bearbeitung"),
-            new MmStatusOption(2,    "Geschlossen"),
-            new MmStatusOption(3,    "Abgebrochen"),
+            new MmStatusOption(0,    MmStatusHelper.StatusLabel(0)),
+            new MmStatusOption(1,    MmStatusHelper.StatusLabel(1)),
+            new MmStatusOption(2,    MmStatusHelper.StatusLabel(2)),
+            new MmStatusOption(3,    MmStatusHelper.StatusLabel(3)),
         };
 
     /// <summary>Status options for the detail / create-form ComboBox (no "Alle").</summary>
     public static IReadOnlyList<MmStatusOption> StatusEditOptions { get; } =
         new[]
         {
-            new MmStatusOption(0, "Offen"),
-            new MmStatusOption(1, "In Bearbeitung"),
-            new MmStatusOption(2, "Geschlossen"),
-            new MmStatusOption(3, "Abgebrochen"),
+            new MmStatusOption(0, MmStatusHelper.StatusLabel(0)),
+            new MmStatusOption(1, MmStatusHelper.StatusLabel(1)),
+            new MmStatusOption(2, MmStatusHelper.StatusLabel(2)),
+            new MmStatusOption(3, MmStatusHelper.StatusLabel(3)),
         };
 
     public static IReadOnlyList<string> DringlichkeitOptions { get; } =
@@ -108,13 +108,20 @@ public partial class MmViewModel : ViewModelBase
                 street: FilterStreet,
                 limit: PageSize,
                 offset: 0);
-            Messages.Clear();
-            TotalMessages = result.Total ?? 0;
-            if (result.Success && result.Messages != null)
+            if (result.Success)
             {
-                foreach (var m in result.Messages)
-                    Messages.Add(m);
-                RefreshDropdownSuggestions(result.Messages);
+                Messages.Clear();
+                TotalMessages = result.Total ?? 0;
+                if (result.Messages != null)
+                {
+                    foreach (var m in result.Messages)
+                        Messages.Add(m);
+                    RefreshDropdownSuggestions(result.Messages);
+                }
+            }
+            else
+            {
+                ErrorMessage = result.Error ?? "Laden der Mängelmeldungen fehlgeschlagen.";
             }
         }
         catch (Exception ex)
@@ -125,6 +132,10 @@ public partial class MmViewModel : ViewModelBase
         {
             IsLoading = false;
         }
+
+        // Lazily populate the Melder dropdown the first time messages are loaded
+        if (MelderOptions.Count == 0)
+            _ = LoadUserInfoAsync();
     }
 
     [RelayCommand]
@@ -156,11 +167,16 @@ public partial class MmViewModel : ViewModelBase
 
     /// <summary>
     /// Tries to load the user list from the API so that Melder can be selected from a dropdown.
-    /// Requires admin permission; silently skipped when not available.
+    /// Requires admin permission; silently skipped when the logged-in user is not an admin.
+    /// Other unexpected errors are surfaced as a non-blocking warning message.
     /// </summary>
     [RelayCommand]
     public async Task LoadUserInfoAsync()
     {
+        // users_list requires admin permission — skip silently for non-admin users
+        if (!_authService.HasPermission("admin"))
+            return;
+
         try
         {
             var api = _apiFactory.Create(_authService.CurrentToken);
@@ -179,9 +195,10 @@ public partial class MmViewModel : ViewModelBase
                     MelderOptions.Add(name);
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // non-admin users won't have access — silently ignore
+            // Surface unexpected errors (network, deserialization, etc.) as a non-blocking warning
+            ErrorMessage = $"Benutzerliste konnte nicht geladen werden: {ex.Message}";
         }
     }
 

@@ -78,15 +78,9 @@
           <TextBlock Grid.Column="0" Text="Straße" VerticalAlignment="Center"/>
           <ComboBox  Grid.Column="2"
                      ItemsSource="{Binding StreetOptions}"
-                     SelectedItem="{Binding FormStreet}"
-                     IsTextSearchEnabled="True"
-                     HorizontalAlignment="Stretch">
-            <ComboBox.ItemTemplate>
-              <DataTemplate x:DataType="x:String">
-                <TextBlock Text="{Binding}"/>
-              </DataTemplate>
-            </ComboBox.ItemTemplate>
-          </ComboBox>
+                     Text="{Binding FormStreet}"
+                     IsEditable="True"
+                     HorizontalAlignment="Stretch"/>
           <TextBlock Grid.Column="4" Text="Wohnung" VerticalAlignment="Center"/>
           <TextBox   Grid.Column="6" Text="{Binding FormWhg}" PlaceholderText="z. B. 3 OG links"/>
         </Grid>
@@ -96,15 +90,9 @@
           <TextBlock Grid.Column="0" Text="Melder" VerticalAlignment="Center"/>
           <ComboBox  Grid.Column="2"
                      ItemsSource="{Binding MelderOptions}"
-                     SelectedItem="{Binding FormMelder}"
-                     IsTextSearchEnabled="True"
-                     HorizontalAlignment="Stretch">
-            <ComboBox.ItemTemplate>
-              <DataTemplate x:DataType="x:String">
-                <TextBlock Text="{Binding}"/>
-              </DataTemplate>
-            </ComboBox.ItemTemplate>
-          </ComboBox>
+                     Text="{Binding FormMelder}"
+                     IsEditable="True"
+                     HorizontalAlignment="Stretch"/>
           <TextBlock Grid.Column="4" Text="Dringlichkeit" VerticalAlignment="Center"/>
           <ComboBox  Grid.Column="6"
                      ItemsSource="{x:Static vm:MmViewModel.DringlichkeitOptions}"
@@ -125,15 +113,9 @@
           <TextBlock Grid.Column="0" Text="Nachunternehmer" VerticalAlignment="Center"/>
           <ComboBox  Grid.Column="2"
                      ItemsSource="{Binding ContractorOptions}"
-                     SelectedItem="{Binding FormNachunternehmer}"
-                     IsTextSearchEnabled="True"
-                     HorizontalAlignment="Stretch">
-            <ComboBox.ItemTemplate>
-              <DataTemplate x:DataType="x:String">
-                <TextBlock Text="{Binding}"/>
-              </DataTemplate>
-            </ComboBox.ItemTemplate>
-          </ComboBox>
+                     Text="{Binding FormNachunternehmer}"
+                     IsEditable="True"
+                     HorizontalAlignment="Stretch"/>
           <TextBlock Grid.Column="4" Text="Zugehörigkeit" VerticalAlignment="Center"/>
           <TextBox   Grid.Column="6" Text="{Binding FormZugeh}" PlaceholderText="Zugehörigkeit"/>
         </Grid>
