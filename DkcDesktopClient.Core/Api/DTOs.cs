@@ -158,6 +158,19 @@ public record NeaInspectionDetailResponse(
     [property: JsonPropertyName("error")] string? Error);
 
 // MM
+/// <summary>Shared helper for converting an MM status integer to a human-readable German label.</summary>
+public static class MmStatusHelper
+{
+    public static string StatusLabel(int status) => status switch
+    {
+        0 => "Offen",
+        1 => "In Bearbeitung",
+        2 => "Geschlossen",
+        3 => "Abgebrochen",
+        _ => status.ToString()
+    };
+}
+
 public record MmMessage(
     [property: JsonPropertyName("uid")] string Uid,
     [property: JsonPropertyName("status")] int Status,
@@ -169,7 +182,17 @@ public record MmMessage(
     [property: JsonPropertyName("dringlichkeit")] string? Dringlichkeit,
     [property: JsonPropertyName("nachunternehmer")] string? Nachunternehmer,
     [property: JsonPropertyName("scanned")] bool Scanned,
-    [property: JsonPropertyName("zugeh")] string? Zugeh);
+    [property: JsonPropertyName("zugeh")] string? Zugeh)
+{
+    public string StatusText => MmStatusHelper.StatusLabel(Status);
+
+    public string DringlichkeitText => Dringlichkeit switch
+    {
+        "dringend" => "⚠ Dringend",
+        "notfall"  => "🔴 Notfall",
+        _          => "Normal"
+    };
+}
 
 public record MmListResponse(
     [property: JsonPropertyName("success")] bool Success,
@@ -184,6 +207,8 @@ public record MmDetail(
     [property: JsonPropertyName("status")] int Status,
     [property: JsonPropertyName("betreff")] string? Betreff,
     [property: JsonPropertyName("meldung_massage")] string? MeldungMassage,
+    [property: JsonPropertyName("apleona")] string? Apleona,
+    [property: JsonPropertyName("folge")] string? Folge,
     [property: JsonPropertyName("street")] string? Street,
     [property: JsonPropertyName("whg")] string? Whg,
     [property: JsonPropertyName("melder")] string? Melder,
@@ -192,8 +217,15 @@ public record MmDetail(
     [property: JsonPropertyName("datetime")] string? Datetime,
     [property: JsonPropertyName("dringlichkeit")] string? Dringlichkeit,
     [property: JsonPropertyName("nachunternehmer")] string? Nachunternehmer,
+    [property: JsonPropertyName("ekpreis")] string? Ekpreis,
+    [property: JsonPropertyName("klausel")] bool Klausel,
     [property: JsonPropertyName("scanned")] bool Scanned,
-    [property: JsonPropertyName("zugeh")] string? Zugeh);
+    [property: JsonPropertyName("zugeh")] string? Zugeh,
+    [property: JsonPropertyName("zeit")] string? Zeit,
+    [property: JsonPropertyName("planon")] string? Planon)
+{
+    public string StatusText => MmStatusHelper.StatusLabel(Status);
+}
 
 public record MmDetailResponse(
     [property: JsonPropertyName("success")] bool Success,
