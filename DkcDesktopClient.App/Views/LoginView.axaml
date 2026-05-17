@@ -9,17 +9,17 @@
 
       <StackPanel Spacing="4">
         <TextBlock Text="Server URL"/>
-        <TextBox Text="{Binding ServerUrl}" Watermark="https://your-server.example.com"/>
+        <TextBox Text="{Binding ServerUrl}" PlaceholderText="https://your-server.example.com"/>
       </StackPanel>
 
       <StackPanel Spacing="4">
         <TextBlock Text="Username"/>
-        <TextBox Text="{Binding Username}" Watermark="Username"/>
+        <TextBox Text="{Binding Username}" PlaceholderText="Username"/>
       </StackPanel>
 
       <StackPanel Spacing="4">
         <TextBlock Text="Password"/>
-        <TextBox Text="{Binding Password}" PasswordChar="*" Watermark="Password"/>
+        <TextBox Text="{Binding Password}" PasswordChar="*" PlaceholderText="Password"/>
       </StackPanel>
 
 

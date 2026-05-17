@@ -57,24 +57,58 @@ public partial class KlimaViewModel : ViewModelBase
         try
         {
             var api = _apiFactory.Create(_authService.CurrentToken);
-            var devicesResult = await api.GetKlimaDevicesAsync();
+            var devicesTask = api.GetKlimaDevicesAsync();
+            var groupsTask = api.GetKlimaGroupsAsync();
+            await Task.WhenAll(devicesTask, groupsTask);
 
-            Devices.Clear();
-            if (devicesResult.Success && devicesResult.Devices != null)
+            var devicesResult = devicesTask.Result;
+            var groupsResult = groupsTask.Result;
+
+            if (!devicesResult.Success)
+            {
+                ErrorMessage = $"Error loading devices: {devicesResult.Error ?? "Unknown error"}";
+            }
+            else if (devicesResult.Devices != null)
+            {
+                Devices.Clear();
                 foreach (var d in devicesResult.Devices)
                     Devices.Add(d);
+            }
 
-            Groups.Clear();
-            var grouped = Devices
-                .Where(d => d.GroupId.HasValue)
-                .GroupBy(d => d.GroupId!.Value)
-                .OrderBy(g => g.Key);
-            foreach (var g in grouped)
-                Groups.Add(new KlimaGroup(g.Key, $"Gruppe {g.Key}", g.Count()));
+            if (!groupsResult.Success)
+            {
+                var groupError = $"Error loading groups: {groupsResult.Error ?? "Unknown error"}";
+                ErrorMessage = ErrorMessage != null ? $"{ErrorMessage}; {groupError}" : groupError;
+                // Fallback: build groups from the already-loaded device list
+                var grouped = Devices
+                    .Where(d => d.GroupId.HasValue)
+                    .GroupBy(d => d.GroupId!.Value)
+                    .OrderBy(g => g.Key);
+                Groups.Clear();
+                foreach (var g in grouped)
+                    Groups.Add(new KlimaGroup(g.Key, $"Gruppe {g.Key}", g.Count()));
+            }
+            else if (groupsResult.Groups != null && groupsResult.Groups.Count > 0)
+            {
+                Groups.Clear();
+                foreach (var g in groupsResult.Groups)
+                    Groups.Add(g);
+            }
+            else
+            {
+                // API returned success but empty groups — build from device group IDs
+                var grouped = Devices
+                    .Where(d => d.GroupId.HasValue)
+                    .GroupBy(d => d.GroupId!.Value)
+                    .OrderBy(g => g.Key);
+                Groups.Clear();
+                foreach (var g in grouped)
+                    Groups.Add(new KlimaGroup(g.Key, $"Gruppe {g.Key}", g.Count()));
+            }
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error loading climate data: {ex.Message}";
+            ErrorMessage = $"Error loading climate data: {ex.GetBaseException().Message}";
         }
         finally
         {
@@ -152,6 +186,18 @@ public partial class KlimaViewModel : ViewModelBase
         ControlMode = SelectedDeviceStatus.Mode ?? "cooling";
         ControlSetpoint = SelectedDeviceStatus.Setpoint ?? 22.0;
         ControlFanSpeed = SelectedDeviceStatus.FanSpeed ?? "auto";
+        ControlError = null;
+        IsControlPanelVisible = true;
+    }
+
+    [RelayCommand(CanExecute = nameof(HasSelectedGroup))]
+    public void ShowGroupControl()
+    {
+        if (SelectedGroup == null) return;
+        ControlPower = true;
+        ControlMode = "cooling";
+        ControlSetpoint = 22.0;
+        ControlFanSpeed = "auto";
         ControlError = null;
         IsControlPanelVisible = true;
     }
@@ -246,8 +292,11 @@ public partial class KlimaViewModel : ViewModelBase
         ApplyDeviceControlCommand.NotifyCanExecuteChanged();
     }
 
-    partial void OnSelectedGroupChanged(KlimaGroup? value) =>
+    partial void OnSelectedGroupChanged(KlimaGroup? value)
+    {
         ApplyGroupControlCommand.NotifyCanExecuteChanged();
+        ShowGroupControlCommand.NotifyCanExecuteChanged();
+    }
 
     partial void OnIsSendingControlChanged(bool value) =>
         ApplyDeviceControlCommand.NotifyCanExecuteChanged();
