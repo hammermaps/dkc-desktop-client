@@ -61,15 +61,18 @@ public partial class KlimaViewModel : ViewModelBase
             var groupsTask = api.GetKlimaGroupsAsync();
             await Task.WhenAll(devicesTask, groupsTask);
 
+            var devicesResult = devicesTask.Result;
+            var groupsResult = groupsTask.Result;
+
             Devices.Clear();
-            if (devicesTask.Result.Success && devicesTask.Result.Devices != null)
-                foreach (var d in devicesTask.Result.Devices)
+            if (devicesResult.Success && devicesResult.Devices != null)
+                foreach (var d in devicesResult.Devices)
                     Devices.Add(d);
 
             Groups.Clear();
-            if (groupsTask.Result.Success && groupsTask.Result.Groups != null && groupsTask.Result.Groups.Count > 0)
+            if (groupsResult.Success && groupsResult.Groups != null && groupsResult.Groups.Count > 0)
             {
-                foreach (var g in groupsTask.Result.Groups)
+                foreach (var g in groupsResult.Groups)
                     Groups.Add(g);
             }
             else
