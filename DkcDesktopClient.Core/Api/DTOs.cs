@@ -568,3 +568,54 @@ public record UserSaveRequest(
     [property: JsonPropertyName("nname")] string? Nname,
     [property: JsonPropertyName("email")] string? Email,
     [property: JsonPropertyName("is_admin")] bool IsAdmin);
+
+// Notifications
+public record NotificationItem(
+    [property: JsonPropertyName("id")] int Id,
+    [property: JsonPropertyName("type")] string? Type,
+    [property: JsonPropertyName("title")] string? Title,
+    [property: JsonPropertyName("message")] string? Message,
+    [property: JsonPropertyName("read")] bool Read,
+    [property: JsonPropertyName("created_at")] string? CreatedAt);
+
+public record NotificationsResponse(
+    [property: JsonPropertyName("success")] bool Success,
+    [property: JsonPropertyName("authenticated")] bool Authenticated,
+    [property: JsonPropertyName("count")] int Count,
+    [property: JsonPropertyName("notifications")] List<NotificationItem>? Notifications,
+    [property: JsonPropertyName("error")] string? Error);
+
+public record NotificationCountResponse(
+    [property: JsonPropertyName("count")] int Count,
+    [property: JsonPropertyName("success")] bool Success);
+
+// Dashboard data (structured)
+public record DashboardMmStats(
+    [property: JsonPropertyName("total")] int Total,
+    [property: JsonPropertyName("pending")] int Pending,
+    [property: JsonPropertyName("approved")] int Approved,
+    [property: JsonPropertyName("completed")] int Completed);
+
+public record DashboardNeaStats(
+    [property: JsonPropertyName("total_systems")] int TotalSystems,
+    [property: JsonPropertyName("inspections_this_month")] int InspectionsThisMonth);
+
+public record DashboardBuildingStats(
+    [property: JsonPropertyName("open")] int Open,
+    [property: JsonPropertyName("in_progress")] int InProgress,
+    [property: JsonPropertyName("completed")] int Completed);
+
+public record DashboardKeysStats(
+    [property: JsonPropertyName("total_inventory")] int TotalInventory,
+    [property: JsonPropertyName("currently_issued")] int CurrentlyIssued);
+
+public record DashboardNotificationsStats(
+    [property: JsonPropertyName("unread")] int Unread);
+
+public record DashboardData(
+    [property: JsonPropertyName("project_id")] int? ProjectId,
+    [property: JsonPropertyName("mm")] DashboardMmStats? Mm,
+    [property: JsonPropertyName("nea")] DashboardNeaStats? Nea,
+    [property: JsonPropertyName("building")] DashboardBuildingStats? Building,
+    [property: JsonPropertyName("keys")] DashboardKeysStats? Keys,
+    [property: JsonPropertyName("notifications")] DashboardNotificationsStats? Notifications);

@@ -2,12 +2,14 @@ using System.IO;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using DkcDesktopClient.App.Services;
 using DkcDesktopClient.App.ViewModels;
 using DkcDesktopClient.App.Views;
 using DkcDesktopClient.Core.Services;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Serilog;
 
 namespace DkcDesktopClient.App;
@@ -27,10 +29,21 @@ public partial class App : Application
         ConfigureServices(services);
         _serviceProvider = services.BuildServiceProvider();
 
+        // Start hosted background services
+        var bgRefresh = _serviceProvider.GetRequiredService<BackgroundRefreshService>();
+        var notifPoll = _serviceProvider.GetRequiredService<NotificationPollingService>();
+        _ = bgRefresh.StartAsync(CancellationToken.None);
+        _ = notifPoll.StartAsync(CancellationToken.None);
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var mainVm = _serviceProvider.GetRequiredService<MainWindowViewModel>();
             desktop.MainWindow = new MainWindow { DataContext = mainVm };
+            desktop.ShutdownRequested += (_, _) =>
+            {
+                _ = bgRefresh.StopAsync(CancellationToken.None);
+                _ = notifPoll.StopAsync(CancellationToken.None);
+            };
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -43,7 +56,8 @@ public partial class App : Application
             "DkcDesktopClient");
         Directory.CreateDirectory(dataDir);
 
-        var logPath = Path.Combine(dataDir, "logs", "dkc-.log");
+        var cacheDir = Path.Combine(dataDir, "cache");
+        var logPath  = Path.Combine(dataDir, "logs", "dkc-.log");
 
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
@@ -57,19 +71,38 @@ public partial class App : Application
         services.AddDataProtection()
             .PersistKeysToFileSystem(new System.IO.DirectoryInfo(Path.Combine(dataDir, "keys")));
 
+        // ── Core infrastructure services ──────────────────────────────────────
         services.AddSingleton<TokenStore>();
         services.AddSingleton<DkcApiFactory>();
         services.AddSingleton<UpdateService>();
+        services.AddSingleton<DataCacheService>(sp =>
+            new DataCacheService(
+                sp.GetRequiredService<ILogger<DataCacheService>>(),
+                cacheDir));
+
         services.AddSingleton<AuthService>(sp =>
         {
-            var factory = sp.GetRequiredService<DkcApiFactory>();
+            var factory    = sp.GetRequiredService<DkcApiFactory>();
             var tokenStore = sp.GetRequiredService<TokenStore>();
-            var logger = sp.GetRequiredService<ILogger<AuthService>>();
-            var svc = new AuthService(factory, tokenStore, logger);
+            var logger     = sp.GetRequiredService<ILogger<AuthService>>();
+            var svc        = new AuthService(factory, tokenStore, logger);
             factory.SetAuthService(svc);
             return svc;
         });
 
+        // ── RefreshConfig (default values; could be loaded from appsettings) ──
+        services.AddSingleton<IOptions<RefreshConfig>>(
+            _ => Options.Create(new RefreshConfig()));
+
+        // ── Background / polling services ─────────────────────────────────────
+        services.AddSingleton<BackgroundRefreshService>();
+        services.AddSingleton<NotificationPollingService>();
+
+        // ── App-layer services ────────────────────────────────────────────────
+        services.AddSingleton<INavigationService, NavigationService>();
+        services.AddSingleton<IDialogService, DialogService>();
+
+        // ── ViewModels ────────────────────────────────────────────────────────
         services.AddTransient<LoginViewModel>();
         services.AddTransient<DashboardViewModel>();
         services.AddTransient<NeaViewModel>();

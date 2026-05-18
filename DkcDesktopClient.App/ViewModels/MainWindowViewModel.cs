@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DkcDesktopClient.App.Services;
 using DkcDesktopClient.Core.Services;
 
 namespace DkcDesktopClient.App.ViewModels;
@@ -9,13 +10,16 @@ public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly AuthService _authService;
     private readonly UpdateService _updateService;
+    private readonly INavigationService _navigationService;
+    private readonly NotificationPollingService _notificationPollingService;
 
-    [ObservableProperty] private ViewModelBase? _currentView;
     [ObservableProperty] private bool _isLoggedIn;
     [ObservableProperty] private string _userDisplayName = string.Empty;
     [ObservableProperty] private bool _isPaneOpen = true;
     [ObservableProperty] private NavItem? _selectedNavItem;
     [ObservableProperty] private UpdateInfo? _availableUpdate;
+    [ObservableProperty] private int _unreadNotificationCount;
+    [ObservableProperty] private IReadOnlyList<BreadcrumbItem> _breadcrumbs = Array.Empty<BreadcrumbItem>();
 
     public LoginViewModel LoginViewModel { get; }
     public DashboardViewModel DashboardViewModel { get; }
@@ -26,11 +30,16 @@ public partial class MainWindowViewModel : ViewModelBase
     public KeysViewModel KeysViewModel { get; }
     public SettingsViewModel SettingsViewModel { get; }
 
+    /// <summary>The currently displayed view, driven by <see cref="INavigationService"/>.</summary>
+    public ViewModelBase? CurrentView => _navigationService.CurrentView;
+
     public ObservableCollection<NavItem> NavItems { get; } = new();
 
     public MainWindowViewModel(
         AuthService authService,
         UpdateService updateService,
+        INavigationService navigationService,
+        NotificationPollingService notificationPollingService,
         LoginViewModel loginViewModel,
         DashboardViewModel dashboardViewModel,
         NeaViewModel neaViewModel,
@@ -40,18 +49,25 @@ public partial class MainWindowViewModel : ViewModelBase
         KeysViewModel keysViewModel,
         SettingsViewModel settingsViewModel)
     {
-        _authService = authService;
-        _updateService = updateService;
-        LoginViewModel = loginViewModel;
+        _authService                = authService;
+        _updateService              = updateService;
+        _navigationService          = navigationService;
+        _notificationPollingService = notificationPollingService;
+        LoginViewModel     = loginViewModel;
         DashboardViewModel = dashboardViewModel;
-        NeaViewModel = neaViewModel;
-        MmViewModel = mmViewModel;
-        BuildingViewModel = buildingViewModel;
-        KlimaViewModel = klimaViewModel;
-        KeysViewModel = keysViewModel;
-        SettingsViewModel = settingsViewModel;
+        NeaViewModel       = neaViewModel;
+        MmViewModel        = mmViewModel;
+        BuildingViewModel  = buildingViewModel;
+        KlimaViewModel     = klimaViewModel;
+        KeysViewModel      = keysViewModel;
+        SettingsViewModel  = settingsViewModel;
 
         _authService.AuthStateChanged += OnAuthStateChanged;
+        _navigationService.CurrentViewChanged  += (_, _) => OnPropertyChanged(nameof(CurrentView));
+        _navigationService.BreadcrumbsChanged  += (_, _) => Breadcrumbs = _navigationService.Breadcrumbs;
+        _notificationPollingService.UnreadCountChanged += (_, count) =>
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => UnreadNotificationCount = count);
+
         UpdateAuthState();
     }
 
@@ -65,13 +81,13 @@ public partial class MainWindowViewModel : ViewModelBase
             var user = _authService.CurrentUser;
             UserDisplayName = user != null ? $"{user.Vname} {user.Nname}".Trim() : _authService.CurrentUser?.Username ?? string.Empty;
             RebuildNavItems();
-            CurrentView = DashboardViewModel;
+            _navigationService.NavigateToRoot(DashboardViewModel, "Dashboard");
             _ = DashboardViewModel.LoadDataAsync();
         }
         else
         {
             NavItems.Clear();
-            CurrentView = LoginViewModel;
+            _navigationService.NavigateToRoot(LoginViewModel, "Login");
         }
     }
 
@@ -90,7 +106,7 @@ public partial class MainWindowViewModel : ViewModelBase
     partial void OnSelectedNavItemChanged(NavItem? value)
     {
         if (value != null)
-            CurrentView = value.ViewModel;
+            _navigationService.NavigateTo(value.ViewModel, value.Title);
     }
 
     [RelayCommand]
@@ -108,7 +124,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public async Task InitializeAsync()
     {
         if (!await _authService.TryAutoLoginAsync())
-            CurrentView = LoginViewModel;
+            _navigationService.NavigateToRoot(LoginViewModel, "Login");
 
         _ = CheckForUpdateAsync();
     }
@@ -145,7 +161,7 @@ public class NavItem
 
     public NavItem(string title, ViewModelBase viewModel)
     {
-        Title = title;
+        Title     = title;
         ViewModel = viewModel;
     }
 }
