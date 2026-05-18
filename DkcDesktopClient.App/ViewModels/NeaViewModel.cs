@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DkcDesktopClient.App.Services;
 using DkcDesktopClient.Core.Api;
 using DkcDesktopClient.Core.Services;
 
@@ -24,6 +25,7 @@ public partial class NeaViewModel : ViewModelBase
 {
     private readonly DkcApiFactory _apiFactory;
     private readonly AuthService _authService;
+    private readonly IFilePickerService _filePicker;
 
     // List state
     [ObservableProperty] private bool _isLoading;
@@ -90,10 +92,11 @@ public partial class NeaViewModel : ViewModelBase
     public static IReadOnlyList<string> FuelTypeOptions { get; } =
         new[] { "Diesel", "Gas", "Hybrid", "Benzin", "Erdgas" };
 
-    public NeaViewModel(DkcApiFactory apiFactory, AuthService authService)
+    public NeaViewModel(DkcApiFactory apiFactory, AuthService authService, IFilePickerService filePicker)
     {
         _apiFactory = apiFactory;
         _authService = authService;
+        _filePicker = filePicker;
     }
 
     [RelayCommand]
@@ -549,4 +552,42 @@ public partial class NeaViewModel : ViewModelBase
     partial void OnIsSavingSystemChanged(bool value) => SaveSystemCommand.NotifyCanExecuteChanged();
     partial void OnIsSavingInspectionChanged(bool value) => SaveInspectionCommand.NotifyCanExecuteChanged();
     partial void OnIsSavingChecklistChanged(bool value) => SaveChecklistCommand.NotifyCanExecuteChanged();
+
+    // ── CSV Export ────────────────────────────────────────────────────────────
+
+    [RelayCommand(CanExecute = nameof(CanExportInspections))]
+    public async Task ExportInspectionsToCsvAsync()
+    {
+        var path = await _filePicker.PickSaveFileAsync(
+            $"nea_pruefungen_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
+            new[] { ("CSV-Datei", "*.csv") });
+        if (path == null) return;
+
+        var columns = new (string, Func<NeaInspection, string?>)[]
+        {
+            ("ID",              i => i.Id.ToString()),
+            ("Anlage",          i => i.SystemName),
+            ("Typ",             i => i.InspectionType),
+            ("Datum",           i => i.InspectionDate),
+            ("Prüfer",          i => i.InspectorName),
+            ("Status",          i => i.Status),
+            ("Ergebnis",        i => i.OverallResult),
+            ("Laufzeit (h)",    i => i.RuntimeHours?.ToString()),
+            ("Notizen",         i => i.Notes),
+        };
+
+        try
+        {
+            CsvExportService.ExportToCsv(path, Inspections, columns);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"CSV-Export fehlgeschlagen: {ex.Message}";
+        }
+    }
+
+    private bool CanExportInspections() => Inspections.Count > 0;
+
+    partial void OnInspectionsChanged(ObservableCollection<NeaInspection>? oldValue, ObservableCollection<NeaInspection> newValue)
+        => ExportInspectionsToCsvCommand.NotifyCanExecuteChanged();
 }

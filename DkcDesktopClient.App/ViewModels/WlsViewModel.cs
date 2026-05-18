@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DkcDesktopClient.App.Services;
 using DkcDesktopClient.Core.Api;
 using DkcDesktopClient.Core.Services;
 
@@ -10,6 +11,7 @@ public partial class WlsViewModel : ViewModelBase
 {
     private readonly DkcApiFactory _apiFactory;
     private readonly AuthService _authService;
+    private readonly IFilePickerService _filePicker;
 
     // ── Tab state ─────────────────────────────────────────────────────────────
     [ObservableProperty] private int _selectedTabIndex;
@@ -64,10 +66,11 @@ public partial class WlsViewModel : ViewModelBase
     [ObservableProperty] private string _filterStartDate = string.Empty;
     [ObservableProperty] private string _filterEndDate = string.Empty;
 
-    public WlsViewModel(DkcApiFactory apiFactory, AuthService authService)
+    public WlsViewModel(DkcApiFactory apiFactory, AuthService authService, IFilePickerService filePicker)
     {
         _apiFactory  = apiFactory;
         _authService = authService;
+        _filePicker  = filePicker;
     }
 
     // ══════════════════════════════  Buildings  ════════════════════════════════
@@ -567,4 +570,42 @@ public partial class WlsViewModel : ViewModelBase
     partial void OnIsSavingBuildingChanged(bool value)  => SaveBuildingCommand.NotifyCanExecuteChanged();
     partial void OnIsSavingApartmentChanged(bool value) => SaveApartmentCommand.NotifyCanExecuteChanged();
     partial void OnIsSavingRecordChanged(bool value)    => SaveRecordCommand.NotifyCanExecuteChanged();
+
+    // ── CSV Export ────────────────────────────────────────────────────────────
+
+    [RelayCommand(CanExecute = nameof(CanExportRecords))]
+    public async Task ExportRecordsToCsvAsync()
+    {
+        var path = await _filePicker.PickSaveFileAsync(
+            $"wls_erfassungen_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
+            new[] { ("CSV-Datei", "*.csv") });
+        if (path == null) return;
+
+        var columns = new (string, Func<WlsRecord, string?>)[]
+        {
+            ("ID",           r => r.Id.ToString()),
+            ("Gebäude-ID",   r => r.BuildingId.ToString()),
+            ("Wohnungs-ID",  r => r.ApartmentId.ToString()),
+            ("Benutzer",     r => r.UserName),
+            ("Startzeit",    r => r.StartTime),
+            ("Endzeit",      r => r.EndTime),
+            ("Dauer",        r => r.DurationText),
+            ("Latitude",     r => r.Latitude?.ToString("F6")),
+            ("Longitude",    r => r.Longitude?.ToString("F6")),
+        };
+
+        try
+        {
+            CsvExportService.ExportToCsv(path, Records, columns);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"CSV-Export fehlgeschlagen: {ex.Message}";
+        }
+    }
+
+    private bool CanExportRecords() => Records.Count > 0;
+
+    partial void OnRecordsChanged(ObservableCollection<WlsRecord>? oldValue, ObservableCollection<WlsRecord> newValue)
+        => ExportRecordsToCsvCommand.NotifyCanExecuteChanged();
 }

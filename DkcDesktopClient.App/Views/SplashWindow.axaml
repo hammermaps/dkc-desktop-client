@@ -1,0 +1,38 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="DkcDesktopClient.App.Views.SplashWindow"
+        Title="DK-Control"
+        Width="400" Height="260"
+        WindowStartupLocation="CenterScreen"
+        CanResize="False"
+        WindowDecorations="None"
+        Background="#1E293B">
+
+  <Grid RowDefinitions="*, Auto, Auto, Auto" Margin="40">
+
+    <!-- Logo / App name -->
+    <StackPanel Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8">
+      <TextBlock Text="DK-Control" Foreground="White" FontSize="32" FontWeight="Bold"
+                 HorizontalAlignment="Center"/>
+      <TextBlock Text="Desktop Client" Foreground="#94A3B8" FontSize="14"
+                 HorizontalAlignment="Center"/>
+    </StackPanel>
+
+    <!-- Progress bar -->
+    <ProgressBar Grid.Row="1" IsIndeterminate="True"
+                 Height="4" Margin="0,0,0,12"
+                 Foreground="#3B82F6" Background="#334155"/>
+
+    <!-- Status text -->
+    <TextBlock Grid.Row="2" x:Name="StatusText"
+               Text="Starte Anwendung…"
+               Foreground="#CBD5E0" FontSize="12"
+               HorizontalAlignment="Center" Margin="0,0,0,8"/>
+
+    <!-- Version -->
+    <TextBlock Grid.Row="3" x:Name="VersionText"
+               Text="v1.0.0"
+               Foreground="#475569" FontSize="11"
+               HorizontalAlignment="Center"/>
+  </Grid>
+</Window>

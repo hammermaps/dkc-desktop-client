@@ -1,5 +1,6 @@
 using System.IO;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using DkcDesktopClient.App.Services;
@@ -23,6 +24,34 @@ public partial class App : Application
         AvaloniaXamlLoader.Load(this);
     }
 
+    // ── Tray icon events ──────────────────────────────────────────────────────
+
+    private void OnTrayIconClicked(object? sender, EventArgs e)
+        => BringMainWindowToFront();
+
+    private void OnTrayOpenClicked(object? sender, EventArgs e)
+        => BringMainWindowToFront();
+
+    private void OnTrayExitClicked(object? sender, EventArgs e)
+    {
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            desktop.Shutdown();
+    }
+
+    private static void BringMainWindowToFront()
+    {
+        if (Application.Current?.ApplicationLifetime
+                is IClassicDesktopStyleApplicationLifetime desktop
+            && desktop.MainWindow is { } win)
+        {
+            win.Show();
+            win.BringIntoView();
+            win.Activate();
+            if (win.WindowState == WindowState.Minimized)
+                win.WindowState = WindowState.Normal;
+        }
+    }
+
     public override void OnFrameworkInitializationCompleted()
     {
         var services = new ServiceCollection();
@@ -30,19 +59,36 @@ public partial class App : Application
         _serviceProvider = services.BuildServiceProvider();
 
         // Start hosted background services
-        var bgRefresh = _serviceProvider.GetRequiredService<BackgroundRefreshService>();
-        var notifPoll = _serviceProvider.GetRequiredService<NotificationPollingService>();
+        var bgRefresh    = _serviceProvider.GetRequiredService<BackgroundRefreshService>();
+        var notifPoll    = _serviceProvider.GetRequiredService<NotificationPollingService>();
+        var connectivity = _serviceProvider.GetRequiredService<ConnectivityService>();
         _ = bgRefresh.StartAsync(CancellationToken.None);
         _ = notifPoll.StartAsync(CancellationToken.None);
+        _ = connectivity.StartAsync(CancellationToken.None);
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var mainVm = _serviceProvider.GetRequiredService<MainWindowViewModel>();
-            desktop.MainWindow = new MainWindow { DataContext = mainVm };
+            var splash = new SplashWindow();
+
+            // Use the splash as the startup window so it appears immediately.
+            // The MainWindow is created but not shown yet.
+            desktop.MainWindow = splash;
+            splash.Opened += async (_, _) =>
+            {
+                splash.SetStatus("Auto-Login wird geprüft…");
+                var mainWindow = new MainWindow { DataContext = mainVm };
+                desktop.MainWindow = mainWindow;
+                await mainVm.InitializeAsync();
+                mainWindow.Show();
+                splash.Close();
+            };
+
             desktop.ShutdownRequested += (_, _) =>
             {
                 _ = bgRefresh.StopAsync(CancellationToken.None);
                 _ = notifPoll.StopAsync(CancellationToken.None);
+                _ = connectivity.StopAsync(CancellationToken.None);
             };
         }
 
@@ -98,9 +144,12 @@ public partial class App : Application
         services.AddSingleton<BackgroundRefreshService>();
         services.AddSingleton<NotificationPollingService>();
 
+        services.AddSingleton<ConnectivityService>();
+
         // ── App-layer services ────────────────────────────────────────────────
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<IDialogService, DialogService>();
+        services.AddSingleton<IFilePickerService, AvaloniaFilePickerService>();
 
         // ── ViewModels ────────────────────────────────────────────────────────
         services.AddTransient<LoginViewModel>();

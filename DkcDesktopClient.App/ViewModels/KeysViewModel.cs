@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DkcDesktopClient.App.Services;
 using DkcDesktopClient.Core.Api;
 using DkcDesktopClient.Core.Services;
 
@@ -10,6 +11,7 @@ public partial class KeysViewModel : ViewModelBase
 {
     private readonly DkcApiFactory _apiFactory;
     private readonly AuthService _authService;
+    private readonly IFilePickerService _filePicker;
 
     // List state
     [ObservableProperty] private bool _isLoading;
@@ -53,10 +55,11 @@ public partial class KeysViewModel : ViewModelBase
     [ObservableProperty] private string _formReturnDate = string.Empty;
     [ObservableProperty] private string _formReturnNotes = string.Empty;
 
-    public KeysViewModel(DkcApiFactory apiFactory, AuthService authService)
+    public KeysViewModel(DkcApiFactory apiFactory, AuthService authService, IFilePickerService filePicker)
     {
         _apiFactory = apiFactory;
         _authService = authService;
+        _filePicker = filePicker;
     }
 
     [RelayCommand]
@@ -385,4 +388,38 @@ public partial class KeysViewModel : ViewModelBase
 
     partial void OnIsSavingKeyChanged(bool value) => SaveKeyCommand.NotifyCanExecuteChanged();
     partial void OnIsSavingIssueChanged(bool value) => IssueKeyCommand.NotifyCanExecuteChanged();
+
+    // ── CSV Export ────────────────────────────────────────────────────────────
+
+    [RelayCommand(CanExecute = nameof(CanExportInventory))]
+    public async Task ExportInventoryToCsvAsync()
+    {
+        var path = await _filePicker.PickSaveFileAsync(
+            $"schluessel_inventar_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
+            new[] { ("CSV-Datei", "*.csv") });
+        if (path == null) return;
+
+        var columns = new (string, Func<KeyInventoryItem, string?>)[]
+        {
+            ("ID",          k => k.Id.ToString()),
+            ("Name",        k => k.Name),
+            ("Beschreibung", k => k.Description),
+            ("Gesamt",      k => k.Total?.ToString()),
+            ("Verfügbar",   k => k.Available?.ToString()),
+        };
+
+        try
+        {
+            CsvExportService.ExportToCsv(path, Inventory, columns);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"CSV-Export fehlgeschlagen: {ex.Message}";
+        }
+    }
+
+    private bool CanExportInventory() => Inventory.Count > 0;
+
+    partial void OnInventoryChanged(ObservableCollection<KeyInventoryItem>? oldValue, ObservableCollection<KeyInventoryItem> newValue)
+        => ExportInventoryToCsvCommand.NotifyCanExecuteChanged();
 }

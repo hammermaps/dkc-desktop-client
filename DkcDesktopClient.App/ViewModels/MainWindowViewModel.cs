@@ -12,6 +12,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly UpdateService _updateService;
     private readonly INavigationService _navigationService;
     private readonly NotificationPollingService _notificationPollingService;
+    private readonly ConnectivityService _connectivityService;
 
     [ObservableProperty] private bool _isLoggedIn;
     [ObservableProperty] private string _userDisplayName = string.Empty;
@@ -21,6 +22,7 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] private UpdateInfo? _availableUpdate;
     [ObservableProperty] private int _unreadNotificationCount;
     [ObservableProperty] private IReadOnlyList<BreadcrumbItem> _breadcrumbs = Array.Empty<BreadcrumbItem>();
+    [ObservableProperty] private bool _isOffline;
 
     public LoginViewModel LoginViewModel { get; }
     public DashboardViewModel DashboardViewModel { get; }
@@ -43,6 +45,7 @@ public partial class MainWindowViewModel : ViewModelBase
         UpdateService updateService,
         INavigationService navigationService,
         NotificationPollingService notificationPollingService,
+        ConnectivityService connectivityService,
         LoginViewModel loginViewModel,
         DashboardViewModel dashboardViewModel,
         NeaViewModel neaViewModel,
@@ -58,6 +61,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _updateService              = updateService;
         _navigationService          = navigationService;
         _notificationPollingService = notificationPollingService;
+        _connectivityService        = connectivityService;
         LoginViewModel         = loginViewModel;
         DashboardViewModel     = dashboardViewModel;
         NeaViewModel           = neaViewModel;
@@ -80,6 +84,11 @@ public partial class MainWindowViewModel : ViewModelBase
         DashboardViewModel.StartNeaInspectionRequested += (_, _) => SelectNavItem(NeaViewModel, "NEA");
         _notificationPollingService.UnreadCountChanged += (_, count) =>
             Avalonia.Threading.Dispatcher.UIThread.Post(() => UnreadNotificationCount = count);
+        _connectivityService.ConnectivityChanged += (_, isOnline) =>
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => IsOffline = !isOnline);
+
+        // Initialise from current connectivity state (may already be known)
+        IsOffline = !_connectivityService.IsOnline;
 
         UpdateAuthState();
     }
@@ -150,6 +159,32 @@ public partial class MainWindowViewModel : ViewModelBase
         else
         {
             _navigationService.NavigateTo(viewModel, title);
+        }
+    }
+
+    /// <summary>Navigates to a module by 1-based index (Ctrl+1 … Ctrl+9).</summary>
+    [RelayCommand]
+    private void NavigateToModule(string? indexStr)
+    {
+        if (!int.TryParse(indexStr, out var index)) return;
+        if (index < 1 || index > NavItems.Count) return;
+        SelectedNavItem = NavItems[index - 1];
+    }
+
+    /// <summary>Triggers a manual refresh on the current view if it supports it.</summary>
+    [RelayCommand]
+    private void RefreshCurrentModule()
+    {
+        switch (CurrentView)
+        {
+            case DashboardViewModel vm:     _ = vm.LoadDataCommand.ExecuteAsync(null);          break;
+            case NeaViewModel vm:           _ = vm.LoadSystemsCommand.ExecuteAsync(null);       break;
+            case MmViewModel vm:            _ = vm.LoadMessagesCommand.ExecuteAsync(null);      break;
+            case BuildingViewModel vm:      _ = vm.LoadBuildingsCommand.ExecuteAsync(null);     break;
+            case KlimaViewModel vm:         _ = vm.LoadDataCommand.ExecuteAsync(null);          break;
+            case KeysViewModel vm:          _ = vm.LoadDataCommand.ExecuteAsync(null);          break;
+            case WlsViewModel vm:           _ = vm.LoadBuildingsCommand.ExecuteAsync(null);     break;
+            case NotificationsViewModel vm: _ = vm.LoadNotificationsCommand.ExecuteAsync(null); break;
         }
     }
 

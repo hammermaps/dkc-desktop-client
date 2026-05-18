@@ -17,6 +17,9 @@
       <Button Content="New Inspection" Command="{Binding ShowCreateInspectionFormCommand}"/>
       <Button Content="Edit Inspection" Command="{Binding ShowEditInspectionFormCommand}"/>
       <Button Content="Complete" Command="{Binding CompleteInspectionCommand}"/>
+      <Separator Width="1" Background="#CCCCCC" Margin="4,0"/>
+      <Button Content="📥 CSV-Export" Command="{Binding ExportInspectionsToCsvCommand}"
+              ToolTip.Tip="Prüfungen als CSV exportieren"/>
     </StackPanel>
 
     <!-- Error / Progress -->

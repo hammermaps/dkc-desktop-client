@@ -8,4 +8,22 @@
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
         <StyleInclude Source="avares://DkcDesktopClient.App/Styles/AppTheme.axaml"/>
     </Application.Styles>
+
+    <Application.DataTemplates/>
+
+    <TrayIcon.Icons>
+      <TrayIcons>
+        <TrayIcon ToolTipText="DK-Control Desktop Client"
+                  Icon="avares://DkcDesktopClient.App/Assets/avalonia-logo.ico"
+                  Clicked="OnTrayIconClicked">
+          <TrayIcon.Menu>
+            <NativeMenu>
+              <NativeMenuItem Header="Öffnen" Click="OnTrayOpenClicked"/>
+              <NativeMenuItemSeparator/>
+              <NativeMenuItem Header="Beenden" Click="OnTrayExitClicked"/>
+            </NativeMenu>
+          </TrayIcon.Menu>
+        </TrayIcon>
+      </TrayIcons>
+    </TrayIcon.Icons>
 </Application>
