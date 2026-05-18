@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj": {}
+    "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj": {}
   },
   "projects": {
-    "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj": {
+    "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj",
+        "projectUniqueName": "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj",
         "projectName": "DkcDesktopClient.Core",
-        "projectPath": "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj",
-        "packagesPath": "/home/masterbee/.nuget/packages/",
-        "outputPath": "/home/masterbee/RiderProjects/dkc-desktop-client/DkcDesktopClient.Core/obj/",
+        "projectPath": "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Core/DkcDesktopClient.Core.csproj",
+        "packagesPath": "/home/runner/.nuget/packages/",
+        "outputPath": "/home/runner/work/dkc-desktop-client/dkc-desktop-client/DkcDesktopClient.Core/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/masterbee/.nuget/NuGet/NuGet.Config"
+          "/home/runner/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -36,9 +36,9 @@
         "restoreAuditProperties": {
           "enableAudit": "true",
           "auditLevel": "low",
-          "auditMode": "all"
+          "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.100"
+        "SdkAnalysisLevel": "10.0.200"
       },
       "frameworks": {
         "net8.0": {
@@ -105,7 +105,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/home/masterbee/.dotnet/sdk/9.0.100/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.201/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
