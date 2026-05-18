@@ -10,6 +10,8 @@ public partial class KlimaViewModel : ViewModelBase
 {
     private readonly DkcApiFactory _apiFactory;
     private readonly AuthService _authService;
+    private readonly BackgroundRefreshService _backgroundRefreshService;
+    private bool _refreshingFromBackground;
 
     // Device list
     [ObservableProperty] private bool _isLoading;
@@ -46,10 +48,15 @@ public partial class KlimaViewModel : ViewModelBase
 
     private CancellationTokenSource? _pollCts;
 
-    public KlimaViewModel(DkcApiFactory apiFactory, AuthService authService)
+    public KlimaViewModel(
+        DkcApiFactory apiFactory,
+        AuthService authService,
+        BackgroundRefreshService backgroundRefreshService)
     {
         _apiFactory = apiFactory;
         _authService = authService;
+        _backgroundRefreshService = backgroundRefreshService;
+        _backgroundRefreshService.DataRefreshed += OnDataRefreshed;
     }
 
     [RelayCommand]
@@ -117,6 +124,8 @@ public partial class KlimaViewModel : ViewModelBase
         {
             IsLoading = false;
         }
+
+        _backgroundRefreshService.NotifyUserActivity(CacheKeys.KlimaStatus);
     }
 
     [RelayCommand]
@@ -132,12 +141,33 @@ public partial class KlimaViewModel : ViewModelBase
                 foreach (var s in result.Devices)
                     DeviceStatuses.Add(s);
                 LastStatusTimestamp = result.Timestamp;
+                if (!_refreshingFromBackground)
+                    _backgroundRefreshService.NotifyUserActivity(CacheKeys.KlimaStatus);
             }
         }
         catch (Exception ex)
         {
             ErrorMessage = $"Status refresh error: {ex.Message}";
         }
+    }
+
+    private void OnDataRefreshed(object? sender, string key)
+    {
+        if (key != CacheKeys.KlimaStatus || IsPolling)
+            return;
+
+        Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
+        {
+            _refreshingFromBackground = true;
+            try
+            {
+                await RefreshStatusAsync();
+            }
+            finally
+            {
+                _refreshingFromBackground = false;
+            }
+        });
     }
 
     [RelayCommand(CanExecute = nameof(CanStartPolling))]

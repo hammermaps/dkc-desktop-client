@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DkcDesktopClient.Core.Api;
@@ -10,21 +11,44 @@ public partial class DashboardViewModel : ViewModelBase
 {
     private readonly DkcApiFactory _apiFactory;
     private readonly AuthService _authService;
+    private readonly DataCacheService _cache;
+    private readonly BackgroundRefreshService _backgroundRefreshService;
 
     [ObservableProperty] private bool _isLoading;
+    [ObservableProperty] private bool _isRefreshing;
     [ObservableProperty] private string? _errorMessage;
     [ObservableProperty] private ObservableCollection<Project> _projects = new();
     [ObservableProperty] private Project? _selectedProject;
+    [ObservableProperty] private int _mmTotal;
+    [ObservableProperty] private int _keysAvailable;
     [ObservableProperty] private int _neaTotalSystems;
     [ObservableProperty] private int _neaOverdueInspections;
+    [ObservableProperty] private bool _hasOverdueItems;
     [ObservableProperty] private ObservableCollection<NeaOverdueItem> _overdueItems = new();
     [ObservableProperty] private ObservableCollection<NeaRecentInspection> _recentInspections = new();
 
-    public DashboardViewModel(DkcApiFactory apiFactory, AuthService authService)
+    public string MmTotalText => MmTotal.ToString();
+    public string KeysAvailableText => KeysAvailable.ToString();
+    public string NeaTotalSystemsText => NeaTotalSystems.ToString();
+    public string NeaOverdueInspectionsText => NeaOverdueInspections.ToString();
+
+    public DashboardViewModel(
+        DkcApiFactory apiFactory,
+        AuthService authService,
+        DataCacheService cache,
+        BackgroundRefreshService backgroundRefreshService)
     {
         _apiFactory = apiFactory;
         _authService = authService;
+        _cache = cache;
+        _backgroundRefreshService = backgroundRefreshService;
+        _backgroundRefreshService.DataRefreshed += OnDataRefreshed;
     }
+
+    partial void OnMmTotalChanged(int value) => OnPropertyChanged(nameof(MmTotalText));
+    partial void OnKeysAvailableChanged(int value) => OnPropertyChanged(nameof(KeysAvailableText));
+    partial void OnNeaTotalSystemsChanged(int value) => OnPropertyChanged(nameof(NeaTotalSystemsText));
+    partial void OnNeaOverdueInspectionsChanged(int value) => OnPropertyChanged(nameof(NeaOverdueInspectionsText));
 
     [RelayCommand]
     public async Task LoadDataAsync()
@@ -36,14 +60,22 @@ public partial class DashboardViewModel : ViewModelBase
             var api = _apiFactory.Create(_authService.CurrentToken);
             var projectsTask = api.GetProjectsListAsync();
             var dashboardTask = api.GetNeaDashboardAsync();
-            await Task.WhenAll(projectsTask, dashboardTask);
+            var mmTask = _cache.GetOrFetchAsync(
+                CacheKeys.MmList,
+                ct => api.GetMmListAsync(limit: 1, ct: ct),
+                CacheTtl.MmList);
+            var keysTask = _cache.GetOrFetchAsync(
+                CacheKeys.KeysInventory,
+                ct => api.GetKeysInventoryAsync(ct),
+                CacheTtl.KeysInventory);
+            await Task.WhenAll(projectsTask, dashboardTask, mmTask, keysTask);
 
             Projects.Clear();
             if (projectsTask.Result.Success && projectsTask.Result.Projects != null)
                 foreach (var p in projectsTask.Result.Projects)
                     Projects.Add(p);
 
-            if (dashboardTask.Result.Success)
+            if (dashboardTask.Result?.Success == true)
             {
                 var d = dashboardTask.Result.Dashboard;
                 NeaTotalSystems = d?.TotalSystems ?? dashboardTask.Result.Stats?.TotalSystems ?? 0;
@@ -53,12 +85,23 @@ public partial class DashboardViewModel : ViewModelBase
                 if (overdueItems != null)
                     foreach (var item in overdueItems)
                         OverdueItems.Add(item);
+                HasOverdueItems = OverdueItems.Count > 0;
                 RecentInspections.Clear();
                 var recentInspections = d?.RecentInspections ?? dashboardTask.Result.RecentInspections;
                 if (recentInspections != null)
                     foreach (var item in recentInspections)
                         RecentInspections.Add(item);
             }
+
+            if (mmTask.Result?.Success == true)
+                MmTotal = mmTask.Result.Total ?? mmTask.Result.Messages?.Count ?? 0;
+
+            if (keysTask.Result?.Success == true)
+                KeysAvailable = keysTask.Result.Keys?.Sum(k => k.Available ?? 0) ?? 0;
+
+            _backgroundRefreshService.NotifyUserActivity(CacheKeys.DashboardData);
+            _backgroundRefreshService.NotifyUserActivity(CacheKeys.MmList);
+            _backgroundRefreshService.NotifyUserActivity(CacheKeys.KeysInventory);
         }
         catch (Exception ex)
         {
@@ -68,5 +111,27 @@ public partial class DashboardViewModel : ViewModelBase
         {
             IsLoading = false;
         }
+    }
+
+    private void OnDataRefreshed(object? sender, string key)
+    {
+        if (key != CacheKeys.DashboardData && key != CacheKeys.MmList && key != CacheKeys.KeysInventory)
+            return;
+
+        Dispatcher.UIThread.Post(async () =>
+        {
+            if (IsLoading)
+                return;
+
+            IsRefreshing = true;
+            try
+            {
+                await LoadDataAsync();
+            }
+            finally
+            {
+                IsRefreshing = false;
+            }
+        });
     }
 }

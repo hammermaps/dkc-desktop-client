@@ -6,8 +6,6 @@
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
-        <Style Selector="TextBlock">
-            <Setter Property="Foreground" Value="#1A202C"/>
-        </Style>
+        <StyleInclude Source="avares://DkcDesktopClient.App/Styles/AppTheme.axaml"/>
     </Application.Styles>
 </Application>

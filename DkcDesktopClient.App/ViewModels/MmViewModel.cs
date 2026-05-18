@@ -23,6 +23,7 @@ public partial class MmViewModel : ViewModelBase
     [ObservableProperty] private MmDetail? _selectedDetail;
     [ObservableProperty] private int _totalMessages;
     [ObservableProperty] private int _currentOffset;
+    public bool HasNoMessages => !IsLoading && Messages.Count == 0;
 
     // Filter
     [ObservableProperty] private MmStatusOption _filterStatusOption = StatusFilterOptions[0];
@@ -134,6 +135,7 @@ public partial class MmViewModel : ViewModelBase
         finally
         {
             IsLoading = false;
+            OnPropertyChanged(nameof(HasNoMessages));
         }
 
         // Lazily populate the Melder dropdown the first time messages are loaded;
@@ -347,6 +349,7 @@ public partial class MmViewModel : ViewModelBase
         finally
         {
             IsLoading = false;
+            OnPropertyChanged(nameof(HasNoMessages));
         }
     }
 
