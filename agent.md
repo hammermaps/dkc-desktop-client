@@ -1,5 +1,8 @@
 # DKC Desktop Client – API-Referenz (`api.php`)
 
+> **Backend-Dokumentation:** Architektur, Controller, Models, Templates und Template↔C#-Mapping befinden sich in  
+> [`/ProxyServer/Backend.md`](./ProxyServer/Backend.md)
+
 > **Basis-URL:** `https://<host>/api.php`  
 > **Zeitzone:** `Europe/Berlin` (konfigurierbar via `APP_TIMEZONE`)  
 > **Encoding:** UTF-8 / JSON  
