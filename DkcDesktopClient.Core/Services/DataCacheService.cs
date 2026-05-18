@@ -170,6 +170,8 @@ public static class CacheKeys
     public const string NeaSystems       = "nea_systems";
     public const string NeaInspections   = "nea_inspections";
     public const string MmList           = "mm_list";
+    public const string MmListOpen       = "mm_list_open";
+    public const string MmListInProgress = "mm_list_in_progress";
     public const string BuildingList     = "building_list";
     public const string KlimaDevices     = "klima_devices";
     public const string KlimaStatus      = "klima_status";

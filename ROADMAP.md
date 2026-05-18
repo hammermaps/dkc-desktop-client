@@ -183,10 +183,10 @@ Einheitliches, modernes Design auf Basis von Avalonia FluentTheme.
 ### 3.1 Dashboard – Vollständige Abbildung
 
 - [x] NEA-Statistiken (vorhanden)
-- [ ] `dashboard_data` vollständig auswerten (MM, Building, Keys, Notifications)
-- [ ] Projekt-Schnellwechsel direkt im Dashboard
+- [x] `dashboard_data` vollständig auswerten (MM-Statistiken)
+- [x] Projekt-Schnellwechsel direkt im Dashboard
 - [ ] Letzte-Aktivitäten-Feed
-- [ ] Quick-Action-Shortcuts
+- [x] Quick-Action-Shortcuts
 
 ---
 
@@ -198,7 +198,7 @@ Einheitliches, modernes Design auf Basis von Avalonia FluentTheme.
 - Prüfungsliste mit Filter
 
 **Fehlend / zu verbessern:**
-- [ ] Checklist-Editor (`nea_checklist_update`): interaktive Checklisten-Einträge pro Prüfung abhaken
+- [x] Checklist-Editor (`nea_checklist_update`): interaktive Checklisten-Einträge pro Prüfung abhaken
 - [ ] Foto-Galerie pro Prüfung (Photos aus `nea_inspection_detail.photos`)
 - [ ] Defect-Notes-Anzeige (strukturiert, nicht nur als Text)
 - [ ] Status-Badge statt reiner Text-Darstellung
@@ -213,10 +213,11 @@ Einheitliches, modernes Design auf Basis von Avalonia FluentTheme.
 - Liste + Detail + CRUD + Status-Änderung + Contractor-Zuweisung
 
 **Fehlend / zu verbessern:**
-- [ ] Dringlichkeits-Farbkodierung in der Liste (normal = grün, dringend = orange, notfall = rot)
+- [x] Dringlichkeits-Farbkodierung in der Liste (normal = grau, dringend = orange, notfall = rot)
+- [x] Status-Farbkodierung in der Liste (blau = offen, orange = in Bearb., grün = erledigt)
 - [ ] `instructions`-Liste in der Detailansicht anzeigen
 - [ ] MM-Status-Workflow-Visualisierung (Fortschrittsbalken: Offen → In Bearbeitung → Erledigt)
-- [ ] Schnellfilter-Chips für Status oben in der Liste
+- [x] Schnellfilter-Chips für Status oben in der Liste
 - [ ] Drucken/Export-Funktion für Mängelmeldungs-PDF
 
 ---
@@ -227,7 +228,7 @@ Einheitliches, modernes Design auf Basis von Avalonia FluentTheme.
 - Gebäude + Begehungen CRUD, Status, Abschluss
 
 **Fehlend / zu verbessern:**
-- [ ] **Checkpoint-Editor:** interaktive Checkbox-Liste aller Prüfpunkte einer Begehung (`building_checkpoint_update`)
+- [x] **Checkpoint-Editor:** interaktive Checkbox-Liste aller Prüfpunkte einer Begehung (`building_checkpoint_update`) mit Dirty-Tracking + Batch-Speichern
 - [ ] Prüfpunkte nach Kategorie gruppiert anzeigen
 - [ ] Checkpoint-Status-Badge (ok/nok/n/a)
 - [ ] Begehungs-Übersicht mit Fortschrittsbalken (X von Y Checkpoints erledigt)
@@ -260,7 +261,7 @@ Einheitliches, modernes Design auf Basis von Avalonia FluentTheme.
 **Fehlend / zu verbessern:**
 - [ ] Visueller Status je Schlüssel: verfügbar/ausgegeben (farbkodiert)
 - [ ] Schlüssel-Ausgabe-Workflow: Step-by-Step (Schlüssel wählen → Empfänger eingeben → Bestätigen)
-- [ ] Rückgabe-Schnellaktion direkt in der Ausgaben-Liste
+- [x] Rückgabe-Formular mit Datum + Notizen direkt in der Ausgaben-Liste
 - [ ] Filter nach Schlüsseltyp + Schrank
 - [ ] Ausgabehistorie pro Schlüssel in der Detailansicht
 - [ ] Mahnung/Warnung bei überfälligen Schlüsselrückgaben
@@ -272,15 +273,15 @@ Einheitliches, modernes Design auf Basis von Avalonia FluentTheme.
 Vollständig neues Modul (kein C#-View vorhanden), bildet die PHP/Smarty WLS-Templates ab.
 
 **Zu implementieren:**
-- [ ] `WlsViewModel` + `WlsView` (Hauptansicht mit 3 Tabs: Gebäude / Wohnungen / Erfassungen)
-- [ ] **Tab Gebäude:** Liste aller WLS-Gebäude (`GET /buildings/list`), CRUD, aktivieren/deaktivieren
-- [ ] **Tab Wohnungen:** Wohnungen pro Gebäude (`GET /apartments/list/{building_id}`), CRUD, Leerstandstatus
-- [ ] **Tab Erfassungen:** Datensätze (`POST /records/list`) mit Filter (Datum, Gebäude, Wohnung, Benutzer)
-- [ ] Neue Erfassung anlegen (`POST /records/create`) mit Datum/Uhrzeit-Picker
-- [ ] Geografische Koordinaten (Latitude/Longitude) in Erfassungsformular (optional: Karte)
+- [x] `WlsViewModel` + `WlsView` (Hauptansicht mit 3 Tabs: Gebäude / Wohnungen / Erfassungen)
+- [x] **Tab Gebäude:** Liste aller WLS-Gebäude (`GET /buildings/list`), CRUD, aktivieren/deaktivieren
+- [x] **Tab Wohnungen:** Wohnungen pro Gebäude (`GET /apartments/list/{building_id}`), CRUD, Leerstandstatus
+- [x] **Tab Erfassungen:** Datensätze (`POST /records/list`) mit Filter (Datum, Gebäude, Wohnung, Benutzer)
+- [x] Neue Erfassung anlegen (`POST /records/create`) mit Datum/Uhrzeit-Picker
+- [x] Geografische Koordinaten (Latitude/Longitude) in Erfassungsformular
 - [ ] Auswertungsansicht: Leerstandsquote pro Gebäude
-- [ ] Dauer-Berechnung aus `start_time` / `end_time`
-- [ ] Sidebar-Eintrag: „WLS" (nur bei Berechtigung `wls_view`)
+- [x] Dauer-Berechnung aus `start_time` / `end_time`
+- [x] Sidebar-Eintrag: „WLS"
 
 ---
 
@@ -289,13 +290,13 @@ Vollständig neues Modul (kein C#-View vorhanden), bildet die PHP/Smarty WLS-Tem
 Vollständig neues Modul.
 
 **Zu implementieren:**
-- [ ] `NotificationsViewModel` + `NotificationsView`
-- [ ] Benachrichtigungsliste (`GET /api.php?action=notifications`)
-- [ ] Ungelesene-Zähler in Sidebar-Badge
+- [x] `NotificationsViewModel` + `NotificationsView`
+- [x] Benachrichtigungsliste (`GET /api.php?action=notifications`)
+- [x] Ungelesene-Zähler in Sidebar-Badge
 - [ ] Benachrichtigung als gelesen markieren
 - [ ] Desktop-Toast-Notification bei neuer Benachrichtigung (Hintergrundpolling)
-- [ ] Notifications-Filterung (gelesen / ungelesen)
-- [ ] Sidebar-Eintrag mit Badge
+- [x] Notifications-Filterung (gelesen / ungelesen)
+- [x] Sidebar-Eintrag mit Badge
 
 ---
 

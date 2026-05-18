@@ -6,6 +6,26 @@ using DkcDesktopClient.Core.Services;
 
 namespace DkcDesktopClient.App.ViewModels;
 
+/// <summary>An editable checkpoint result for use in the inspection detail editor.</summary>
+public partial class CheckpointEditItem : ObservableObject
+{
+    public int CheckpointId   { get; init; }
+    public int ResultId       { get; init; }
+    [ObservableProperty] private string _checkpointName = string.Empty;
+    [ObservableProperty] private string _category = string.Empty;
+    [ObservableProperty] private string _status = "ok";
+    [ObservableProperty] private string _note = string.Empty;
+    [ObservableProperty] private string _comment = string.Empty;
+    [ObservableProperty] private bool _isDirty;
+
+    public static IReadOnlyList<string> StatusOptions { get; } =
+        new[] { "ok", "defect", "n_a" };
+
+    partial void OnStatusChanged(string value)  => IsDirty = true;
+    partial void OnNoteChanged(string value)    => IsDirty = true;
+    partial void OnCommentChanged(string value) => IsDirty = true;
+}
+
 public partial class BuildingViewModel : ViewModelBase
 {
     private readonly DkcApiFactory _apiFactory;
@@ -61,6 +81,11 @@ public partial class BuildingViewModel : ViewModelBase
     // Complete-inspection quick fields
     [ObservableProperty] private string _formCompleteResult = "ok";
     [ObservableProperty] private string _formCompleteNotes = string.Empty;
+
+    // Checkpoint editor
+    [ObservableProperty] private ObservableCollection<CheckpointEditItem> _checkpointEdits = new();
+    [ObservableProperty] private bool _isSavingCheckpoints;
+    [ObservableProperty] private string? _checkpointError;
 
     public static IReadOnlyList<string> InspectionStatusOptions { get; } =
         new[] { "open", "in_progress", "completed" };
@@ -142,7 +167,10 @@ public partial class BuildingViewModel : ViewModelBase
             var api = _apiFactory.Create(_authService.CurrentToken);
             var result = await api.GetBuildingInspectionDetailAsync(SelectedInspection.Id);
             if (result.Success)
+            {
                 InspectionDetail = result.Inspection;
+                BuildCheckpointEditItems();
+            }
         }
         catch (Exception ex)
         {
@@ -151,6 +179,25 @@ public partial class BuildingViewModel : ViewModelBase
         finally
         {
             IsLoading = false;
+        }
+    }
+
+    private void BuildCheckpointEditItems()
+    {
+        CheckpointEdits.Clear();
+        if (InspectionDetail?.Results == null) return;
+        foreach (var r in InspectionDetail.Results)
+        {
+            CheckpointEdits.Add(new CheckpointEditItem
+            {
+                CheckpointId   = r.CheckpointId,
+                ResultId       = r.Id,
+                CheckpointName = r.CheckpointName ?? r.CheckpointId.ToString(),
+                Status         = r.Status         ?? "ok",
+                Note           = r.Note           ?? string.Empty,
+                Comment        = r.Comment        ?? string.Empty,
+                IsDirty        = false,
+            });
         }
     }
 
@@ -356,6 +403,43 @@ public partial class BuildingViewModel : ViewModelBase
     }
 
     [RelayCommand(CanExecute = nameof(HasInspectionDetail))]
+    public async Task SaveAllCheckpointsAsync()
+    {
+        if (InspectionDetail == null) return;
+        var dirty = CheckpointEdits.Where(c => c.IsDirty).ToList();
+        if (dirty.Count == 0) return;
+        IsSavingCheckpoints = true;
+        CheckpointError     = null;
+        try
+        {
+            var api = _apiFactory.Create(_authService.CurrentToken);
+            foreach (var cp in dirty)
+            {
+                var result = await api.UpdateBuildingCheckpointAsync(InspectionDetail.Id,
+                    new BuildingCheckpointUpdateRequest(
+                        cp.CheckpointId,
+                        cp.Status,
+                        Nz(cp.Note),
+                        Nz(cp.Comment)));
+                if (!result.Success)
+                {
+                    CheckpointError = result.Error ?? "Prüfpunkt-Aktualisierung fehlgeschlagen.";
+                    break;
+                }
+                cp.IsDirty = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            CheckpointError = $"Fehler: {ex.Message}";
+        }
+        finally
+        {
+            IsSavingCheckpoints = false;
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(HasInspectionDetail))]
     public async Task SaveCheckpointAsync(CheckpointResult checkpoint)
     {
         if (InspectionDetail == null) return;
@@ -405,8 +489,11 @@ public partial class BuildingViewModel : ViewModelBase
         CompleteInspectionCommand.NotifyCanExecuteChanged();
     }
 
-    partial void OnInspectionDetailChanged(BuildingInspectionDetail? value) =>
+    partial void OnInspectionDetailChanged(BuildingInspectionDetail? value)
+    {
         SaveCheckpointCommand.NotifyCanExecuteChanged();
+        SaveAllCheckpointsCommand.NotifyCanExecuteChanged();
+    }
 
     partial void OnIsSavingBuildingChanged(bool value) => SaveBuildingCommand.NotifyCanExecuteChanged();
     partial void OnIsSavingInspectionChanged(bool value) => SaveInspectionCommand.NotifyCanExecuteChanged();

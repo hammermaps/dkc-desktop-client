@@ -418,6 +418,49 @@ public partial class MmViewModel : ViewModelBase
         }
     }
 
+    // ── Quick filter chip colors ──────────────────────────────────────────────
+    private const string ChipActiveBg  = "#3B82F6";
+    private const string ChipActiveFg  = "White";
+    private const string ChipDefaultBg = "#E5E7EB";
+    private const string ChipDefaultFg = "#374151";
+
+    public string FilterChipAllBg         => FilterStatusOption.Value == null ? ChipActiveBg : ChipDefaultBg;
+    public string FilterChipAllFg         => FilterStatusOption.Value == null ? ChipActiveFg : ChipDefaultFg;
+    public string FilterChipOpenBg        => FilterStatusOption.Value == 0   ? ChipActiveBg : ChipDefaultBg;
+    public string FilterChipOpenFg        => FilterStatusOption.Value == 0   ? ChipActiveFg : ChipDefaultFg;
+    public string FilterChipInProgressBg  => FilterStatusOption.Value == 1   ? ChipActiveBg : ChipDefaultBg;
+    public string FilterChipInProgressFg  => FilterStatusOption.Value == 1   ? ChipActiveFg : ChipDefaultFg;
+    public string FilterChipCompletedBg   => FilterStatusOption.Value == 2   ? ChipActiveBg : ChipDefaultBg;
+    public string FilterChipCompletedFg   => FilterStatusOption.Value == 2   ? ChipActiveFg : ChipDefaultFg;
+
+    [RelayCommand]
+    public async Task SetFilterAllAsync()
+    {
+        FilterStatusOption = StatusFilterOptions[0];
+        await LoadMessagesAsync();
+    }
+
+    [RelayCommand]
+    public async Task SetFilterOpenAsync()
+    {
+        FilterStatusOption = StatusFilterOptions[1];
+        await LoadMessagesAsync();
+    }
+
+    [RelayCommand]
+    public async Task SetFilterInProgressAsync()
+    {
+        FilterStatusOption = StatusFilterOptions[2];
+        await LoadMessagesAsync();
+    }
+
+    [RelayCommand]
+    public async Task SetFilterCompletedAsync()
+    {
+        FilterStatusOption = StatusFilterOptions[3];
+        await LoadMessagesAsync();
+    }
+
     // ── Helper ────────────────────────────────────────────────────────────────
 
     private bool CanSave()           => !IsSaving;
@@ -469,6 +512,18 @@ public partial class MmViewModel : ViewModelBase
         ShowEditFormCommand.NotifyCanExecuteChanged();
         UpdateStatusCommand.NotifyCanExecuteChanged();
         AssignContractorCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnFilterStatusOptionChanged(MmStatusOption value)
+    {
+        OnPropertyChanged(nameof(FilterChipAllBg));
+        OnPropertyChanged(nameof(FilterChipAllFg));
+        OnPropertyChanged(nameof(FilterChipOpenBg));
+        OnPropertyChanged(nameof(FilterChipOpenFg));
+        OnPropertyChanged(nameof(FilterChipInProgressBg));
+        OnPropertyChanged(nameof(FilterChipInProgressFg));
+        OnPropertyChanged(nameof(FilterChipCompletedBg));
+        OnPropertyChanged(nameof(FilterChipCompletedFg));
     }
 
     partial void OnIsSavingChanged(bool value) => SaveCommand.NotifyCanExecuteChanged();

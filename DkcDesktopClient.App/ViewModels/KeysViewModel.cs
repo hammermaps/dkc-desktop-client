@@ -46,6 +46,13 @@ public partial class KeysViewModel : ViewModelBase
     [ObservableProperty] private string _formIssuedAt = string.Empty;
     [ObservableProperty] private string _formIssueNotes = string.Empty;
 
+    // Return form
+    [ObservableProperty] private bool _isReturnFormVisible;
+    [ObservableProperty] private bool _isSavingReturn;
+    [ObservableProperty] private string? _returnFormError;
+    [ObservableProperty] private string _formReturnDate = string.Empty;
+    [ObservableProperty] private string _formReturnNotes = string.Empty;
+
     public KeysViewModel(DkcApiFactory apiFactory, AuthService authService)
     {
         _apiFactory = apiFactory;
@@ -100,6 +107,11 @@ public partial class KeysViewModel : ViewModelBase
     [RelayCommand]
     public void ShowCreateKeyForm()
     {
+        IsIssueFormVisible  = false;
+        IsReturnFormVisible = false;
+        IssueFormError      = null;
+        ReturnFormError     = null;
+
         IsEditingKey = false;
         _editingKeyId = null;
         FormKeyName = string.Empty;
@@ -113,6 +125,12 @@ public partial class KeysViewModel : ViewModelBase
     public void ShowEditKeyForm()
     {
         if (SelectedInventoryItem == null) return;
+
+        IsIssueFormVisible  = false;
+        IsReturnFormVisible = false;
+        IssueFormError      = null;
+        ReturnFormError     = null;
+
         IsEditingKey = true;
         _editingKeyId = SelectedInventoryItem.Id;
         FormKeyName = SelectedInventoryItem.Name ?? string.Empty;
@@ -182,6 +200,11 @@ public partial class KeysViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(HasSelectedInventoryItem))]
     public void ShowIssueForm()
     {
+        // Close other inline forms first to avoid overlapping panels
+        IsKeyFormVisible    = false;
+        IsReturnFormVisible = false;
+        ReturnFormError     = null;
+
         FormIssuedTo = string.Empty;
         FormIssuedAt = DateTime.Today.ToString("yyyy-MM-dd");
         FormIssueNotes = string.Empty;
@@ -242,21 +265,63 @@ public partial class KeysViewModel : ViewModelBase
     }
 
     // — Return key —
+    [RelayCommand(CanExecute = nameof(HasActiveIssuedItem))]
+    public void ShowReturnForm()
+    {
+        if (SelectedIssuedItem == null) return;
+
+        // Close other inline forms first to avoid overlapping panels
+        IsKeyFormVisible   = false;
+        IsIssueFormVisible = false;
+        IssueFormError     = null;
+
+        FormReturnDate  = DateTime.Today.ToString("yyyy-MM-dd");
+        FormReturnNotes = string.Empty;
+        ReturnFormError = null;
+        IsReturnFormVisible = true;
+    }
+
+    [RelayCommand]
+    public void CancelReturnForm()
+    {
+        IsReturnFormVisible = false;
+        ReturnFormError     = null;
+    }
+
     [RelayCommand(CanExecute = nameof(HasSelectedIssuedItem))]
     public async Task ReturnKeyAsync()
     {
         if (SelectedIssuedItem == null) return;
+        if (IsReturnFormVisible && string.IsNullOrWhiteSpace(FormReturnDate))
+        {
+            ReturnFormError = "Rückgabedatum ist erforderlich.";
+            return;
+        }
+        IsSavingReturn = true;
+        ReturnFormError = null;
         IsLoading = true;
         ErrorMessage = null;
         try
         {
             var api = _apiFactory.Create(_authService.CurrentToken);
+            var date = IsReturnFormVisible && !string.IsNullOrWhiteSpace(FormReturnDate)
+                ? FormReturnDate
+                : DateTime.Today.ToString("yyyy-MM-dd");
+            var notes = IsReturnFormVisible && !string.IsNullOrWhiteSpace(FormReturnNotes)
+                ? FormReturnNotes
+                : null;
             var result = await api.ReturnKeyAsync(SelectedIssuedItem.Id,
-                new KeyReturnRequest(DateTime.Today.ToString("yyyy-MM-dd"), null));
+                new KeyReturnRequest(date, notes));
             if (result.Success)
+            {
+                IsReturnFormVisible = false;
                 await LoadDataAsync();
+            }
             else
-                ErrorMessage = result.Error ?? "Return failed.";
+            {
+                ReturnFormError = result.Error ?? "Rückgabe fehlgeschlagen.";
+                ErrorMessage    = ReturnFormError;
+            }
         }
         catch (Exception ex)
         {
@@ -264,7 +329,8 @@ public partial class KeysViewModel : ViewModelBase
         }
         finally
         {
-            IsLoading = false;
+            IsLoading      = false;
+            IsSavingReturn = false;
         }
     }
 
@@ -302,6 +368,7 @@ public partial class KeysViewModel : ViewModelBase
     private bool CanSaveIssue() => !IsSavingIssue;
     private bool HasSelectedInventoryItem() => SelectedInventoryItem != null;
     private bool HasSelectedIssuedItem() => SelectedIssuedItem != null;
+    private bool HasActiveIssuedItem() => SelectedIssuedItem?.ReturnedAt == null;
 
     partial void OnSelectedInventoryItemChanged(KeyInventoryItem? value)
     {
@@ -312,6 +379,7 @@ public partial class KeysViewModel : ViewModelBase
     partial void OnSelectedIssuedItemChanged(KeyIssuedItem? value)
     {
         ReturnKeyCommand.NotifyCanExecuteChanged();
+        ShowReturnFormCommand.NotifyCanExecuteChanged();
         DeleteIssuedCommand.NotifyCanExecuteChanged();
     }
 

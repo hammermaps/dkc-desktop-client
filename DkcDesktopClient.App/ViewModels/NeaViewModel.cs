@@ -1,10 +1,24 @@
 using System.Collections.ObjectModel;
+using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DkcDesktopClient.Core.Api;
 using DkcDesktopClient.Core.Services;
 
 namespace DkcDesktopClient.App.ViewModels;
+
+/// <summary>An editable checklist item within a NEA inspection.</summary>
+public partial class NeaChecklistEditItem : ObservableObject
+{
+    public int CheckpointId { get; init; }
+    [ObservableProperty] private string _name = string.Empty;
+    [ObservableProperty] private string _status = "ok";
+    [ObservableProperty] private string _note = string.Empty;
+    [ObservableProperty] private string _comment = string.Empty;
+
+    public static IReadOnlyList<string> StatusOptions { get; } =
+        new[] { "ok", "nok", "n_a" };
+}
 
 public partial class NeaViewModel : ViewModelBase
 {
@@ -60,6 +74,12 @@ public partial class NeaViewModel : ViewModelBase
     [ObservableProperty] private string _formInspectionNotes = string.Empty;
     [ObservableProperty] private string _formDefectsFound = string.Empty;
     [ObservableProperty] private string _formCorrectiveActions = string.Empty;
+
+    // Checklist
+    [ObservableProperty] private bool _isChecklistVisible;
+    [ObservableProperty] private bool _isSavingChecklist;
+    [ObservableProperty] private string? _checklistError;
+    [ObservableProperty] private ObservableCollection<NeaChecklistEditItem> _checklistItems = new();
 
     public static IReadOnlyList<string> InspectionTypeOptions { get; } =
         new[] { "annual", "monthly", "quarterly", "ad_hoc" };
@@ -417,8 +437,98 @@ public partial class NeaViewModel : ViewModelBase
     private bool CanSaveInspection() => !IsSavingInspection;
     private bool HasSelectedSystem() => SelectedSystem != null;
     private bool HasSelectedInspection() => SelectedInspection != null;
+    private bool CanSaveChecklist() => !IsSavingChecklist;
 
     private static string? Nz(string s) => string.IsNullOrWhiteSpace(s) ? null : s;
+
+    // ── Checklist commands ────────────────────────────────────────────────────
+
+    [RelayCommand(CanExecute = nameof(HasSelectedInspection))]
+    public void ShowChecklist()
+    {
+        BuildChecklistItems();
+        IsChecklistVisible = true;
+    }
+
+    [RelayCommand]
+    public void HideChecklist() => IsChecklistVisible = false;
+
+    [RelayCommand(CanExecute = nameof(CanSaveChecklist))]
+    public async Task SaveChecklistAsync()
+    {
+        if (SelectedInspection == null || ChecklistItems.Count == 0) return;
+        IsSavingChecklist = true;
+        ChecklistError    = null;
+        try
+        {
+            var api   = _apiFactory.Create(_authService.CurrentToken);
+            var items = ChecklistItems
+                .Select(ci => new NeaChecklistUpdateItem(ci.CheckpointId, ci.Status, Nz(ci.Note), Nz(ci.Comment)))
+                .ToList();
+            var result = await api.UpdateNeaChecklistAsync(SelectedInspection.Id, new NeaChecklistUpdateRequest(items));
+            if (!result.Success)
+                ChecklistError = result.Error ?? "Checkliste speichern fehlgeschlagen.";
+        }
+        catch (Exception ex)
+        {
+            ChecklistError = $"Fehler: {ex.Message}";
+        }
+        finally
+        {
+            IsSavingChecklist = false;
+        }
+    }
+
+    private void BuildChecklistItems()
+    {
+        ChecklistItems.Clear();
+        if (InspectionDetail?.ChecklistData == null) return;
+        try
+        {
+            var json = JsonSerializer.Serialize(InspectionDetail.ChecklistData);
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            if (root.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var el in root.EnumerateArray())
+                {
+                    var item = new NeaChecklistEditItem
+                    {
+                        CheckpointId = el.TryGetProperty("checkpoint_id", out var cpid) ? cpid.GetInt32() : 0,
+                        Name         = el.TryGetProperty("name",          out var n)    ? n.GetString() ?? string.Empty : string.Empty,
+                        Status       = el.TryGetProperty("status",        out var s)    ? s.GetString() ?? "ok"         : "ok",
+                        Note         = el.TryGetProperty("note",          out var nt)   ? nt.GetString() ?? string.Empty : string.Empty,
+                        Comment      = el.TryGetProperty("comment",       out var c)    ? c.GetString() ?? string.Empty : string.Empty,
+                    };
+                    ChecklistItems.Add(item);
+                }
+            }
+            else if (root.ValueKind == JsonValueKind.Object)
+            {
+                int i = 0;
+                foreach (var prop in root.EnumerateObject())
+                {
+                    int checkpointId = int.TryParse(prop.Name, out var pid) ? pid : ++i;
+                    var valKind = prop.Value.ValueKind;
+                    var item = new NeaChecklistEditItem
+                    {
+                        CheckpointId = checkpointId,
+                        Name         = prop.Name,
+                        Status       = valKind == JsonValueKind.Object && prop.Value.TryGetProperty("status", out var s) ? s.GetString() ?? "ok" : "ok",
+                        Note         = valKind == JsonValueKind.Object && prop.Value.TryGetProperty("note",   out var nt) ? nt.GetString() ?? string.Empty : string.Empty,
+                        Comment      = valKind == JsonValueKind.Object && prop.Value.TryGetProperty("comment", out var c) ? c.GetString() ?? string.Empty : string.Empty,
+                    };
+                    ChecklistItems.Add(item);
+                }
+            }
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            // If JSON parsing fails, start with an empty checklist — this is expected if the backend
+            // returns a format we don't recognize or an empty object.
+        }
+    }
 
     partial void OnSelectedSystemChanged(NeaSystem? value)
     {
@@ -433,8 +543,10 @@ public partial class NeaViewModel : ViewModelBase
         if (value != null) _ = LoadInspectionDetailAsync();
         ShowEditInspectionFormCommand.NotifyCanExecuteChanged();
         CompleteInspectionCommand.NotifyCanExecuteChanged();
+        ShowChecklistCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnIsSavingSystemChanged(bool value) => SaveSystemCommand.NotifyCanExecuteChanged();
     partial void OnIsSavingInspectionChanged(bool value) => SaveInspectionCommand.NotifyCanExecuteChanged();
+    partial void OnIsSavingChecklistChanged(bool value) => SaveChecklistCommand.NotifyCanExecuteChanged();
 }

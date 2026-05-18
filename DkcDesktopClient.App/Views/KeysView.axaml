@@ -8,14 +8,14 @@
     <!-- Toolbar -->
     <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
       <TextBlock Text="Keys Management" FontSize="24" FontWeight="Bold" VerticalAlignment="Center"/>
-      <Button Content="Refresh" Command="{Binding LoadDataCommand}"/>
+      <Button Content="Aktualisieren" Command="{Binding LoadDataCommand}"/>
       <Separator Width="1" Background="#CCCCCC" Margin="4,0"/>
-      <Button Content="New Key" Command="{Binding ShowCreateKeyFormCommand}"/>
-      <Button Content="Edit Key" Command="{Binding ShowEditKeyFormCommand}"/>
-      <Button Content="Issue Key" Command="{Binding ShowIssueFormCommand}"/>
+      <Button Content="Neu" Command="{Binding ShowCreateKeyFormCommand}"/>
+      <Button Content="Bearbeiten" Command="{Binding ShowEditKeyFormCommand}"/>
+      <Button Content="Ausgeben" Command="{Binding ShowIssueFormCommand}"/>
       <Separator Width="1" Background="#CCCCCC" Margin="4,0"/>
-      <Button Content="Return Selected" Command="{Binding ReturnKeyCommand}"/>
-      <Button Content="Delete Issued" Command="{Binding DeleteIssuedCommand}" Foreground="Red"/>
+      <Button Content="🔄 Zurückgeben" Command="{Binding ShowReturnFormCommand}"/>
+      <Button Content="Löschen" Command="{Binding DeleteIssuedCommand}" Foreground="Red"/>
     </StackPanel>
 
     <!-- Stats tiles -->
@@ -78,21 +78,42 @@
     <Border Grid.Row="4" IsVisible="{Binding IsIssueFormVisible}"
             Background="#FAF089" BorderThickness="1" BorderBrush="#F6C90E" CornerRadius="4" Padding="12">
       <StackPanel Spacing="8">
-        <TextBlock Text="{Binding SelectedInventoryItem.Name, StringFormat='Issue: {0}'}" FontSize="15" FontWeight="SemiBold"/>
+        <TextBlock Text="{Binding SelectedInventoryItem.Name, StringFormat='Ausgeben: {0}'}" FontSize="15" FontWeight="SemiBold"/>
         <TextBlock Text="{Binding IssueFormError}" Foreground="Red"
                    IsVisible="{Binding IssueFormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
         <Grid ColumnDefinitions="100,8,*,16,100,8,*" RowDefinitions="Auto,8,Auto" RowSpacing="0">
-          <TextBlock Grid.Row="0" Grid.Column="0" Text="Issued To *" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding FormIssuedTo}" PlaceholderText="Person name (required)"/>
-          <TextBlock Grid.Row="0" Grid.Column="4" Text="Date *" VerticalAlignment="Center"/>
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="Empfänger *" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding FormIssuedTo}" PlaceholderText="Personenname (Pflichtfeld)"/>
+          <TextBlock Grid.Row="0" Grid.Column="4" Text="Datum *" VerticalAlignment="Center"/>
           <TextBox Grid.Row="0" Grid.Column="6" Text="{Binding FormIssuedAt}" PlaceholderText="YYYY-MM-DD"/>
-          <TextBlock Grid.Row="2" Grid.Column="0" Text="Notes" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="5" Text="{Binding FormIssueNotes}" PlaceholderText="Optional notes"/>
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="Notizen" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="5" Text="{Binding FormIssueNotes}" PlaceholderText="Optionale Notizen"/>
         </Grid>
         <StackPanel Orientation="Horizontal" Spacing="8">
-          <Button Content="Issue Key" Command="{Binding IssueKeyCommand}"/>
-          <Button Content="Cancel" Command="{Binding CancelIssueFormCommand}"/>
+          <Button Content="Ausgeben" Command="{Binding IssueKeyCommand}"/>
+          <Button Content="Abbrechen" Command="{Binding CancelIssueFormCommand}"/>
           <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSavingIssue}" Width="80" Height="16" VerticalAlignment="Center"/>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- Return form -->
+    <Border Grid.Row="4" IsVisible="{Binding IsReturnFormVisible}"
+            Background="#C6F6D5" BorderThickness="1" BorderBrush="#68D391" CornerRadius="4" Padding="12">
+      <StackPanel Spacing="8">
+        <TextBlock Text="{Binding SelectedIssuedItem.KeyName, StringFormat='Rückgabe: {0}'}" FontSize="15" FontWeight="SemiBold"/>
+        <TextBlock Text="{Binding ReturnFormError}" Foreground="Red"
+                   IsVisible="{Binding ReturnFormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+        <Grid ColumnDefinitions="130,8,*,16,130,8,*">
+          <TextBlock Grid.Column="0" Text="Rückgabedatum *" VerticalAlignment="Center"/>
+          <TextBox   Grid.Column="2" Text="{Binding FormReturnDate}" PlaceholderText="YYYY-MM-DD"/>
+          <TextBlock Grid.Column="4" Text="Notizen" VerticalAlignment="Center"/>
+          <TextBox   Grid.Column="6" Text="{Binding FormReturnNotes}" PlaceholderText="Optionale Notizen"/>
+        </Grid>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Button Content="Rückgabe bestätigen" Command="{Binding ReturnKeyCommand}"/>
+          <Button Content="Abbrechen" Command="{Binding CancelReturnFormCommand}"/>
+          <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSavingReturn}" Width="80" Height="16" VerticalAlignment="Center"/>
         </StackPanel>
       </StackPanel>
     </Border>

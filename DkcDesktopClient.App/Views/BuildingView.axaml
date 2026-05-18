@@ -144,14 +144,26 @@
         <GridSplitter Grid.Row="1" Height="4"/>
         <ScrollViewer Grid.Row="2">
           <StackPanel Margin="4" Spacing="8" IsVisible="{Binding InspectionDetail, Converter={x:Static ObjectConverters.IsNotNull}}">
-            <TextBlock Text="Checkpoint Results" FontSize="16" FontWeight="SemiBold"/>
-            <DataGrid ItemsSource="{Binding InspectionDetail.Results}" IsReadOnly="True" AutoGenerateColumns="False">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBlock Text="Checkpoint Results" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+              <Button Content="Alle Änderungen speichern" Command="{Binding SaveAllCheckpointsCommand}"/>
+              <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSavingCheckpoints}" Width="80" Height="14" VerticalAlignment="Center"/>
+            </StackPanel>
+            <TextBlock Text="{Binding CheckpointError}" Foreground="Red"
+                       IsVisible="{Binding CheckpointError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+            <DataGrid ItemsSource="{Binding CheckpointEdits}" IsReadOnly="False" AutoGenerateColumns="False" MaxHeight="300">
               <DataGrid.Columns>
-                <DataGridTextColumn Header="Checkpoint" Binding="{Binding CheckpointName}" Width="*"/>
-                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90"/>
-                <DataGridTextColumn Header="Note" Binding="{Binding Note}" Width="150"/>
-                <DataGridTextColumn Header="Comment" Binding="{Binding Comment}" Width="150"/>
-                <DataGridTextColumn Header="Editor" Binding="{Binding EditedByName}" Width="120"/>
+                <DataGridTextColumn Header="Prüfpunkt" Binding="{Binding CheckpointName}" Width="*" IsReadOnly="True"/>
+                <DataGridTemplateColumn Header="Status" Width="120">
+                  <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate x:DataType="vm:CheckpointEditItem">
+                      <ComboBox ItemsSource="{x:Static vm:CheckpointEditItem.StatusOptions}"
+                                SelectedItem="{Binding Status}" HorizontalAlignment="Stretch"/>
+                    </DataTemplate>
+                  </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Notiz"     Binding="{Binding Note}"    Width="200"/>
+                <DataGridTextColumn Header="Kommentar" Binding="{Binding Comment}" Width="200"/>
               </DataGrid.Columns>
             </DataGrid>
           </StackPanel>
