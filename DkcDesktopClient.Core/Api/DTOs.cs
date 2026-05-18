@@ -194,6 +194,24 @@ public record MmMessage(
         "notfall"  => "🔴 Notfall",
         _          => "Normal"
     };
+
+    /// <summary>Hex color for the urgency badge (safe for XAML string binding).</summary>
+    public string DringlichkeitColorHex => Dringlichkeit switch
+    {
+        "dringend" => "#D97706",
+        "notfall"  => "#DC2626",
+        _          => "#718096"
+    };
+
+    /// <summary>Hex color for the status badge.</summary>
+    public string StatusColorHex => Status switch
+    {
+        0 => "#3B82F6",  // open – blue
+        1 => "#D97706",  // in progress – amber
+        2 => "#10B981",  // completed – green
+        3 => "#6B7280",  // closed – gray
+        _ => "#6B7280"
+    };
 }
 
 public record MmListResponse(

@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:DkcDesktopClient.App.ViewModels"
+             xmlns:api="using:DkcDesktopClient.Core.Api"
              xmlns:controls="using:DkcDesktopClient.App.Controls"
              x:Class="DkcDesktopClient.App.Views.DashboardView"
              x:DataType="vm:DashboardViewModel">
@@ -14,10 +15,29 @@
         </StackPanel>
       </DockPanel>
 
+      <!-- Project quick-switch -->
+      <Border Classes="card" Background="#F0F9FF" BorderBrush="#BAE6FD" IsVisible="{Binding Projects.Count}">
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="Aktives Projekt:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+          <ComboBox ItemsSource="{Binding Projects}"
+                    SelectedItem="{Binding SelectedProject}"
+                    MinWidth="240">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="api:Project">
+                <TextBlock Text="{Binding Name}"/>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <Button Content="Als aktiv setzen" Command="{Binding SetActiveProjectCommand}" Classes="primary"/>
+          <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSettingProject}" Width="60" Height="14" VerticalAlignment="Center"/>
+        </StackPanel>
+      </Border>
+
       <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}"
                  IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
       <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}" Height="4"/>
 
+      <!-- Stats tiles -->
       <WrapPanel Orientation="Horizontal" ItemWidth="190" ItemHeight="124">
         <controls:StatCard Title="Mängelmeldungen" Value="{Binding MmTotalText}" Icon="🔧" BackgroundColor="#EFF6FF"
                            ToolTip.Tip="Gesamtzahl der geladenen Mängelmeldungen"/>
@@ -28,6 +48,26 @@
         <controls:StatCard Title="Überfällige Prüfungen" Value="{Binding NeaOverdueInspectionsText}" Icon="⚠" BackgroundColor="#FEF2F2" TrendColor="#EF4444"
                            ToolTip.Tip="Anzahl überfälliger NEA-Prüfungen"/>
       </WrapPanel>
+
+      <!-- MM stats row -->
+      <Border Classes="card">
+        <Grid ColumnDefinitions="*,1,*,1,*" ColumnSpacing="0">
+          <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+            <TextBlock Text="Offen" FontSize="12" Foreground="#4A5568" HorizontalAlignment="Center"/>
+            <TextBlock Text="{Binding MmOpenText}" FontSize="28" FontWeight="Bold" Foreground="#D97706" HorizontalAlignment="Center"/>
+          </StackPanel>
+          <Border Grid.Column="1" Background="#E2E8F0"/>
+          <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+            <TextBlock Text="In Bearbeitung" FontSize="12" Foreground="#4A5568" HorizontalAlignment="Center"/>
+            <TextBlock Text="{Binding MmInProgress}" FontSize="28" FontWeight="Bold" Foreground="#3B82F6" HorizontalAlignment="Center"/>
+          </StackPanel>
+          <Border Grid.Column="3" Background="#E2E8F0"/>
+          <StackPanel Grid.Column="4" HorizontalAlignment="Center">
+            <TextBlock Text="Gesamt" FontSize="12" Foreground="#4A5568" HorizontalAlignment="Center"/>
+            <TextBlock Text="{Binding MmTotalText}" FontSize="28" FontWeight="Bold" HorizontalAlignment="Center"/>
+          </StackPanel>
+        </Grid>
+      </Border>
 
       <Border Classes="card" Background="#FFFBEB" BorderBrush="#F59E0B" IsVisible="{Binding HasOverdueItems}">
         <StackPanel Spacing="10">
@@ -51,6 +91,7 @@
           <StackPanel Orientation="Horizontal" Spacing="10">
             <Button Content="Neue Mängelmeldung" Command="{Binding CreateMmCommand}" Classes="primary"/>
             <Button Content="NEA-Prüfung starten" Command="{Binding StartNeaInspectionCommand}" Classes="primary"/>
+            <Button Content="Dashboard neu laden" Command="{Binding LoadDataCommand}"/>
           </StackPanel>
         </StackPanel>
       </Border>

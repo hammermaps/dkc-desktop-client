@@ -20,14 +20,23 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty] private ObservableCollection<Project> _projects = new();
     [ObservableProperty] private Project? _selectedProject;
     [ObservableProperty] private int _mmTotal;
+    [ObservableProperty] private int _mmOpen;
+    [ObservableProperty] private int _mmInProgress;
     [ObservableProperty] private int _keysAvailable;
+    [ObservableProperty] private int _keysTotal;
     [ObservableProperty] private int _neaTotalSystems;
     [ObservableProperty] private int _neaOverdueInspections;
     [ObservableProperty] private bool _hasOverdueItems;
     [ObservableProperty] private ObservableCollection<NeaOverdueItem> _overdueItems = new();
     [ObservableProperty] private ObservableCollection<NeaRecentInspection> _recentInspections = new();
+    [ObservableProperty] private int _buildingOpen;
+    [ObservableProperty] private int _buildingInProgress;
+    [ObservableProperty] private int _buildingCompleted;
+    [ObservableProperty] private int _unreadNotifications;
+    [ObservableProperty] private bool _isSettingProject;
 
     public string MmTotalText => MmTotal.ToString("N0");
+    public string MmOpenText => MmOpen.ToString("N0");
     public string KeysAvailableText => KeysAvailable.ToString("N0");
     public string NeaTotalSystemsText => NeaTotalSystems.ToString("N0");
     public string NeaOverdueInspectionsText => NeaOverdueInspections.ToString("N0");
@@ -49,6 +58,7 @@ public partial class DashboardViewModel : ViewModelBase
     public event EventHandler? StartNeaInspectionRequested;
 
     partial void OnMmTotalChanged(int value) => OnPropertyChanged(nameof(MmTotalText));
+    partial void OnMmOpenChanged(int value) => OnPropertyChanged(nameof(MmOpenText));
     partial void OnKeysAvailableChanged(int value) => OnPropertyChanged(nameof(KeysAvailableText));
     partial void OnNeaTotalSystemsChanged(int value) => OnPropertyChanged(nameof(NeaTotalSystemsText));
     partial void OnNeaOverdueInspectionsChanged(int value) => OnPropertyChanged(nameof(NeaOverdueInspectionsText));
@@ -104,7 +114,11 @@ public partial class DashboardViewModel : ViewModelBase
             }
 
             if (mmTask.Result?.Success == true)
-                MmTotal = mmTask.Result.Total ?? mmTask.Result.Messages?.Count ?? 0;
+            {
+                MmTotal    = mmTask.Result.Total ?? mmTask.Result.Messages?.Count ?? 0;
+                MmOpen     = mmTask.Result.Messages?.Count(m => m.Status == 0) ?? 0;
+                MmInProgress = mmTask.Result.Messages?.Count(m => m.Status == 1) ?? 0;
+            }
 
             if (keysTask.Result?.Success == true)
             {
@@ -140,6 +154,37 @@ public partial class DashboardViewModel : ViewModelBase
     {
         StartNeaInspectionRequested?.Invoke(this, EventArgs.Empty);
     }
+
+    [RelayCommand(CanExecute = nameof(CanSetProject))]
+    public async Task SetActiveProjectAsync()
+    {
+        if (SelectedProject == null) return;
+        IsSettingProject = true;
+        ErrorMessage     = null;
+        try
+        {
+            var api    = _apiFactory.Create(_authService.CurrentToken);
+            var result = await api.SetActiveProjectAsync(new ProjectSetActiveRequest(SelectedProject.Id));
+            if (!result.Success)
+                ErrorMessage = result.Error ?? "Projekt konnte nicht gesetzt werden.";
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Fehler beim Setzen des Projekts: {ex.Message}";
+        }
+        finally
+        {
+            IsSettingProject = false;
+        }
+    }
+
+    private bool CanSetProject() => SelectedProject != null && !IsSettingProject;
+
+    partial void OnSelectedProjectChanged(Project? value) =>
+        SetActiveProjectCommand.NotifyCanExecuteChanged();
+
+    partial void OnIsSettingProjectChanged(bool value) =>
+        SetActiveProjectCommand.NotifyCanExecuteChanged();
 
     private void OnDataRefreshed(object? sender, string key)
     {

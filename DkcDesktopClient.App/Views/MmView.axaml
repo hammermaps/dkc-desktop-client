@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:DkcDesktopClient.App.ViewModels"
+             xmlns:api="using:DkcDesktopClient.Core.Api"
              xmlns:controls="using:DkcDesktopClient.App.Controls"
              x:Class="DkcDesktopClient.App.Views.MmView"
              x:DataType="vm:MmViewModel">
@@ -18,27 +19,44 @@
 
     <!-- ═══════════════════════════════  Filter-Leiste  ════════════════════════════════ -->
     <Border Grid.Row="1" Background="#F7F8FA" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="8,6">
-      <StackPanel Orientation="Horizontal" Spacing="8">
+      <StackPanel Spacing="6">
+        <!-- Quick filter chips -->
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <TextBlock Text="Schnellfilter:" VerticalAlignment="Center" FontSize="12" Foreground="#6B7280"/>
+          <Button Content="Alle" Command="{Binding SetFilterAllCommand}"
+                  Padding="10,3" FontSize="12"
+                  Background="{Binding FilterChipAllBg}" Foreground="{Binding FilterChipAllFg}"/>
+          <Button Content="Offen" Command="{Binding SetFilterOpenCommand}"
+                  Padding="10,3" FontSize="12"
+                  Background="{Binding FilterChipOpenBg}" Foreground="{Binding FilterChipOpenFg}"/>
+          <Button Content="In Bearbeitung" Command="{Binding SetFilterInProgressCommand}"
+                  Padding="10,3" FontSize="12"
+                  Background="{Binding FilterChipInProgressBg}" Foreground="{Binding FilterChipInProgressFg}"/>
+          <Button Content="Erledigt" Command="{Binding SetFilterCompletedCommand}"
+                  Padding="10,3" FontSize="12"
+                  Background="{Binding FilterChipCompletedBg}" Foreground="{Binding FilterChipCompletedFg}"/>
+        </StackPanel>
 
-        <!-- Status-Filter -->
-        <TextBlock Text="Status:" VerticalAlignment="Center" FontWeight="SemiBold"/>
-        <ComboBox ItemsSource="{x:Static vm:MmViewModel.StatusFilterOptions}"
-                  SelectedItem="{Binding FilterStatusOption}"
-                  MinWidth="150">
-          <ComboBox.ItemTemplate>
-            <DataTemplate x:DataType="vm:MmStatusOption">
-              <TextBlock Text="{Binding Label}"/>
-            </DataTemplate>
-          </ComboBox.ItemTemplate>
-        </ComboBox>
+        <!-- Main filter row -->
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <TextBlock Text="Status:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+          <ComboBox ItemsSource="{x:Static vm:MmViewModel.StatusFilterOptions}"
+                    SelectedItem="{Binding FilterStatusOption}"
+                    MinWidth="150">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:MmStatusOption">
+                <TextBlock Text="{Binding Label}"/>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
 
-        <!-- Straße-Filter -->
-        <TextBlock Text="Straße:" VerticalAlignment="Center" FontWeight="SemiBold"/>
-        <TextBox Text="{Binding FilterStreet}" PlaceholderText="Straße filtern…" Width="180"/>
+          <TextBlock Text="Straße:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+          <TextBox Text="{Binding FilterStreet}" PlaceholderText="Straße filtern…" Width="180"/>
 
-        <Button Content="Suchen" Command="{Binding LoadMessagesCommand}"/>
-        <TextBlock Text="{Binding TotalMessages, StringFormat='Gesamt: {0}'}"
-                   VerticalAlignment="Center" Foreground="#4A5568"/>
+          <Button Content="Suchen" Command="{Binding LoadMessagesCommand}"/>
+          <TextBlock Text="{Binding TotalMessages, StringFormat='Gesamt: {0}'}"
+                     VerticalAlignment="Center" Foreground="#4A5568"/>
+        </StackPanel>
       </StackPanel>
     </Border>
 
@@ -145,14 +163,30 @@
                 AutoGenerateColumns="False"
                 GridLinesVisibility="Horizontal">
         <DataGrid.Columns>
-          <DataGridTextColumn Header="UID"          Binding="{Binding Uid}"             Width="130"/>
-          <DataGridTextColumn Header="Betreff"      Binding="{Binding Betreff}"         Width="*"/>
-          <DataGridTextColumn Header="Straße"       Binding="{Binding Street}"          Width="160"/>
-          <DataGridTextColumn Header="Whg"          Binding="{Binding Whg}"             Width="60"/>
-          <DataGridTextColumn Header="Melder"       Binding="{Binding Melder}"          Width="130"/>
-          <DataGridTextColumn Header="Datum"        Binding="{Binding Datetime}"        Width="140"/>
-          <DataGridTextColumn Header="Status"       Binding="{Binding StatusText}"      Width="120"/>
-          <DataGridTextColumn Header="Dringlichkeit" Binding="{Binding DringlichkeitText}" Width="110"/>
+          <DataGridTextColumn Header="UID"       Binding="{Binding Uid}"      Width="130"/>
+          <DataGridTextColumn Header="Betreff"   Binding="{Binding Betreff}"  Width="*"/>
+          <DataGridTextColumn Header="Straße"    Binding="{Binding Street}"   Width="160"/>
+          <DataGridTextColumn Header="Whg"       Binding="{Binding Whg}"      Width="60"/>
+          <DataGridTextColumn Header="Melder"    Binding="{Binding Melder}"   Width="130"/>
+          <DataGridTextColumn Header="Datum"     Binding="{Binding Datetime}" Width="140"/>
+          <DataGridTemplateColumn Header="Status" Width="120">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="api:MmMessage">
+                <Border Background="{Binding StatusColorHex}" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding StatusText}" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                </Border>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Dringlichkeit" Width="120">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="api:MmMessage">
+                <Border Background="{Binding DringlichkeitColorHex}" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding DringlichkeitText}" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                </Border>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
         </DataGrid.Columns>
       </DataGrid>
       <controls:EmptyStateView Icon="🔧"
