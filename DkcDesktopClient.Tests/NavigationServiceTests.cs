@@ -160,7 +160,7 @@ public class NavigationServiceTests
     // ── NavigateBack ───────────────────────────────────────────────────────────
 
     [Fact]
-    public void NavigateBack_ReturnsTosPreviousView()
+    public void NavigateBack_ReturnsToPreviousView()
     {
         var (svc, _) = Create();
         var vm1 = new StubViewModel();

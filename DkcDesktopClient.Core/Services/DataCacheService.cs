@@ -143,10 +143,12 @@ public class DataCacheService
         }
     }
 
+    private static readonly char[] InvalidFileNameChars = Path.GetInvalidFileNameChars();
+
     private string GetDiskPath(string key)
     {
         // Sanitise key to a safe file name
-        var safeName = string.Concat(key.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
+        var safeName = string.Concat(key.Select(c => InvalidFileNameChars.Contains(c) ? '_' : c));
         return Path.Combine(_cacheDir!, $"{safeName}.json");
     }
 }

@@ -84,7 +84,7 @@ public class NavigationService : INavigationService
         SetCurrentView(viewModel);
         BreadcrumbsChanged?.Invoke(this, EventArgs.Empty);
 
-        // Notify the ViewModel about navigation (fire-and-forget; errors are logged)
+        // Notify the ViewModel about navigation; exceptions are caught and logged.
         if (viewModel is INavigationTarget target)
         {
             _ = Task.Run(async () =>
@@ -95,7 +95,12 @@ public class NavigationService : INavigationService
                     _logger.LogWarning(ex, "OnNavigatedToAsync failed for {ViewModel}",
                         viewModel.GetType().Name);
                 }
-            });
+            }).ContinueWith(t =>
+            {
+                if (t.IsFaulted)
+                    _logger.LogError(t.Exception, "Unhandled error in OnNavigatedToAsync for {ViewModel}",
+                        viewModel.GetType().Name);
+            }, TaskContinuationOptions.OnlyOnFaulted);
         }
 
         _logger.LogDebug("NavigateTo → {ViewModel} (parameter: {Parameter})",
