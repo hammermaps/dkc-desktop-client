@@ -1129,3 +1129,120 @@ Die folgenden Endpunkte sind laut `missing-api-endpoints.md` noch nicht implemen
 | Benutzer | `user_delete` (DELETE) | Benutzer löschen (Admin) |
 
 > ⚠️ Diese Liste basiert auf `missing-api-endpoints.md`. Eine vollständige Analyse der `template/default/*`-Dateien im ProxyServer-Projekt ist noch ausstehend.
+
+---
+
+## 9. C# Desktop Client – Architektur & Implementierungsstatus
+
+### 9.1 Technologie-Stack
+
+| Komponente | Technologie |
+|------------|-------------|
+| UI-Framework | Avalonia UI 12 (Cross-Platform: Windows, Linux, macOS) |
+| Sprache | C# / .NET 8.0 |
+| MVVM | CommunityToolkit.Mvvm 8.4 |
+| API-Client | Refit (typisierter HTTP-Client über `IDkcApi`) |
+| Dependency Injection | Microsoft.Extensions.Hosting + Microsoft.Extensions.DependencyInjection |
+| Token-Persistenz | Microsoft.AspNetCore.DataProtection (verschlüsselt, OS-spezifisch) |
+| Logging | Serilog (File-Sink) |
+| Theme | Avalonia Fluent Theme + Inter Font |
+
+**Build:** `dotnet build DkcDesktopClient.slnx --configuration Release`  
+**Test:** `dotnet test DkcDesktopClient.Tests/DkcDesktopClient.Tests.csproj --configuration Release --no-build`
+
+---
+
+### 9.2 Solution-Struktur
+
+```
+DkcDesktopClient.slnx
+├── DkcDesktopClient.App/          # Avalonia UI – Views, ViewModels, App-Einstiegspunkt
+│   ├── Views/                     # AXAML Views (UserControls + MainWindow)
+│   ├── ViewModels/                # MVVM ViewModels (CommunityToolkit.Mvvm)
+│   ├── Assets/                    # Statische Ressourcen (Icons, Bilder)
+│   ├── App.axaml / App.axaml.cs   # Application-Root, Theme-Konfiguration
+│   ├── Program.cs                 # DI-Container, Host-Konfiguration, Serilog
+│   └── ViewLocator.cs             # Automatisches View→ViewModel-Mapping
+│
+├── DkcDesktopClient.Core/         # Kern-Bibliothek (API, Services)
+│   ├── Api/
+│   │   ├── IDkcApi.cs             # Refit-Interface: alle API-Endpunkte typisiert
+│   │   └── DTOs.cs                # Request/Response-Records (System.Text.Json)
+│   └── Services/
+│       ├── AuthService.cs         # Login/Logout/AutoLogin, Berechtigungsverwaltung
+│       ├── DkcApiFactory.cs       # Refit-Client-Factory (Token + Server-URL)
+│       ├── TokenStore.cs          # Verschlüsselte Token-/URL-Persistenz (AppData)
+│       └── UpdateService.cs       # GitHub-Release-Checker + Download + Self-Update
+│
+└── DkcDesktopClient.Tests/        # xUnit-Tests für Core-Services
+```
+
+---
+
+### 9.3 Aktuelle Implementierungsstatus der Views
+
+| View / ViewModel | Lesend | Schreibend | Hintergrund-Refresh | Caching | Status |
+|------------------|--------|-----------|---------------------|---------|--------|
+| `LoginView` | ✅ | ✅ | — | — | ✅ Vollständig |
+| `DashboardView` | ✅ (NEA) | — | ❌ | ❌ | ⚠️ Unvollständig (nur NEA-Stats) |
+| `NeaView` | ✅ | ✅ (CRUD) | ❌ | ❌ | ✅ Grundfunktionen implementiert |
+| `MmView` | ✅ | ✅ (CRUD) | ❌ | ❌ | ⚠️ Teilweise (kein Anhang/Photo) |
+| `BuildingView` | ✅ | ✅ (CRUD) | ❌ | ❌ | ⚠️ Teilweise (keine Checkpoints-UI) |
+| `KlimaView` | ✅ | ✅ (Steuerung) | ❌ | ❌ | ⚠️ Teilweise |
+| `KeysView` | ✅ | ✅ (CRUD) | ❌ | ❌ | ⚠️ Teilweise |
+| `SettingsView` | ✅ | ✅ | — | — | ✅ Token, Projekte, User, Update |
+| WLS (Buildings/Apartments/Records) | ❌ | ❌ | ❌ | ❌ | ❌ Nicht implementiert |
+| Benachrichtigungen | ❌ | — | ❌ | ❌ | ❌ Nicht implementiert |
+| Meter/PWA | ❌ | ❌ | ❌ | ❌ | ❌ Nicht implementiert |
+| Admin-Benutzerverwaltung | ✅ (in Settings) | ✅ (in Settings) | — | — | ⚠️ In Settings eingebettet |
+
+---
+
+### 9.4 Fehlende Infrastruktur-Komponenten
+
+| Komponente | Beschreibung | Priorität |
+|------------|-------------|-----------|
+| `DataCacheService` | In-Memory + Disk-Cache für API-Responses (TTL-basiert) | Hoch |
+| `BackgroundRefreshService` | Periodische Hintergrundaktualisierung von Daten per Timer | Hoch |
+| `NotificationService` | Polling / SSE für Benachrichtigungen, lokale Toast-Anzeige | Mittel |
+| `NavigationService` | Zentraler Navigation-Service mit History/Back-Stack | Mittel |
+| `DialogService` | Zentrale Dialoge (Confirm, Alert, Detail-Panels) | Mittel |
+| `ThemeService` | Light/Dark-Mode-Umschaltung, Akzentfarbe | Niedrig |
+
+---
+
+### 9.5 Navigationsmodell (aktuell)
+
+Die Navigation erfolgt über eine `SplitView` mit einer Sidebar-`ListBox` (NavItems). Der `MainWindowViewModel` verwaltet `CurrentView` und tauscht das aktive ViewModel aus. Es gibt kein Back-Stack oder Deep-Linking.
+
+**Aktuell vorhandene Nav-Items (nach Login):**
+1. Dashboard
+2. NEA (Netzersatzanlagen)
+3. Mängelmeldungen
+4. Buildings (Gebäudebegehungen)
+5. Climate (Klimaanlagen)
+6. Keys (Schlüsselverwaltung)
+7. Settings
+
+**Fehlende Nav-Items:**
+- WLS (Wohnungsleerstandserfassung)
+- Benachrichtigungen / Notifications
+- Meter / Zählererfassung *(Session-basiert, ggf. eingeschränkt)*
+
+---
+
+### 9.6 PHP/Smarty-Template → C#-View-Mapping
+
+| PHP/Smarty Template | C# View | Status |
+|---------------------|---------|--------|
+| `dashboard.tpl` | `DashboardView` | ⚠️ Unvollständig (nur NEA) |
+| `nea.tpl` / `nea_detail.tpl` | `NeaView` | ✅ Grundfunktionen |
+| `mm.tpl` / `mm_detail.tpl` | `MmView` | ⚠️ Kein Photo-Upload |
+| `building.tpl` / `building_detail.tpl` | `BuildingView` | ⚠️ Checkpoints fehlen |
+| `klima.tpl` | `KlimaView` | ⚠️ Teilweise |
+| `keys.tpl` | `KeysView` | ⚠️ Teilweise |
+| `settings.tpl` | `SettingsView` | ✅ |
+| `wls.tpl` / `apartments.tpl` / `records.tpl` | — | ❌ Fehlt |
+| `notifications.tpl` | — | ❌ Fehlt |
+| `meter.tpl` | — | ❌ Fehlt (Session-abhängig) |
+| `admin/users.tpl` | In `SettingsView` | ⚠️ Eingebettet |
