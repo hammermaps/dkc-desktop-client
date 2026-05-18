@@ -84,27 +84,25 @@ public class NavigationService : INavigationService
         SetCurrentView(viewModel);
         BreadcrumbsChanged?.Invoke(this, EventArgs.Empty);
 
-        // Notify the ViewModel about navigation; exceptions are caught and logged.
+        // Notify the ViewModel about navigation; runs on the current synchronization context
+        // (typically the UI thread) so observable-property updates are safe.
         if (viewModel is INavigationTarget target)
         {
-            _ = Task.Run(async () =>
-            {
-                try { await target.OnNavigatedToAsync(parameter); }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "OnNavigatedToAsync failed for {ViewModel}",
-                        viewModel.GetType().Name);
-                }
-            }).ContinueWith(t =>
-            {
-                if (t.IsFaulted)
-                    _logger.LogError(t.Exception, "Unhandled error in OnNavigatedToAsync for {ViewModel}",
-                        viewModel.GetType().Name);
-            }, TaskContinuationOptions.OnlyOnFaulted);
+            _ = InvokeNavigatedToAsync(target, parameter);
         }
 
         _logger.LogDebug("NavigateTo → {ViewModel} (parameter: {Parameter})",
             viewModel.GetType().Name, parameter);
+    }
+
+    private async Task InvokeNavigatedToAsync(INavigationTarget target, object? parameter)
+    {
+        try { await target.OnNavigatedToAsync(parameter); }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "OnNavigatedToAsync failed for {ViewModel}",
+                target.GetType().Name);
+        }
     }
 
     private void SetCurrentView(ViewModelBase viewModel)

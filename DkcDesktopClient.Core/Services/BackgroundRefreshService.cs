@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using DkcDesktopClient.Core.Api;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -29,7 +30,7 @@ public class BackgroundRefreshService : BackgroundService
 
     // Tracks when each key was last successfully loaded (manual or background).
     // Background refresh only runs when Now >= lastLoad + interval.
-    private readonly Dictionary<string, DateTime> _lastLoaded = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, DateTime> _lastLoaded = new(StringComparer.Ordinal);
 
     private static readonly TimeSpan TickInterval = TimeSpan.FromSeconds(10);
 
@@ -84,10 +85,10 @@ public class BackgroundRefreshService : BackgroundService
                 stoppingToken);
 
             await TryRefreshAsync(
-                CacheKeys.Notifications,
+                CacheKeys.NotificationCount,
                 _config.NotificationCount,
                 now,
-                ct => api.GetNotificationsAsync(ct),
+                ct => api.GetNotificationCountAsync(ct),
                 stoppingToken);
 
             await TryRefreshAsync(

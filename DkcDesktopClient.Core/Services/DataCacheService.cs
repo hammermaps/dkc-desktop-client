@@ -63,9 +63,9 @@ public class DataCacheService
                 if (diskValue is not null)
                 {
                     _logger.LogDebug("Cache hit (disk): {Key}", key);
-                    // Disk cache is treated as expired but returned immediately;
-                    // a refresh will happen on the next call once the fetch completes.
-                    _ = FetchAndStoreAsync(key, fetcher, ttl, persistToDisk, ct);
+                    // Store with an already-expired timestamp so the next call will
+                    // refresh via the normal semaphore-protected path.
+                    _cache[key] = new CacheEntry(diskValue, DateTime.MinValue);
                     return diskValue;
                 }
             }
@@ -97,6 +97,9 @@ public class DataCacheService
     public void Invalidate(string key)
     {
         _cache.TryRemove(key, out _);
+        // Also remove the semaphore so it can be garbage-collected.
+        if (_locks.TryRemove(key, out var sem))
+            sem.Dispose();
         _logger.LogDebug("Cache invalidated: {Key}", key);
     }
 
@@ -104,6 +107,12 @@ public class DataCacheService
     public void InvalidateAll()
     {
         _cache.Clear();
+        // Dispose and remove all per-key semaphores.
+        foreach (var key in _locks.Keys.ToList())
+        {
+            if (_locks.TryRemove(key, out var sem))
+                sem.Dispose();
+        }
         _logger.LogDebug("Cache fully invalidated");
     }
 
@@ -166,7 +175,8 @@ public static class CacheKeys
     public const string KeysInventory    = "keys_inventory";
     public const string ProjectsList     = "projects_list";
     public const string UsersList        = "users_list";
-    public const string Notifications    = "notifications";
+    public const string Notifications      = "notifications";
+    public const string NotificationCount  = "notification_count";
 }
 
 /// <summary>Default TTL values per data type (from the ROADMAP specification).</summary>

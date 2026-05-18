@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using DkcDesktopClient.Core.Api;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -8,8 +7,9 @@ namespace DkcDesktopClient.Core.Services;
 /// <summary>
 /// Polling-based notification service that checks for new notifications every 60 seconds.
 /// Acts as a replacement for Server-Sent Events.
-/// - Maintains an <see cref="UnreadNotifications"/> collection bound to the sidebar badge.
+/// - Maintains an internal thread-safe list of unread notifications.
 /// - Raises <see cref="NewNotificationsReceived"/> when new unread items arrive.
+/// - Raises <see cref="UnreadCountChanged"/> when the count changes.
 /// - Pauses automatically when the user is not authenticated.
 /// </summary>
 public class NotificationPollingService : BackgroundService
@@ -20,19 +20,29 @@ public class NotificationPollingService : BackgroundService
 
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(60);
 
-    /// <summary>Current set of unread notification items. Updated on every poll.</summary>
-    public ObservableCollection<NotificationItem> UnreadNotifications { get; } = new();
+    private readonly List<NotificationItem> _unreadNotifications = new();
+    private readonly object _notificationLock = new();
 
-    /// <summary>Total unread count (mirrors <see cref="UnreadNotifications"/>.Count).</summary>
-    public int UnreadCount => UnreadNotifications.Count;
+    /// <summary>Total unread count. Thread-safe.</summary>
+    public int UnreadCount
+    {
+        get { lock (_notificationLock) return _unreadNotifications.Count; }
+    }
+
+    /// <summary>Returns a snapshot of the current unread notification list. Thread-safe.</summary>
+    public IReadOnlyList<NotificationItem> GetUnreadSnapshot()
+    {
+        lock (_notificationLock)
+            return _unreadNotifications.ToList();
+    }
 
     /// <summary>
     /// Raised when new unread notifications are received.
-    /// The integer argument is the new unread count.
+    /// The argument is the list of brand-new items.
     /// </summary>
     public event EventHandler<IReadOnlyList<NotificationItem>>? NewNotificationsReceived;
 
-    /// <summary>Raised whenever the unread count changes.</summary>
+    /// <summary>Raised whenever the unread count changes. Argument is the new count.</summary>
     public event EventHandler<int>? UnreadCountChanged;
 
     public NotificationPollingService(
@@ -67,23 +77,27 @@ public class NotificationPollingService : BackgroundService
         => PollAsync(ct);
 
     /// <summary>
-    /// Marks a notification as read locally (removes it from <see cref="UnreadNotifications"/>).
-    /// Does not currently call the API because the notification endpoint is session-based;
-    /// future backend changes can enable full read-marking here.
+    /// Marks a notification as read locally (removes it from the internal list).
+    /// Raises <see cref="UnreadCountChanged"/>. Callers in the UI should marshal accordingly.
     /// </summary>
     public void MarkAsRead(int notificationId)
     {
-        var item = UnreadNotifications.FirstOrDefault(n => n.Id == notificationId);
-        if (item == null) return;
-
-        UnreadNotifications.Remove(item);
-        UnreadCountChanged?.Invoke(this, UnreadNotifications.Count);
+        int newCount;
+        lock (_notificationLock)
+        {
+            var item = _unreadNotifications.FirstOrDefault(n => n.Id == notificationId);
+            if (item == null) return;
+            _unreadNotifications.Remove(item);
+            newCount = _unreadNotifications.Count;
+        }
+        UnreadCountChanged?.Invoke(this, newCount);
     }
 
     /// <summary>Marks all current notifications as read locally.</summary>
     public void MarkAllAsRead()
     {
-        UnreadNotifications.Clear();
+        lock (_notificationLock)
+            _unreadNotifications.Clear();
         UnreadCountChanged?.Invoke(this, 0);
     }
 
@@ -103,19 +117,22 @@ public class NotificationPollingService : BackgroundService
                 .Where(n => !n.Read)
                 .ToList();
 
-            // Detect genuinely new items (not already in the collection)
-            var existingIds = UnreadNotifications.Select(n => n.Id).ToHashSet();
-            var brandNew    = newUnread.Where(n => !existingIds.Contains(n.Id)).ToList();
+            List<NotificationItem> brandNew;
+            int updatedCount;
+            lock (_notificationLock)
+            {
+                // Detect genuinely new items (not already in the collection)
+                var existingIds = _unreadNotifications.Select(n => n.Id).ToHashSet();
+                brandNew = newUnread.Where(n => !existingIds.Contains(n.Id)).ToList();
 
-            // Remove items that are no longer unread on the server
-            var serverUnreadIds = newUnread.Select(n => n.Id).ToHashSet();
-            var toRemove = UnreadNotifications.Where(n => !serverUnreadIds.Contains(n.Id)).ToList();
-            foreach (var item in toRemove)
-                UnreadNotifications.Remove(item);
+                // Remove items that are no longer unread on the server
+                var serverUnreadIds = newUnread.Select(n => n.Id).ToHashSet();
+                _unreadNotifications.RemoveAll(n => !serverUnreadIds.Contains(n.Id));
 
-            // Add genuinely new items
-            foreach (var item in brandNew)
-                UnreadNotifications.Add(item);
+                // Add genuinely new items
+                _unreadNotifications.AddRange(brandNew);
+                updatedCount = _unreadNotifications.Count;
+            }
 
             if (brandNew.Count > 0)
             {
@@ -123,8 +140,8 @@ public class NotificationPollingService : BackgroundService
                 NewNotificationsReceived?.Invoke(this, brandNew);
             }
 
-            if (toRemove.Count > 0 || brandNew.Count > 0)
-                UnreadCountChanged?.Invoke(this, UnreadNotifications.Count);
+            // Always raise the count event so subscribers stay in sync
+            UnreadCountChanged?.Invoke(this, updatedCount);
         }
         catch (OperationCanceledException)
         {

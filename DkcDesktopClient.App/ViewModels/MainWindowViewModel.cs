@@ -65,7 +65,8 @@ public partial class MainWindowViewModel : ViewModelBase
         _authService.AuthStateChanged += OnAuthStateChanged;
         _navigationService.CurrentViewChanged  += (_, _) => OnPropertyChanged(nameof(CurrentView));
         _navigationService.BreadcrumbsChanged  += (_, _) => Breadcrumbs = _navigationService.Breadcrumbs;
-        _notificationPollingService.UnreadCountChanged += (_, count) => UnreadNotificationCount = count;
+        _notificationPollingService.UnreadCountChanged += (_, count) =>
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => UnreadNotificationCount = count);
 
         UpdateAuthState();
     }
