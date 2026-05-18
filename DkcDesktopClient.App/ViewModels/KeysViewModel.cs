@@ -107,6 +107,11 @@ public partial class KeysViewModel : ViewModelBase
     [RelayCommand]
     public void ShowCreateKeyForm()
     {
+        IsIssueFormVisible  = false;
+        IsReturnFormVisible = false;
+        IssueFormError      = null;
+        ReturnFormError     = null;
+
         IsEditingKey = false;
         _editingKeyId = null;
         FormKeyName = string.Empty;
@@ -120,6 +125,12 @@ public partial class KeysViewModel : ViewModelBase
     public void ShowEditKeyForm()
     {
         if (SelectedInventoryItem == null) return;
+
+        IsIssueFormVisible  = false;
+        IsReturnFormVisible = false;
+        IssueFormError      = null;
+        ReturnFormError     = null;
+
         IsEditingKey = true;
         _editingKeyId = SelectedInventoryItem.Id;
         FormKeyName = SelectedInventoryItem.Name ?? string.Empty;
@@ -189,6 +200,11 @@ public partial class KeysViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(HasSelectedInventoryItem))]
     public void ShowIssueForm()
     {
+        // Close other inline forms first to avoid overlapping panels
+        IsKeyFormVisible    = false;
+        IsReturnFormVisible = false;
+        ReturnFormError     = null;
+
         FormIssuedTo = string.Empty;
         FormIssuedAt = DateTime.Today.ToString("yyyy-MM-dd");
         FormIssueNotes = string.Empty;
@@ -253,6 +269,12 @@ public partial class KeysViewModel : ViewModelBase
     public void ShowReturnForm()
     {
         if (SelectedIssuedItem == null) return;
+
+        // Close other inline forms first to avoid overlapping panels
+        IsKeyFormVisible   = false;
+        IsIssueFormVisible = false;
+        IssueFormError     = null;
+
         FormReturnDate  = DateTime.Today.ToString("yyyy-MM-dd");
         FormReturnNotes = string.Empty;
         ReturnFormError = null;

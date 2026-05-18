@@ -712,9 +712,16 @@ public record WlsRecord(
     [property: JsonPropertyName("user_firstname")] string? UserFirstname,
     [property: JsonPropertyName("user_lastname")] string? UserLastname)
 {
-    public string DurationText => Duration.HasValue
-        ? TimeSpan.FromSeconds(Duration.Value).ToString(@"hh\:mm\:ss")
-        : "–";
+    public string DurationText
+    {
+        get
+        {
+            if (!Duration.HasValue) return "–";
+            var ts = TimeSpan.FromSeconds(Duration.Value);
+            var totalHours = (int)ts.TotalHours;
+            return $"{totalHours}:{ts.Minutes:D2}:{ts.Seconds:D2}";
+        }
+    }
 }
 
 public record WlsRecordListResponse(

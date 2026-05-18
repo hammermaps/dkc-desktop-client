@@ -71,15 +71,19 @@ public partial class DashboardViewModel : ViewModelBase
                 CacheKeys.NeaDashboard,
                 ct => api.GetNeaDashboardAsync(ct),
                 CacheTtl.DashboardStats);
-            var mmTask = _cache.GetOrFetchAsync(
+            // Three lightweight requests (limit: 1) — we only need the server-side
+            // Total from the pagination header, not the actual message payload.
+            var mmTotalTask      = _cache.GetOrFetchAsync(
                 CacheKeys.MmList,
                 ct => api.GetMmListAsync(limit: 1, ct: ct),
                 CacheTtl.MmList);
+            var mmOpenTask       = api.GetMmListAsync(status: 0, limit: 1);
+            var mmInProgressTask = api.GetMmListAsync(status: 1, limit: 1);
             var keysTask = _cache.GetOrFetchAsync(
                 CacheKeys.KeysInventory,
                 ct => api.GetKeysInventoryAsync(ct),
                 CacheTtl.KeysInventory);
-            await Task.WhenAll(projectsTask, dashboardTask, mmTask, keysTask);
+            await Task.WhenAll(projectsTask, dashboardTask, mmTotalTask, mmOpenTask, mmInProgressTask, keysTask);
 
             Projects.Clear();
             if (projectsTask.Result.Success && projectsTask.Result.Projects != null)
@@ -108,11 +112,11 @@ public partial class DashboardViewModel : ViewModelBase
                 ClearNeaDashboardData();
             }
 
-            if (mmTask.Result?.Success == true)
+            if (mmTotalTask.Result?.Success == true)
             {
-                MmTotal    = mmTask.Result.Total ?? mmTask.Result.Messages?.Count ?? 0;
-                MmOpen     = mmTask.Result.Messages?.Count(m => m.Status == 0) ?? 0;
-                MmInProgress = mmTask.Result.Messages?.Count(m => m.Status == 1) ?? 0;
+                MmTotal      = mmTotalTask.Result.Total ?? 0;
+                MmOpen       = mmOpenTask.Result?.Success == true ? mmOpenTask.Result.Total ?? 0 : 0;
+                MmInProgress = mmInProgressTask.Result?.Success == true ? mmInProgressTask.Result.Total ?? 0 : 0;
             }
 
             if (keysTask.Result?.Success == true)
