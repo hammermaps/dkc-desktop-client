@@ -128,8 +128,6 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (value != null)
         {
-            foreach (var item in NavItems)
-                item.SetActive(item == value);
             _navigationService.NavigateTo(value.ViewModel, value.Title);
         }
     }
@@ -192,16 +190,11 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 }
 
-public partial class NavItem : ObservableObject
+public class NavItem
 {
-    private const string DefaultForeground = "#CBD5E0";
-    private const string ActiveForeground = "#FFFFFF";
-
     public string Icon { get; }
     public string Title { get; }
     public ViewModelBase ViewModel { get; }
-    [ObservableProperty] private bool _isActive;
-    [ObservableProperty] private string _foreground = DefaultForeground;
 
     /// <param name="icon">Short visual icon shown before the navigation title.</param>
     /// <param name="title">Navigation label shown in the sidebar.</param>
@@ -211,11 +204,5 @@ public partial class NavItem : ObservableObject
         Icon      = icon;
         Title     = title;
         ViewModel = viewModel;
-    }
-
-    public void SetActive(bool isActive)
-    {
-        IsActive = isActive;
-        Foreground = isActive ? ActiveForeground : DefaultForeground;
     }
 }

@@ -119,6 +119,8 @@ public partial class DashboardViewModel : ViewModelBase
         catch (Exception ex)
         {
             ClearNeaDashboardData();
+            MmTotal = 0;
+            KeysAvailable = 0;
             ErrorMessage = $"Error loading dashboard: {ex.Message}";
         }
         finally
