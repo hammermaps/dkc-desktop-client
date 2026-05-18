@@ -77,8 +77,14 @@ public partial class DashboardViewModel : ViewModelBase
                 CacheKeys.MmList,
                 ct => api.GetMmListAsync(limit: 1, ct: ct),
                 CacheTtl.MmList);
-            var mmOpenTask       = api.GetMmListAsync(status: 0, limit: 1);
-            var mmInProgressTask = api.GetMmListAsync(status: 1, limit: 1);
+            var mmOpenTask       = _cache.GetOrFetchAsync(
+                CacheKeys.MmListOpen,
+                ct => api.GetMmListAsync(status: 0, limit: 1, ct: ct),
+                CacheTtl.MmList);
+            var mmInProgressTask = _cache.GetOrFetchAsync(
+                CacheKeys.MmListInProgress,
+                ct => api.GetMmListAsync(status: 1, limit: 1, ct: ct),
+                CacheTtl.MmList);
             var keysTask = _cache.GetOrFetchAsync(
                 CacheKeys.KeysInventory,
                 ct => api.GetKeysInventoryAsync(ct),
@@ -127,6 +133,8 @@ public partial class DashboardViewModel : ViewModelBase
 
             _backgroundRefreshService.NotifyUserActivity(CacheKeys.NeaDashboard);
             _backgroundRefreshService.NotifyUserActivity(CacheKeys.MmList);
+            _backgroundRefreshService.NotifyUserActivity(CacheKeys.MmListOpen);
+            _backgroundRefreshService.NotifyUserActivity(CacheKeys.MmListInProgress);
             _backgroundRefreshService.NotifyUserActivity(CacheKeys.KeysInventory);
         }
         catch (Exception ex)
