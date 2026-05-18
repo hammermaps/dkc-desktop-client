@@ -109,7 +109,7 @@
             <DataGridTextColumn Header="# Dev" Binding="{Binding DeviceCount}" Width="50"/>
           </DataGrid.Columns>
         </DataGrid>
-        <Button Content="Control Group" Command="{Binding ShowDeviceControlCommand}"
+        <Button Content="Control Group" Command="{Binding ShowGroupControlCommand}"
                 IsEnabled="{Binding SelectedGroup, Converter={x:Static ObjectConverters.IsNotNull}}"/>
       </StackPanel>
     </Grid>
