@@ -84,6 +84,7 @@ public partial class StatCard : UserControl
     private static IBrush ParseBrush(string value, string fallback)
     {
         try { return Brush.Parse(string.IsNullOrWhiteSpace(value) ? fallback : value); }
-        catch { return Brush.Parse(fallback); }
+        catch (FormatException) { return Brush.Parse(fallback); }
+        catch (ArgumentException) { return Brush.Parse(fallback); }
     }
 }

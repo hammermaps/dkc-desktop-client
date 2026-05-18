@@ -97,7 +97,10 @@ public partial class DashboardViewModel : ViewModelBase
                 MmTotal = mmTask.Result.Total ?? mmTask.Result.Messages?.Count ?? 0;
 
             if (keysTask.Result?.Success == true)
-                KeysAvailable = keysTask.Result.Keys?.Sum(k => k.Available ?? 0) ?? 0;
+            {
+                var keys = keysTask.Result.Keys;
+                KeysAvailable = keys == null ? 0 : keys.Sum(k => k.Available ?? 0);
+            }
 
             _backgroundRefreshService.NotifyUserActivity(CacheKeys.DashboardData);
             _backgroundRefreshService.NotifyUserActivity(CacheKeys.MmList);

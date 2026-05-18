@@ -110,6 +110,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         var parts = displayName
             .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(p => p.Length > 0)
             .Take(2)
             .Select(p => char.ToUpperInvariant(p[0]));
         var initials = string.Concat(parts);
