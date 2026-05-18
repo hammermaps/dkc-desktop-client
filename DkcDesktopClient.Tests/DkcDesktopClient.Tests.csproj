@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DkcDesktopClient.Core\DkcDesktopClient.Core.csproj" />
+    <ProjectReference Include="..\DkcDesktopClient.App\DkcDesktopClient.App.csproj" />
   </ItemGroup>
 
 </Project>

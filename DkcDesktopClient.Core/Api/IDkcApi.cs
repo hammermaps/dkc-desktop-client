@@ -198,4 +198,11 @@ public interface IDkcApi
 
     [Delete("/api.php?action=user_delete")]
     Task<ApiError> DeleteUserAsync([Query] int id, CancellationToken ct = default);
+
+    // Notifications
+    [Get("/api.php?action=notifications")]
+    Task<NotificationsResponse> GetNotificationsAsync(CancellationToken ct = default);
+
+    [Get("/api.php?action=get_notification_count")]
+    Task<NotificationCountResponse> GetNotificationCountAsync(CancellationToken ct = default);
 }

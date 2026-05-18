@@ -156,7 +156,7 @@ public partial class MmViewModel : ViewModelBase
                 SelectedDetail = result.Message;
                 DetailStatusOption = StatusEditOptions.FirstOrDefault(o => o.Value == result.Message.Status)
                                      ?? StatusEditOptions[0];
-                DetailNachunternehmer = result.Message.Nachunternehmer ?? string.Empty;
+                DetailNachunternehmer = result.Message.Nachunternehmer?.ToString() ?? string.Empty;
             }
         }
         catch (Exception ex)
@@ -244,13 +244,13 @@ public partial class MmViewModel : ViewModelBase
         _editingUid         = SelectedDetail.Uid;
         FormBetreff         = SelectedDetail.Betreff         ?? string.Empty;
         FormMeldung         = SelectedDetail.MeldungMassage  ?? string.Empty;
-        FormStreet          = SelectedDetail.Street          ?? string.Empty;
+        FormStreet          = SelectedDetail.Street?.ToString()          ?? string.Empty;
         FormWhg             = SelectedDetail.Whg             ?? string.Empty;
         FormMelder          = SelectedDetail.Melder          ?? string.Empty;
         FormTel             = SelectedDetail.Tel             ?? string.Empty;
         FormEmail           = SelectedDetail.Email           ?? string.Empty;
         FormDringlichkeit   = SelectedDetail.Dringlichkeit   ?? "normal";
-        FormNachunternehmer = SelectedDetail.Nachunternehmer ?? string.Empty;
+        FormNachunternehmer = SelectedDetail.Nachunternehmer?.ToString() ?? string.Empty;
         FormZugeh           = SelectedDetail.Zugeh           ?? string.Empty;
         FormError           = null;
         IsFormVisible       = true;
@@ -422,10 +422,18 @@ public partial class MmViewModel : ViewModelBase
 
         foreach (var m in loaded)
         {
-            if (!string.IsNullOrWhiteSpace(m.Street) && existingStreets.Add(m.Street))
-                StreetOptions.Add(m.Street);
-            if (!string.IsNullOrWhiteSpace(m.Nachunternehmer) && existingContractors.Add(m.Nachunternehmer))
-                ContractorOptions.Add(m.Nachunternehmer);
+            if (m.Street.HasValue)
+            {
+                var streetStr = m.Street.Value.ToString();
+                if (existingStreets.Add(streetStr))
+                    StreetOptions.Add(streetStr);
+            }
+            if (m.Nachunternehmer.HasValue)
+            {
+                var contractorStr = m.Nachunternehmer.Value.ToString();
+                if (existingContractors.Add(contractorStr))
+                    ContractorOptions.Add(contractorStr);
+            }
         }
     }
 
