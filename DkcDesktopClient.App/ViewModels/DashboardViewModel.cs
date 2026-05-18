@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DkcDesktopClient.App.Services;
 using DkcDesktopClient.Core.Api;
 using DkcDesktopClient.Core.Services;
 
@@ -14,9 +13,6 @@ public partial class DashboardViewModel : ViewModelBase
     private readonly AuthService _authService;
     private readonly DataCacheService _cache;
     private readonly BackgroundRefreshService _backgroundRefreshService;
-    private readonly INavigationService _navigationService;
-    private readonly MmViewModel _mmViewModel;
-    private readonly NeaViewModel _neaViewModel;
 
     [ObservableProperty] private bool _isLoading;
     [ObservableProperty] private bool _isRefreshing;
@@ -40,20 +36,17 @@ public partial class DashboardViewModel : ViewModelBase
         DkcApiFactory apiFactory,
         AuthService authService,
         DataCacheService cache,
-        BackgroundRefreshService backgroundRefreshService,
-        INavigationService navigationService,
-        MmViewModel mmViewModel,
-        NeaViewModel neaViewModel)
+        BackgroundRefreshService backgroundRefreshService)
     {
         _apiFactory = apiFactory;
         _authService = authService;
         _cache = cache;
         _backgroundRefreshService = backgroundRefreshService;
-        _navigationService = navigationService;
-        _mmViewModel = mmViewModel;
-        _neaViewModel = neaViewModel;
         _backgroundRefreshService.DataRefreshed += OnDataRefreshed;
     }
+
+    public event EventHandler? CreateMmRequested;
+    public event EventHandler? StartNeaInspectionRequested;
 
     partial void OnMmTotalChanged(int value) => OnPropertyChanged(nameof(MmTotalText));
     partial void OnKeysAvailableChanged(int value) => OnPropertyChanged(nameof(KeysAvailableText));
@@ -69,7 +62,10 @@ public partial class DashboardViewModel : ViewModelBase
         {
             var api = _apiFactory.Create(_authService.CurrentToken);
             var projectsTask = api.GetProjectsListAsync();
-            var dashboardTask = api.GetNeaDashboardAsync();
+            var dashboardTask = _cache.GetOrFetchAsync(
+                CacheKeys.NeaDashboard,
+                ct => api.GetNeaDashboardAsync(ct),
+                CacheTtl.DashboardStats);
             var mmTask = _cache.GetOrFetchAsync(
                 CacheKeys.MmList,
                 ct => api.GetMmListAsync(limit: 1, ct: ct),
@@ -102,6 +98,10 @@ public partial class DashboardViewModel : ViewModelBase
                     foreach (var item in recentInspections)
                         RecentInspections.Add(item);
             }
+            else
+            {
+                ClearNeaDashboardData();
+            }
 
             if (mmTask.Result?.Success == true)
                 MmTotal = mmTask.Result.Total ?? mmTask.Result.Messages?.Count ?? 0;
@@ -112,12 +112,13 @@ public partial class DashboardViewModel : ViewModelBase
                 KeysAvailable = keys == null ? 0 : keys.Sum(k => k.Available ?? 0);
             }
 
-            _backgroundRefreshService.NotifyUserActivity(CacheKeys.DashboardData);
+            _backgroundRefreshService.NotifyUserActivity(CacheKeys.NeaDashboard);
             _backgroundRefreshService.NotifyUserActivity(CacheKeys.MmList);
             _backgroundRefreshService.NotifyUserActivity(CacheKeys.KeysInventory);
         }
         catch (Exception ex)
         {
+            ClearNeaDashboardData();
             ErrorMessage = $"Error loading dashboard: {ex.Message}";
         }
         finally
@@ -129,35 +130,49 @@ public partial class DashboardViewModel : ViewModelBase
     [RelayCommand]
     private void CreateMm()
     {
-        _mmViewModel.ShowCreateForm();
-        _navigationService.NavigateTo(_mmViewModel, "Maengelmeldungen");
+        CreateMmRequested?.Invoke(this, EventArgs.Empty);
     }
 
     [RelayCommand]
     private void StartNeaInspection()
     {
-        _navigationService.NavigateTo(_neaViewModel, "NEA");
+        StartNeaInspectionRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private void OnDataRefreshed(object? sender, string key)
     {
-        if (key != CacheKeys.DashboardData && key != CacheKeys.MmList && key != CacheKeys.KeysInventory)
+        if (key != CacheKeys.NeaDashboard && key != CacheKeys.MmList && key != CacheKeys.KeysInventory)
             return;
 
-        Dispatcher.UIThread.Post(async () =>
-        {
-            if (IsLoading)
-                return;
+        _ = Dispatcher.UIThread.InvokeAsync(RefreshFromBackgroundAsync);
+    }
 
-            IsRefreshing = true;
-            try
-            {
-                await LoadDataAsync();
-            }
-            finally
-            {
-                IsRefreshing = false;
-            }
-        });
+    private async Task RefreshFromBackgroundAsync()
+    {
+        if (IsLoading)
+            return;
+
+        IsRefreshing = true;
+        try
+        {
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error refreshing dashboard: {ex.Message}";
+        }
+        finally
+        {
+            IsRefreshing = false;
+        }
+    }
+
+    private void ClearNeaDashboardData()
+    {
+        NeaTotalSystems = 0;
+        NeaOverdueInspections = 0;
+        OverdueItems.Clear();
+        RecentInspections.Clear();
+        HasOverdueItems = false;
     }
 }

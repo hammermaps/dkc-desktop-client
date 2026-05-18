@@ -73,9 +73,10 @@
             <ListBox.ItemTemplate>
               <DataTemplate x:DataType="vm:NavItem">
                 <Grid ColumnDefinitions="4,30,*" Margin="0,2" MinHeight="38">
-                  <Border Grid.Column="0" Background="{DynamicResource AccentBlueBrush}" CornerRadius="2"/>
+                  <Border Grid.Column="0" Background="{DynamicResource AccentBlueBrush}" CornerRadius="2"
+                          IsVisible="{Binding IsActive}"/>
                   <TextBlock Grid.Column="1" Text="{Binding Icon}" FontSize="17" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                  <TextBlock Grid.Column="2" Text="{Binding Title}" Foreground="{DynamicResource SidebarForegroundActiveBrush}"
+                  <TextBlock Grid.Column="2" Text="{Binding Title}" Foreground="{Binding Foreground}"
                              FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0,0,0"/>
                 </Grid>
               </DataTemplate>

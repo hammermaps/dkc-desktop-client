@@ -66,6 +66,12 @@ public partial class MainWindowViewModel : ViewModelBase
         _authService.AuthStateChanged += OnAuthStateChanged;
         _navigationService.CurrentViewChanged  += (_, _) => OnPropertyChanged(nameof(CurrentView));
         _navigationService.BreadcrumbsChanged  += (_, _) => Breadcrumbs = _navigationService.Breadcrumbs;
+        DashboardViewModel.CreateMmRequested += (_, _) =>
+        {
+            MmViewModel.ShowCreateForm();
+            SelectNavItem(MmViewModel, "Maengelmeldungen");
+        };
+        DashboardViewModel.StartNeaInspectionRequested += (_, _) => SelectNavItem(NeaViewModel, "NEA");
         _notificationPollingService.UnreadCountChanged += (_, count) =>
             Avalonia.Threading.Dispatcher.UIThread.Post(() => UnreadNotificationCount = count);
 
@@ -83,6 +89,7 @@ public partial class MainWindowViewModel : ViewModelBase
             UserDisplayName = user != null ? $"{user.Vname} {user.Nname}".Trim() : _authService.CurrentUser?.Username ?? string.Empty;
             UserInitials = BuildInitials(UserDisplayName);
             RebuildNavItems();
+            SelectedNavItem = NavItems.FirstOrDefault(n => n.ViewModel == DashboardViewModel);
             _navigationService.NavigateToRoot(DashboardViewModel, "Dashboard");
             _ = DashboardViewModel.LoadDataAsync();
         }
@@ -120,7 +127,24 @@ public partial class MainWindowViewModel : ViewModelBase
     partial void OnSelectedNavItemChanged(NavItem? value)
     {
         if (value != null)
+        {
+            foreach (var item in NavItems)
+                item.SetActive(item == value);
             _navigationService.NavigateTo(value.ViewModel, value.Title);
+        }
+    }
+
+    private void SelectNavItem(ViewModelBase viewModel, string title)
+    {
+        var navItem = NavItems.FirstOrDefault(n => n.ViewModel == viewModel);
+        if (navItem != null)
+        {
+            SelectedNavItem = navItem;
+        }
+        else
+        {
+            _navigationService.NavigateTo(viewModel, title);
+        }
     }
 
     [RelayCommand]
@@ -168,11 +192,16 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 }
 
-public class NavItem
+public partial class NavItem : ObservableObject
 {
+    private const string DefaultForeground = "#CBD5E0";
+    private const string ActiveForeground = "#FFFFFF";
+
     public string Icon { get; }
     public string Title { get; }
     public ViewModelBase ViewModel { get; }
+    [ObservableProperty] private bool _isActive;
+    [ObservableProperty] private string _foreground = DefaultForeground;
 
     /// <param name="icon">Short visual icon shown before the navigation title.</param>
     /// <param name="title">Navigation label shown in the sidebar.</param>
@@ -182,5 +211,11 @@ public class NavItem
         Icon      = icon;
         Title     = title;
         ViewModel = viewModel;
+    }
+
+    public void SetActive(bool isActive)
+    {
+        IsActive = isActive;
+        Foreground = isActive ? ActiveForeground : DefaultForeground;
     }
 }

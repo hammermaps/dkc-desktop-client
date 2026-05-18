@@ -85,6 +85,13 @@ public class BackgroundRefreshService : BackgroundService
                 stoppingToken);
 
             await TryRefreshAsync(
+                CacheKeys.NeaDashboard,
+                _config.DashboardStats,
+                now,
+                ct => api.GetNeaDashboardAsync(ct),
+                stoppingToken);
+
+            await TryRefreshAsync(
                 CacheKeys.NotificationCount,
                 _config.NotificationCount,
                 now,
@@ -96,6 +103,13 @@ public class BackgroundRefreshService : BackgroundService
                 _config.MmList,
                 now,
                 ct => api.GetMmListAsync(ct: ct),
+                stoppingToken);
+
+            await TryRefreshAsync(
+                CacheKeys.KeysInventory,
+                CacheTtl.KeysInventory,
+                now,
+                ct => api.GetKeysInventoryAsync(ct),
                 stoppingToken);
 
             await TryRefreshAsync(

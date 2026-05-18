@@ -156,18 +156,20 @@ public partial class KlimaViewModel : ViewModelBase
         if (key != CacheKeys.KlimaStatus || IsPolling)
             return;
 
-        Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
+        _ = Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(RefreshStatusFromBackgroundAsync);
+    }
+
+    private async Task RefreshStatusFromBackgroundAsync()
+    {
+        _refreshingFromBackground = true;
+        try
         {
-            _refreshingFromBackground = true;
-            try
-            {
-                await RefreshStatusAsync();
-            }
-            finally
-            {
-                _refreshingFromBackground = false;
-            }
-        });
+            await RefreshStatusAsync();
+        }
+        finally
+        {
+            _refreshingFromBackground = false;
+        }
     }
 
     [RelayCommand(CanExecute = nameof(CanStartPolling))]
