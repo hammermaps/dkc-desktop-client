@@ -32,6 +32,12 @@
     <DataTemplate DataType="{x:Type vm:KeysViewModel}">
       <views:KeysView/>
     </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:WlsViewModel}">
+      <views:WlsView/>
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:NotificationsViewModel}">
+      <views:NotificationsView/>
+    </DataTemplate>
     <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
       <views:SettingsView/>
     </DataTemplate>

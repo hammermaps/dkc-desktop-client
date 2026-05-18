@@ -619,3 +619,120 @@ public record DashboardData(
     [property: JsonPropertyName("building")] DashboardBuildingStats? Building,
     [property: JsonPropertyName("keys")] DashboardKeysStats? Keys,
     [property: JsonPropertyName("notifications")] DashboardNotificationsStats? Notifications);
+
+// ── WLS – Wohnungsleerstandserfassung ─────────────────────────────────────────
+
+public record WlsBuilding(
+    [property: JsonPropertyName("id")] int Id,
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("hidden")] bool Hidden,
+    [property: JsonPropertyName("sorted")] int Sorted,
+    [property: JsonPropertyName("created")] string? Created,
+    [property: JsonPropertyName("updated")] string? Updated,
+    [property: JsonPropertyName("apartments_count")] int ApartmentsCount);
+
+public record WlsBuildingListResponse(
+    [property: JsonPropertyName("success")] bool Success,
+    [property: JsonPropertyName("data")] List<WlsBuilding>? Data,
+    [property: JsonPropertyName("error")] string? Error);
+
+public record WlsBuildingResponse(
+    [property: JsonPropertyName("success")] bool Success,
+    [property: JsonPropertyName("data")] WlsBuilding? Data,
+    [property: JsonPropertyName("error")] string? Error);
+
+public record WlsBuildingSaveRequest(
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("hidden")] bool Hidden,
+    [property: JsonPropertyName("sorted")] int Sorted);
+
+public record WlsApartment(
+    [property: JsonPropertyName("id")] int Id,
+    [property: JsonPropertyName("building_id")] int BuildingId,
+    [property: JsonPropertyName("number")] string? Number,
+    [property: JsonPropertyName("value")] string Value,
+    [property: JsonPropertyName("name")] string? Name,
+    [property: JsonPropertyName("sorted")] int Sorted,
+    [property: JsonPropertyName("empty")] bool Empty);
+
+public record WlsApartmentListResponse(
+    [property: JsonPropertyName("success")] bool Success,
+    [property: JsonPropertyName("data")] List<WlsApartment>? Data,
+    [property: JsonPropertyName("error")] string? Error);
+
+public record WlsApartmentResponse(
+    [property: JsonPropertyName("success")] bool Success,
+    [property: JsonPropertyName("data")] WlsApartment? Data,
+    [property: JsonPropertyName("error")] string? Error);
+
+public record WlsApartmentCreateRequest(
+    [property: JsonPropertyName("building_id")] int BuildingId,
+    [property: JsonPropertyName("value")] string Value,
+    [property: JsonPropertyName("name")] string? Name,
+    [property: JsonPropertyName("sorted")] int Sorted);
+
+public record WlsApartmentUpdateRequest(
+    [property: JsonPropertyName("value")] string Value,
+    [property: JsonPropertyName("name")] string? Name,
+    [property: JsonPropertyName("sorted")] int Sorted,
+    [property: JsonPropertyName("empty")] bool Empty,
+    [property: JsonPropertyName("building_id")] int BuildingId);
+
+public record WlsRecord(
+    [property: JsonPropertyName("id")] int Id,
+    [property: JsonPropertyName("apartment_id")] int ApartmentId,
+    [property: JsonPropertyName("building_id")] int BuildingId,
+    [property: JsonPropertyName("user_id")] int UserId,
+    [property: JsonPropertyName("start_time")] string? StartTime,
+    [property: JsonPropertyName("end_time")] string? EndTime,
+    [property: JsonPropertyName("duration")] int? Duration,
+    [property: JsonPropertyName("latitude")] double? Latitude,
+    [property: JsonPropertyName("longitude")] double? Longitude,
+    [property: JsonPropertyName("location_accuracy")] double? LocationAccuracy,
+    [property: JsonPropertyName("created_at")] string? CreatedAt,
+    [property: JsonPropertyName("user_name")] string? UserName,
+    [property: JsonPropertyName("user_firstname")] string? UserFirstname,
+    [property: JsonPropertyName("user_lastname")] string? UserLastname)
+{
+    public string DurationText => Duration.HasValue
+        ? TimeSpan.FromSeconds(Duration.Value).ToString(@"hh\:mm\:ss")
+        : "–";
+}
+
+public record WlsRecordListResponse(
+    [property: JsonPropertyName("success")] bool Success,
+    [property: JsonPropertyName("data")] List<WlsRecord>? Data,
+    [property: JsonPropertyName("error")] string? Error);
+
+public record WlsRecordResponse(
+    [property: JsonPropertyName("success")] bool Success,
+    [property: JsonPropertyName("data")] WlsRecord? Data,
+    [property: JsonPropertyName("error")] string? Error);
+
+public record WlsRecordListRequest(
+    [property: JsonPropertyName("apartment_id")] int? ApartmentId,
+    [property: JsonPropertyName("building_id")] int? BuildingId,
+    [property: JsonPropertyName("user_id")] int? UserId,
+    [property: JsonPropertyName("start_date")] string? StartDate,
+    [property: JsonPropertyName("end_date")] string? EndDate,
+    [property: JsonPropertyName("order_by")] string? OrderBy,
+    [property: JsonPropertyName("order")] string? Order,
+    [property: JsonPropertyName("limit")] int? Limit,
+    [property: JsonPropertyName("offset")] int? Offset);
+
+public record WlsRecordCreateRequest(
+    [property: JsonPropertyName("apartment_id")] int ApartmentId,
+    [property: JsonPropertyName("building_id")] int BuildingId,
+    [property: JsonPropertyName("start_time")] string StartTime,
+    [property: JsonPropertyName("end_time")] string? EndTime,
+    [property: JsonPropertyName("user_id")] int? UserId,
+    [property: JsonPropertyName("latitude")] double? Latitude,
+    [property: JsonPropertyName("longitude")] double? Longitude,
+    [property: JsonPropertyName("location_accuracy")] double? LocationAccuracy);
+
+public record WlsRecordUpdateRequest(
+    [property: JsonPropertyName("start_time")] string? StartTime,
+    [property: JsonPropertyName("end_time")] string? EndTime,
+    [property: JsonPropertyName("latitude")] double? Latitude,
+    [property: JsonPropertyName("longitude")] double? Longitude,
+    [property: JsonPropertyName("location_accuracy")] double? LocationAccuracy);

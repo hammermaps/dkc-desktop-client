@@ -30,6 +30,8 @@ public partial class MainWindowViewModel : ViewModelBase
     public KlimaViewModel KlimaViewModel { get; }
     public KeysViewModel KeysViewModel { get; }
     public SettingsViewModel SettingsViewModel { get; }
+    public WlsViewModel WlsViewModel { get; }
+    public NotificationsViewModel NotificationsViewModel { get; }
 
     /// <summary>The currently displayed view, driven by <see cref="INavigationService"/>.</summary>
     public ViewModelBase? CurrentView => _navigationService.CurrentView;
@@ -48,20 +50,24 @@ public partial class MainWindowViewModel : ViewModelBase
         BuildingViewModel buildingViewModel,
         KlimaViewModel klimaViewModel,
         KeysViewModel keysViewModel,
-        SettingsViewModel settingsViewModel)
+        SettingsViewModel settingsViewModel,
+        WlsViewModel wlsViewModel,
+        NotificationsViewModel notificationsViewModel)
     {
         _authService                = authService;
         _updateService              = updateService;
         _navigationService          = navigationService;
         _notificationPollingService = notificationPollingService;
-        LoginViewModel     = loginViewModel;
-        DashboardViewModel = dashboardViewModel;
-        NeaViewModel       = neaViewModel;
-        MmViewModel        = mmViewModel;
-        BuildingViewModel  = buildingViewModel;
-        KlimaViewModel     = klimaViewModel;
-        KeysViewModel      = keysViewModel;
-        SettingsViewModel  = settingsViewModel;
+        LoginViewModel         = loginViewModel;
+        DashboardViewModel     = dashboardViewModel;
+        NeaViewModel           = neaViewModel;
+        MmViewModel            = mmViewModel;
+        BuildingViewModel      = buildingViewModel;
+        KlimaViewModel         = klimaViewModel;
+        KeysViewModel          = keysViewModel;
+        SettingsViewModel      = settingsViewModel;
+        WlsViewModel           = wlsViewModel;
+        NotificationsViewModel = notificationsViewModel;
 
         _authService.AuthStateChanged += OnAuthStateChanged;
         _navigationService.CurrentViewChanged  += (_, _) => OnPropertyChanged(nameof(CurrentView));
@@ -110,6 +116,8 @@ public partial class MainWindowViewModel : ViewModelBase
         NavItems.Add(new NavItem("🏢", "Buildings", BuildingViewModel));
         NavItems.Add(new NavItem("❄️", "Climate", KlimaViewModel));
         NavItems.Add(new NavItem("🔑", "Keys", KeysViewModel));
+        NavItems.Add(new NavItem("🏠", "WLS", WlsViewModel));
+        NavItems.Add(new NavItem("🔔", "Benachrichtigungen", NotificationsViewModel));
         NavItems.Add(new NavItem("⚙️", "Settings", SettingsViewModel));
     }
 

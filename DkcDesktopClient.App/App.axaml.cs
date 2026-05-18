@@ -111,6 +111,8 @@ public partial class App : Application
         services.AddTransient<KlimaViewModel>();
         services.AddTransient<KeysViewModel>();
         services.AddTransient<SettingsViewModel>();
+        services.AddTransient<WlsViewModel>();
+        services.AddTransient<NotificationsViewModel>();
         services.AddTransient<MainWindowViewModel>();
     }
 }
