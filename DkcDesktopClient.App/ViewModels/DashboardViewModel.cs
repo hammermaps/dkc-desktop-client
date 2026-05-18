@@ -23,16 +23,11 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty] private int _mmOpen;
     [ObservableProperty] private int _mmInProgress;
     [ObservableProperty] private int _keysAvailable;
-    [ObservableProperty] private int _keysTotal;
     [ObservableProperty] private int _neaTotalSystems;
     [ObservableProperty] private int _neaOverdueInspections;
     [ObservableProperty] private bool _hasOverdueItems;
     [ObservableProperty] private ObservableCollection<NeaOverdueItem> _overdueItems = new();
     [ObservableProperty] private ObservableCollection<NeaRecentInspection> _recentInspections = new();
-    [ObservableProperty] private int _buildingOpen;
-    [ObservableProperty] private int _buildingInProgress;
-    [ObservableProperty] private int _buildingCompleted;
-    [ObservableProperty] private int _unreadNotifications;
     [ObservableProperty] private bool _isSettingProject;
 
     public string MmTotalText => MmTotal.ToString("N0");

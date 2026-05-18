@@ -18,6 +18,7 @@ public partial class NotificationsViewModel : ViewModelBase
     [ObservableProperty] private int _totalCount;
     [ObservableProperty] private bool _showUnreadOnly;
 
+    public bool HasUnreadNotifications => TotalCount > 0;
     public bool HasNoNotifications => !IsLoading && Notifications.Count == 0;
 
     public NotificationsViewModel(
@@ -38,6 +39,7 @@ public partial class NotificationsViewModel : ViewModelBase
     }
 
     partial void OnIsLoadingChanged(bool value) => OnPropertyChanged(nameof(HasNoNotifications));
+    partial void OnTotalCountChanged(int value)  => OnPropertyChanged(nameof(HasUnreadNotifications));
 
     [RelayCommand]
     public async Task LoadNotificationsAsync()

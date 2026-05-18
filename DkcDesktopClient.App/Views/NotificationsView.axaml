@@ -12,7 +12,7 @@
       <TextBlock Text="🔔 Benachrichtigungen" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
       <Button Content="Aktualisieren" Command="{Binding LoadNotificationsCommand}"/>
       <Border Background="#3B82F6" CornerRadius="12" Padding="8,3"
-              IsVisible="{Binding TotalCount}">
+              IsVisible="{Binding HasUnreadNotifications}">
         <TextBlock Text="{Binding TotalCount, StringFormat='{}{0} ungelesen'}"
                    Foreground="White" FontSize="12" FontWeight="SemiBold"/>
       </Border>

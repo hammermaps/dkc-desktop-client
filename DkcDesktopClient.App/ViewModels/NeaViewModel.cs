@@ -523,9 +523,10 @@ public partial class NeaViewModel : ViewModelBase
                 }
             }
         }
-        catch
+        catch (System.Text.Json.JsonException)
         {
-            // If parsing fails, start with an empty checklist
+            // If JSON parsing fails, start with an empty checklist — this is expected if the backend
+            // returns a format we don't recognize or an empty object.
         }
     }
 

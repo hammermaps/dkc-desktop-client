@@ -164,7 +164,6 @@
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="Notiz"     Binding="{Binding Note}"    Width="200"/>
                 <DataGridTextColumn Header="Kommentar" Binding="{Binding Comment}" Width="200"/>
-                <DataGridTextColumn Header="Bearbeitet von" Binding="{Binding CheckpointName}" Width="120" IsReadOnly="True"/>
               </DataGrid.Columns>
             </DataGrid>
           </StackPanel>
