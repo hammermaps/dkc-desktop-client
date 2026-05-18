@@ -19,10 +19,14 @@
       <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}" Height="4"/>
 
       <WrapPanel Orientation="Horizontal" ItemWidth="190" ItemHeight="124">
-        <controls:StatCard Title="Mängelmeldungen" Value="{Binding MmTotalText}" Icon="🔧" BackgroundColor="#EFF6FF"/>
-        <controls:StatCard Title="NEA-Systeme" Value="{Binding NeaTotalSystemsText}" Icon="⚡" BackgroundColor="#EEF2FF"/>
-        <controls:StatCard Title="Schlüssel verfügbar" Value="{Binding KeysAvailableText}" Icon="🔑" BackgroundColor="#ECFDF5" TrendColor="#10B981"/>
-        <controls:StatCard Title="Überfällige Prüfungen" Value="{Binding NeaOverdueInspectionsText}" Icon="⚠" BackgroundColor="#FEF2F2" TrendColor="#EF4444"/>
+        <controls:StatCard Title="Mängelmeldungen" Value="{Binding MmTotalText}" Icon="🔧" BackgroundColor="#EFF6FF"
+                           ToolTip.Tip="Gesamtzahl der geladenen Mängelmeldungen"/>
+        <controls:StatCard Title="NEA-Systeme" Value="{Binding NeaTotalSystemsText}" Icon="⚡" BackgroundColor="#EEF2FF"
+                           ToolTip.Tip="Gesamtzahl der NEA-Systeme"/>
+        <controls:StatCard Title="Schlüssel verfügbar" Value="{Binding KeysAvailableText}" Icon="🔑" BackgroundColor="#ECFDF5" TrendColor="#10B981"
+                           ToolTip.Tip="Anzahl verfügbarer Schlüssel"/>
+        <controls:StatCard Title="Überfällige Prüfungen" Value="{Binding NeaOverdueInspectionsText}" Icon="⚠" BackgroundColor="#FEF2F2" TrendColor="#EF4444"
+                           ToolTip.Tip="Anzahl überfälliger NEA-Prüfungen"/>
       </WrapPanel>
 
       <Border Classes="card" Background="#FFFBEB" BorderBrush="#F59E0B" IsVisible="{Binding HasOverdueItems}">
@@ -45,8 +49,8 @@
         <StackPanel Spacing="12">
           <TextBlock Text="Quick Actions" FontSize="18" FontWeight="SemiBold"/>
           <StackPanel Orientation="Horizontal" Spacing="10">
-            <Button Content="Neue Mängelmeldung" Classes="primary"/>
-            <Button Content="NEA-Prüfung starten" Classes="primary"/>
+            <Button Content="Neue Mängelmeldung" Command="{Binding CreateMmCommand}" Classes="primary"/>
+            <Button Content="NEA-Prüfung starten" Command="{Binding StartNeaInspectionCommand}" Classes="primary"/>
           </StackPanel>
         </StackPanel>
       </Border>

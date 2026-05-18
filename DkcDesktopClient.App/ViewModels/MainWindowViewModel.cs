@@ -174,6 +174,9 @@ public class NavItem
     public string Title { get; }
     public ViewModelBase ViewModel { get; }
 
+    /// <param name="icon">Short visual icon shown before the navigation title.</param>
+    /// <param name="title">Navigation label shown in the sidebar.</param>
+    /// <param name="viewModel">ViewModel displayed when the item is selected.</param>
     public NavItem(string icon, string title, ViewModelBase viewModel)
     {
         Icon      = icon;

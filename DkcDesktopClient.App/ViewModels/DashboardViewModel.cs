@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DkcDesktopClient.App.Services;
 using DkcDesktopClient.Core.Api;
 using DkcDesktopClient.Core.Services;
 
@@ -13,6 +14,9 @@ public partial class DashboardViewModel : ViewModelBase
     private readonly AuthService _authService;
     private readonly DataCacheService _cache;
     private readonly BackgroundRefreshService _backgroundRefreshService;
+    private readonly INavigationService _navigationService;
+    private readonly MmViewModel _mmViewModel;
+    private readonly NeaViewModel _neaViewModel;
 
     [ObservableProperty] private bool _isLoading;
     [ObservableProperty] private bool _isRefreshing;
@@ -27,21 +31,27 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty] private ObservableCollection<NeaOverdueItem> _overdueItems = new();
     [ObservableProperty] private ObservableCollection<NeaRecentInspection> _recentInspections = new();
 
-    public string MmTotalText => MmTotal.ToString();
-    public string KeysAvailableText => KeysAvailable.ToString();
-    public string NeaTotalSystemsText => NeaTotalSystems.ToString();
-    public string NeaOverdueInspectionsText => NeaOverdueInspections.ToString();
+    public string MmTotalText => MmTotal.ToString("N0");
+    public string KeysAvailableText => KeysAvailable.ToString("N0");
+    public string NeaTotalSystemsText => NeaTotalSystems.ToString("N0");
+    public string NeaOverdueInspectionsText => NeaOverdueInspections.ToString("N0");
 
     public DashboardViewModel(
         DkcApiFactory apiFactory,
         AuthService authService,
         DataCacheService cache,
-        BackgroundRefreshService backgroundRefreshService)
+        BackgroundRefreshService backgroundRefreshService,
+        INavigationService navigationService,
+        MmViewModel mmViewModel,
+        NeaViewModel neaViewModel)
     {
         _apiFactory = apiFactory;
         _authService = authService;
         _cache = cache;
         _backgroundRefreshService = backgroundRefreshService;
+        _navigationService = navigationService;
+        _mmViewModel = mmViewModel;
+        _neaViewModel = neaViewModel;
         _backgroundRefreshService.DataRefreshed += OnDataRefreshed;
     }
 
@@ -114,6 +124,19 @@ public partial class DashboardViewModel : ViewModelBase
         {
             IsLoading = false;
         }
+    }
+
+    [RelayCommand]
+    private void CreateMm()
+    {
+        _mmViewModel.ShowCreateForm();
+        _navigationService.NavigateTo(_mmViewModel, "Maengelmeldungen");
+    }
+
+    [RelayCommand]
+    private void StartNeaInspection()
+    {
+        _navigationService.NavigateTo(_neaViewModel, "NEA");
     }
 
     private void OnDataRefreshed(object? sender, string key)
