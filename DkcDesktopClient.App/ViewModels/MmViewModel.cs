@@ -105,8 +105,8 @@ public partial class MmViewModel : ViewModelBase
 
     // ── CSV Export ────────────────────────────────────────────────────────────
 
-    [RelayCommand(CanExecute = nameof(CanExport))]
-    public async Task ExportToCsvAsync()
+    [RelayCommand(CanExecute = nameof(CanExportMessages))]
+    public async Task ExportMessagesToCsvAsync()
     {
         var path = await _filePicker.PickSaveFileAsync(
             $"maengelmeldungen_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
@@ -134,7 +134,7 @@ public partial class MmViewModel : ViewModelBase
         }
     }
 
-    private bool CanExport() => Messages.Count > 0;
+    private bool CanExportMessages() => Messages.Count > 0;
 
     partial void OnMessagesChanged(ObservableCollection<MmMessage>? oldValue, ObservableCollection<MmMessage> newValue)
     {
@@ -142,6 +142,7 @@ public partial class MmViewModel : ViewModelBase
             oldValue.CollectionChanged -= OnMessagesCollectionChanged;
         newValue.CollectionChanged += OnMessagesCollectionChanged;
         OnPropertyChanged(nameof(HasNoMessages));
+        ExportMessagesToCsvCommand.NotifyCanExecuteChanged();
     }
 
     private void OnMessagesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) =>
