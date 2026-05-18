@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DkcDesktopClient.Core.Api;
@@ -23,6 +24,7 @@ public partial class MmViewModel : ViewModelBase
     [ObservableProperty] private MmDetail? _selectedDetail;
     [ObservableProperty] private int _totalMessages;
     [ObservableProperty] private int _currentOffset;
+    public bool HasNoMessages => !IsLoading && Messages.Count == 0;
 
     // Filter
     [ObservableProperty] private MmStatusOption _filterStatusOption = StatusFilterOptions[0];
@@ -93,7 +95,21 @@ public partial class MmViewModel : ViewModelBase
     {
         _apiFactory = apiFactory;
         _authService = authService;
+        Messages.CollectionChanged += OnMessagesCollectionChanged;
     }
+
+    partial void OnIsLoadingChanged(bool value) => OnPropertyChanged(nameof(HasNoMessages));
+
+    partial void OnMessagesChanged(ObservableCollection<MmMessage>? oldValue, ObservableCollection<MmMessage> newValue)
+    {
+        if (oldValue != null)
+            oldValue.CollectionChanged -= OnMessagesCollectionChanged;
+        newValue.CollectionChanged += OnMessagesCollectionChanged;
+        OnPropertyChanged(nameof(HasNoMessages));
+    }
+
+    private void OnMessagesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) =>
+        OnPropertyChanged(nameof(HasNoMessages));
 
     // ── Commands ──────────────────────────────────────────────────────────────
 

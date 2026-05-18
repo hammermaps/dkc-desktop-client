@@ -1,49 +1,73 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:DkcDesktopClient.App.ViewModels"
+             xmlns:controls="using:DkcDesktopClient.App.Controls"
              x:Class="DkcDesktopClient.App.Views.DashboardView"
              x:DataType="vm:DashboardViewModel">
-  <ScrollViewer>
-    <StackPanel Margin="16" Spacing="16">
-      <TextBlock Text="Dashboard" FontSize="24" FontWeight="Bold"/>
+  <ScrollViewer Background="{DynamicResource ContentBackgroundBrush}">
+    <StackPanel Margin="24" Spacing="18">
+      <DockPanel LastChildFill="True">
+        <controls:RefreshIndicator DockPanel.Dock="Right" IsRefreshing="{Binding IsRefreshing}" Margin="12,12,0,0"/>
+        <StackPanel>
+          <TextBlock Text="Dashboard" FontSize="24" FontWeight="Bold"/>
+          <TextBlock Text="Übersicht über aktuelle Kennzahlen und Prüfungen" Foreground="{DynamicResource TextSecondaryBrush}"/>
+        </StackPanel>
+      </DockPanel>
 
-      <TextBlock Text="{Binding ErrorMessage}" Foreground="Red"
+      <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}"
                  IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
       <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}" Height="4"/>
 
-      <Grid ColumnDefinitions="*, *" RowDefinitions="Auto" HorizontalAlignment="Left">
-        <Border Grid.Column="0" Background="#E3F2FD" CornerRadius="8" Padding="16" Margin="0,0,8,0" MinWidth="160">
-          <StackPanel>
-            <TextBlock Text="Total NEA Systems" FontSize="14"/>
-            <TextBlock Text="{Binding NeaTotalSystems}" FontSize="32" FontWeight="Bold"/>
-          </StackPanel>
-        </Border>
-        <Border Grid.Column="1" Background="#FFEBEE" CornerRadius="8" Padding="16" MinWidth="160">
-          <StackPanel>
-            <TextBlock Text="Overdue Inspections" FontSize="14"/>
-            <TextBlock Text="{Binding NeaOverdueInspections}" FontSize="32" FontWeight="Bold" Foreground="Red"/>
-          </StackPanel>
-        </Border>
-      </Grid>
+      <WrapPanel Orientation="Horizontal" ItemWidth="190" ItemHeight="124">
+        <controls:StatCard Title="Mängelmeldungen" Value="{Binding MmTotalText}" Icon="🔧" BackgroundColor="#EFF6FF"
+                           ToolTip.Tip="Gesamtzahl der geladenen Mängelmeldungen"/>
+        <controls:StatCard Title="NEA-Systeme" Value="{Binding NeaTotalSystemsText}" Icon="⚡" BackgroundColor="#EEF2FF"
+                           ToolTip.Tip="Gesamtzahl der NEA-Systeme"/>
+        <controls:StatCard Title="Schlüssel verfügbar" Value="{Binding KeysAvailableText}" Icon="🔑" BackgroundColor="#ECFDF5" TrendColor="#10B981"
+                           ToolTip.Tip="Anzahl verfügbarer Schlüssel"/>
+        <controls:StatCard Title="Überfällige Prüfungen" Value="{Binding NeaOverdueInspectionsText}" Icon="⚠" BackgroundColor="#FEF2F2" TrendColor="#EF4444"
+                           ToolTip.Tip="Anzahl überfälliger NEA-Prüfungen"/>
+      </WrapPanel>
 
-      <TextBlock Text="Overdue Items" FontSize="18" FontWeight="SemiBold"/>
-      <DataGrid ItemsSource="{Binding OverdueItems}" IsReadOnly="True" AutoGenerateColumns="False" Height="200">
-        <DataGrid.Columns>
-          <DataGridTextColumn Header="System" Binding="{Binding SystemName}" Width="*"/>
-          <DataGridTextColumn Header="Days Overdue" Binding="{Binding DaysOverdue}" Width="120"/>
-          <DataGridTextColumn Header="Last Inspection" Binding="{Binding LastInspection}" Width="150"/>
-        </DataGrid.Columns>
-      </DataGrid>
+      <Border Classes="card" Background="#FFFBEB" BorderBrush="#F59E0B" IsVisible="{Binding HasOverdueItems}">
+        <StackPanel Spacing="10">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="⚠" FontSize="18"/>
+            <TextBlock Text="Überfällige NEA-Prüfungen" FontSize="18" FontWeight="SemiBold"/>
+          </StackPanel>
+          <DataGrid ItemsSource="{Binding OverdueItems}" IsReadOnly="True" AutoGenerateColumns="False" Height="190">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="System" Binding="{Binding SystemName}" Width="*"/>
+              <DataGridTextColumn Header="Tage überfällig" Binding="{Binding DaysOverdue}" Width="140"/>
+              <DataGridTextColumn Header="Letzte Prüfung" Binding="{Binding LastInspection}" Width="160"/>
+            </DataGrid.Columns>
+          </DataGrid>
+        </StackPanel>
+      </Border>
 
-      <TextBlock Text="Recent Inspections" FontSize="18" FontWeight="SemiBold"/>
-      <DataGrid ItemsSource="{Binding RecentInspections}" IsReadOnly="True" AutoGenerateColumns="False" Height="200">
-        <DataGrid.Columns>
-          <DataGridTextColumn Header="Date" Binding="{Binding InspectionDate}" Width="120"/>
-          <DataGridTextColumn Header="Inspector" Binding="{Binding InspectorName}" Width="*"/>
-          <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
-          <DataGridTextColumn Header="Result" Binding="{Binding OverallResult}" Width="100"/>
-        </DataGrid.Columns>
-      </DataGrid>
+      <Border Classes="card">
+        <StackPanel Spacing="12">
+          <TextBlock Text="Quick Actions" FontSize="18" FontWeight="SemiBold"/>
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <Button Content="Neue Mängelmeldung" Command="{Binding CreateMmCommand}" Classes="primary"/>
+            <Button Content="NEA-Prüfung starten" Command="{Binding StartNeaInspectionCommand}" Classes="primary"/>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card">
+        <StackPanel Spacing="10">
+          <TextBlock Text="Letzte NEA-Prüfungen" FontSize="18" FontWeight="SemiBold"/>
+          <DataGrid ItemsSource="{Binding RecentInspections}" IsReadOnly="True" AutoGenerateColumns="False" Height="220">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="Datum" Binding="{Binding InspectionDate}" Width="120"/>
+              <DataGridTextColumn Header="Prüfer" Binding="{Binding InspectorName}" Width="*"/>
+              <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="120"/>
+              <DataGridTextColumn Header="Ergebnis" Binding="{Binding OverallResult}" Width="120"/>
+            </DataGrid.Columns>
+          </DataGrid>
+        </StackPanel>
+      </Border>
     </StackPanel>
   </ScrollViewer>
 </UserControl>

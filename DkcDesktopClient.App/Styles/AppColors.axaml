@@ -1,0 +1,40 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+  <SolidColorBrush x:Key="SidebarBackgroundBrush" Color="#1E2235"/>
+  <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#F8FAFC"/>
+  <SolidColorBrush x:Key="AccentBlueBrush" Color="#3B82F6"/>
+  <SolidColorBrush x:Key="AccentBlueDarkBrush" Color="#2563EB"/>
+  <SolidColorBrush x:Key="SidebarForegroundBrush" Color="#CBD5E0"/>
+  <SolidColorBrush x:Key="SidebarForegroundActiveBrush" Color="White"/>
+  <SolidColorBrush x:Key="SidebarItemActiveBrush" Color="#3B82F6"/>
+  <SolidColorBrush x:Key="CardBackgroundBrush" Color="White"/>
+  <SolidColorBrush x:Key="BorderColorBrush" Color="#E2E8F0"/>
+  <SolidColorBrush x:Key="TextPrimaryBrush" Color="#1A202C"/>
+  <SolidColorBrush x:Key="TextSecondaryBrush" Color="#4A5568"/>
+  <SolidColorBrush x:Key="TextMutedBrush" Color="#9AAAB4"/>
+  <SolidColorBrush x:Key="SuccessBrush" Color="#10B981"/>
+  <SolidColorBrush x:Key="WarningBrush" Color="#F59E0B"/>
+  <SolidColorBrush x:Key="DangerBrush" Color="#EF4444"/>
+  <SolidColorBrush x:Key="InfoBrush" Color="#3B82F6"/>
+
+  <sys:Double x:Key="FontXs">11</sys:Double>
+  <sys:Double x:Key="FontSm">12</sys:Double>
+  <sys:Double x:Key="FontBase">14</sys:Double>
+  <sys:Double x:Key="FontLg">16</sys:Double>
+  <sys:Double x:Key="FontXl">18</sys:Double>
+  <sys:Double x:Key="Font2Xl">24</sys:Double>
+
+  <Thickness x:Key="Space1">4</Thickness>
+  <Thickness x:Key="Space2">8</Thickness>
+  <Thickness x:Key="Space3">12</Thickness>
+  <Thickness x:Key="Space4">16</Thickness>
+  <Thickness x:Key="Space6">24</Thickness>
+  <Thickness x:Key="Space8">32</Thickness>
+  <Thickness x:Key="Space12">48</Thickness>
+
+  <CornerRadius x:Key="RadiusSm">4</CornerRadius>
+  <CornerRadius x:Key="RadiusMd">6</CornerRadius>
+  <CornerRadius x:Key="RadiusLg">8</CornerRadius>
+  <CornerRadius x:Key="RadiusXl">12</CornerRadius>
+</ResourceDictionary>

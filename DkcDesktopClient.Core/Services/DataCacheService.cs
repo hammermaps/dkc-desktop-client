@@ -166,6 +166,7 @@ public class DataCacheService
 public static class CacheKeys
 {
     public const string DashboardData    = "dashboard_data";
+    public const string NeaDashboard     = "nea_dashboard";
     public const string NeaSystems       = "nea_systems";
     public const string NeaInspections   = "nea_inspections";
     public const string MmList           = "mm_list";

@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:DkcDesktopClient.App.ViewModels"
+             xmlns:controls="using:DkcDesktopClient.App.Controls"
              x:Class="DkcDesktopClient.App.Views.MmView"
              x:DataType="vm:MmViewModel">
 
@@ -137,23 +138,30 @@
     </Border>
 
     <!-- ═══════════════════════════════  Meldungs-Liste  ═══════════════════════════════ -->
-    <DataGrid Grid.Row="4"
-              ItemsSource="{Binding Messages}"
-              SelectedItem="{Binding SelectedMessage}"
-              IsReadOnly="True"
-              AutoGenerateColumns="False"
-              GridLinesVisibility="Horizontal">
-      <DataGrid.Columns>
-        <DataGridTextColumn Header="UID"          Binding="{Binding Uid}"             Width="130"/>
-        <DataGridTextColumn Header="Betreff"      Binding="{Binding Betreff}"         Width="*"/>
-        <DataGridTextColumn Header="Straße"       Binding="{Binding Street}"          Width="160"/>
-        <DataGridTextColumn Header="Whg"          Binding="{Binding Whg}"             Width="60"/>
-        <DataGridTextColumn Header="Melder"       Binding="{Binding Melder}"          Width="130"/>
-        <DataGridTextColumn Header="Datum"        Binding="{Binding Datetime}"        Width="140"/>
-        <DataGridTextColumn Header="Status"       Binding="{Binding StatusText}"      Width="120"/>
-        <DataGridTextColumn Header="Dringlichkeit" Binding="{Binding DringlichkeitText}" Width="110"/>
-      </DataGrid.Columns>
-    </DataGrid>
+    <Grid Grid.Row="4">
+      <DataGrid ItemsSource="{Binding Messages}"
+                SelectedItem="{Binding SelectedMessage}"
+                IsReadOnly="True"
+                AutoGenerateColumns="False"
+                GridLinesVisibility="Horizontal">
+        <DataGrid.Columns>
+          <DataGridTextColumn Header="UID"          Binding="{Binding Uid}"             Width="130"/>
+          <DataGridTextColumn Header="Betreff"      Binding="{Binding Betreff}"         Width="*"/>
+          <DataGridTextColumn Header="Straße"       Binding="{Binding Street}"          Width="160"/>
+          <DataGridTextColumn Header="Whg"          Binding="{Binding Whg}"             Width="60"/>
+          <DataGridTextColumn Header="Melder"       Binding="{Binding Melder}"          Width="130"/>
+          <DataGridTextColumn Header="Datum"        Binding="{Binding Datetime}"        Width="140"/>
+          <DataGridTextColumn Header="Status"       Binding="{Binding StatusText}"      Width="120"/>
+          <DataGridTextColumn Header="Dringlichkeit" Binding="{Binding DringlichkeitText}" Width="110"/>
+        </DataGrid.Columns>
+      </DataGrid>
+      <controls:EmptyStateView Icon="🔧"
+                               Title="Keine Mängelmeldungen gefunden"
+                               Message="Passe die Filter an oder lege eine neue Meldung an."
+                               ActionText="Neue Meldung"
+                               ActionCommand="{Binding ShowCreateFormCommand}"
+                               IsVisible="{Binding HasNoMessages}"/>
+    </Grid>
 
     <GridSplitter Grid.Row="5" Height="4" HorizontalAlignment="Stretch"/>
 

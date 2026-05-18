@@ -2,11 +2,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:DkcDesktopClient.App.ViewModels"
         xmlns:views="using:DkcDesktopClient.App.Views"
+        xmlns:controls="using:DkcDesktopClient.App.Controls"
         x:Class="DkcDesktopClient.App.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="DK-Control Desktop Client"
         Width="1200" Height="800"
-        MinWidth="800" MinHeight="600">
+        MinWidth="800" MinHeight="600"
+        Background="{DynamicResource ContentBackgroundBrush}">
 
   <Window.DataTemplates>
     <DataTemplate DataType="{x:Type vm:LoginViewModel}">
@@ -40,44 +42,73 @@
 
     <SplitView IsPaneOpen="{Binding IsPaneOpen}"
                DisplayMode="Inline"
-               PaneBackground="#2D3142"
-               OpenPaneLength="220"
+               PaneBackground="{DynamicResource SidebarBackgroundBrush}"
+               OpenPaneLength="248"
                IsVisible="{Binding IsLoggedIn}">
       <SplitView.Pane>
         <DockPanel LastChildFill="True">
-          <StackPanel DockPanel.Dock="Top" Margin="12,16,12,8">
-            <TextBlock Text="DK-Control" Foreground="White" FontSize="18" FontWeight="Bold"/>
-            <TextBlock Text="{Binding UserDisplayName}" Foreground="#9AAAB4" FontSize="12" Margin="0,4,0,0"/>
-          </StackPanel>
+          <Grid DockPanel.Dock="Top" Margin="16,18,16,14" ColumnDefinitions="44,*,Auto" RowDefinitions="Auto,Auto">
+            <Border Grid.RowSpan="2" Grid.Column="0" Width="38" Height="38" CornerRadius="19"
+                    Background="{DynamicResource AccentBlueBrush}">
+              <TextBlock Text="{Binding UserInitials}" Foreground="White" FontWeight="Bold"
+                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <TextBlock Grid.Column="1" Text="DK-Control" Foreground="White" FontSize="18" FontWeight="Bold"/>
+            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding UserDisplayName}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
+            <controls:NotificationBadge Grid.Column="2" Grid.RowSpan="2" Count="{Binding UnreadNotificationCount}"
+                                        HorizontalAlignment="Right" VerticalAlignment="Top"/>
+          </Grid>
 
-          <StackPanel DockPanel.Dock="Bottom" Margin="8,8,8,16" Spacing="4">
+          <StackPanel DockPanel.Dock="Bottom" Margin="12,8,12,16" Spacing="10">
+            <Border Height="1" Background="#334155"/>
             <Button Content="Logout" Command="{Binding LogoutCommand}"
                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                    Background="#C0392B" Foreground="White"/>
+                    Classes="danger"/>
           </StackPanel>
 
           <ListBox ItemsSource="{Binding NavItems}"
                    SelectedItem="{Binding SelectedNavItem}"
                    Background="Transparent"
-                   Margin="4">
+                   Margin="8,0,8,8">
             <ListBox.ItemTemplate>
               <DataTemplate x:DataType="vm:NavItem">
-                <TextBlock Text="{Binding Title}" Padding="8,4" Foreground="White"/>
+                <Grid ColumnDefinitions="4,30,*" Margin="0,2" MinHeight="38">
+                  <Border Grid.Column="0" Classes="nav-indicator" Background="{DynamicResource AccentBlueBrush}"
+                          CornerRadius="2" IsVisible="False"/>
+                  <TextBlock Grid.Column="1" Text="{Binding Icon}" FontSize="17" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                  <TextBlock Grid.Column="2" Classes="nav-title" Text="{Binding Title}" Foreground="{DynamicResource SidebarForegroundBrush}"
+                             FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                </Grid>
               </DataTemplate>
             </ListBox.ItemTemplate>
             <ListBox.Styles>
+              <Style Selector="ListBoxItem /template/ ContentPresenter">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="CornerRadius" Value="8"/>
+              </Style>
+              <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
+                <Setter Property="Background" Value="#27304A"/>
+              </Style>
               <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-                <Setter Property="Background" Value="#4A5568"/>
+                <Setter Property="Background" Value="#2D3A5C"/>
+              </Style>
+              <Style Selector="ListBoxItem:selected Border.nav-indicator">
+                <Setter Property="IsVisible" Value="True"/>
+              </Style>
+              <Style Selector="ListBoxItem:selected TextBlock.nav-title">
+                <Setter Property="Foreground" Value="{DynamicResource SidebarForegroundActiveBrush}"/>
               </Style>
             </ListBox.Styles>
           </ListBox>
         </DockPanel>
       </SplitView.Pane>
 
-      <Grid RowDefinitions="Auto, *">
-        <Border Grid.Row="0" Background="#F7F8FA" BorderThickness="0,0,0,1" BorderBrush="#E2E8F0" Padding="8,4">
+      <Grid RowDefinitions="Auto, *" Background="{DynamicResource ContentBackgroundBrush}">
+        <Border Grid.Row="0" Background="White" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource BorderColorBrush}" Padding="10,6">
           <StackPanel Orientation="Horizontal" Spacing="8">
-            <Button Content="=" Command="{Binding TogglePaneCommand}" Width="32" Height="32"/>
+            <Button Content="☰" Command="{Binding TogglePaneCommand}" Width="36" Height="32"
+                    AutomationProperties.Name="Navigation umschalten"
+                    ToolTip.Tip="Navigation umschalten"/>
           </StackPanel>
         </Border>
         <Grid Grid.Row="1" RowDefinitions="Auto, *">
