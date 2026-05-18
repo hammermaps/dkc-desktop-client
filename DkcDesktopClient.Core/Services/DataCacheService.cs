@@ -175,8 +175,8 @@ public static class CacheKeys
     public const string KeysInventory    = "keys_inventory";
     public const string ProjectsList     = "projects_list";
     public const string UsersList        = "users_list";
-    public const string Notifications      = "notifications";
-    public const string NotificationCount  = "notification_count";
+    public const string Notifications     = "notifications";
+    public const string NotificationCount = "notification_count";
 }
 
 /// <summary>Default TTL values per data type (from the ROADMAP specification).</summary>
