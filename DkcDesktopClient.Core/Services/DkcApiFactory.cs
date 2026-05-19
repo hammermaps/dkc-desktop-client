@@ -55,7 +55,10 @@ public class DkcApiFactory
             BaseAddress = new Uri(url)
         };
 
-        return new DkcProtobufApiClient(httpClient, () => token ?? _authService?.CurrentToken);
+        return new DkcProtobufApiClient(
+            httpClient,
+            () => token ?? _authService?.CurrentToken,
+            disposeHttpClient: true);
     }
 }
 
