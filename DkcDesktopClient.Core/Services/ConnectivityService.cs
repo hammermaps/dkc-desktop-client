@@ -52,11 +52,8 @@ public class ConnectivityService : BackgroundService
         TokenStore tokenStore,
         ILogger<ConnectivityService> logger,
         Func<HttpClient> createHttpClient)
-    {
-        _tokenStore        = tokenStore;
-        _logger            = logger;
-        _createHttpClient  = createHttpClient;
-    }
+        : this(tokenStore, logger, createHttpClient, serverUrlOverride: null)
+    { }
 
     /// <summary>Internal constructor for unit tests: uses a fixed server URL so tests
     /// do not write to disk via <see cref="TokenStore"/>.</summary>
@@ -64,9 +61,19 @@ public class ConnectivityService : BackgroundService
         string serverUrl,
         ILogger<ConnectivityService> logger,
         Func<HttpClient> createHttpClient)
-        : this((TokenStore)null!, logger, createHttpClient)
+        : this(tokenStore: null, logger, createHttpClient, serverUrlOverride: serverUrl)
+    { }
+
+    private ConnectivityService(
+        TokenStore? tokenStore,
+        ILogger<ConnectivityService> logger,
+        Func<HttpClient> createHttpClient,
+        string? serverUrlOverride)
     {
-        _serverUrlOverride = serverUrl;
+        _tokenStore        = tokenStore;
+        _logger            = logger;
+        _createHttpClient  = createHttpClient;
+        _serverUrlOverride = serverUrlOverride;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

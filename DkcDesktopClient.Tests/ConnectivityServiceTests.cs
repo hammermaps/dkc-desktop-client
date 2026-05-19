@@ -73,7 +73,7 @@ public class ConnectivityServiceTests
     }
 
     [Fact]
-    public async Task ForceCheckAsync_With5xxThenSuccess_GoesOnlineThenOffline()
+    public async Task ForceCheckAsync_With5xxThenSuccess_GoesOfflineThenOnline()
     {
         // First call: 5xx → offline
         var svc = CreateWithResponse("http://fake-server", HttpStatusCode.InternalServerError);
