@@ -16,6 +16,9 @@
       <Separator Width="1" Background="#CCCCCC" Margin="4,0"/>
       <Button Content="🔄 Zurückgeben" Command="{Binding ShowReturnFormCommand}"/>
       <Button Content="Löschen" Command="{Binding DeleteIssuedCommand}" Foreground="Red"/>
+      <Separator Width="1" Background="#CCCCCC" Margin="4,0"/>
+      <Button Content="📥 CSV-Export" Command="{Binding ExportInventoryToCsvCommand}"
+              ToolTip.Tip="Schlüssel-Inventar als CSV exportieren"/>
     </StackPanel>
 
     <!-- Stats tiles -->

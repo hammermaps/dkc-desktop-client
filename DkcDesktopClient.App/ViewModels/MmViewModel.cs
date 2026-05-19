@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DkcDesktopClient.App.Services;
 using DkcDesktopClient.Core.Api;
 using DkcDesktopClient.Core.Services;
 
@@ -14,6 +15,7 @@ public partial class MmViewModel : ViewModelBase
 {
     private readonly DkcApiFactory _apiFactory;
     private readonly AuthService _authService;
+    private readonly IFilePickerService _filePicker;
     private const int PageSize = 50;
 
     // ── List state ────────────────────────────────────────────────────────────
@@ -91,14 +93,48 @@ public partial class MmViewModel : ViewModelBase
     public static IReadOnlyList<string> DringlichkeitOptions { get; } =
         new[] { "normal", "dringend", "notfall" };
 
-    public MmViewModel(DkcApiFactory apiFactory, AuthService authService)
+    public MmViewModel(DkcApiFactory apiFactory, AuthService authService, IFilePickerService filePicker)
     {
         _apiFactory = apiFactory;
         _authService = authService;
+        _filePicker = filePicker;
         Messages.CollectionChanged += OnMessagesCollectionChanged;
     }
 
     partial void OnIsLoadingChanged(bool value) => OnPropertyChanged(nameof(HasNoMessages));
+
+    // ── CSV Export ────────────────────────────────────────────────────────────
+
+    [RelayCommand(CanExecute = nameof(CanExportMessages))]
+    public async Task ExportMessagesToCsvAsync()
+    {
+        var path = await _filePicker.PickSaveFileAsync(
+            $"maengelmeldungen_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
+            new[] { ("CSV-Datei", "*.csv") });
+        if (path == null) return;
+
+        var columns = new (string, Func<MmMessage, string?>)[]
+        {
+            ("UID",           m => m.Uid),
+            ("Status",        m => m.StatusText),
+            ("Betreff",       m => m.Betreff),
+            ("Dringlichkeit", m => m.DringlichkeitText),
+            ("Melder",        m => m.Melder),
+            ("Datum",         m => m.Datetime),
+            ("Zugehörigkeit", m => m.Zugeh),
+        };
+
+        try
+        {
+            CsvExportService.ExportToCsv(path, Messages, columns);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"CSV-Export fehlgeschlagen: {ex.Message}";
+        }
+    }
+
+    private bool CanExportMessages() => Messages.Count > 0;
 
     partial void OnMessagesChanged(ObservableCollection<MmMessage>? oldValue, ObservableCollection<MmMessage> newValue)
     {
@@ -106,16 +142,21 @@ public partial class MmViewModel : ViewModelBase
             oldValue.CollectionChanged -= OnMessagesCollectionChanged;
         newValue.CollectionChanged += OnMessagesCollectionChanged;
         OnPropertyChanged(nameof(HasNoMessages));
+        ExportMessagesToCsvCommand.NotifyCanExecuteChanged();
     }
 
-    private void OnMessagesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) =>
+    private void OnMessagesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
         OnPropertyChanged(nameof(HasNoMessages));
+        ExportMessagesToCsvCommand.NotifyCanExecuteChanged();
+    }
 
     // ── Commands ──────────────────────────────────────────────────────────────
 
     [RelayCommand]
     public async Task LoadMessagesAsync()
     {
+        var ct = StartLoad();
         IsLoading = true;
         ErrorMessage = null;
         CurrentOffset = 0;
@@ -126,7 +167,8 @@ public partial class MmViewModel : ViewModelBase
                 status: FilterStatusOption.Value,
                 street: FilterStreet,
                 limit: PageSize,
-                offset: 0);
+                offset: 0,
+                ct: ct);
             if (result.Success)
             {
                 Messages.Clear();
@@ -142,6 +184,10 @@ public partial class MmViewModel : ViewModelBase
             {
                 ErrorMessage = result.Error ?? "Laden der Mängelmeldungen fehlgeschlagen.";
             }
+        }
+        catch (OperationCanceledException)
+        {
+            // Navigation away – discard silently.
         }
         catch (Exception ex)
         {

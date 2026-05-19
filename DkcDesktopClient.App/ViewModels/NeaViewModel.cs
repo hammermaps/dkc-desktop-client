@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DkcDesktopClient.App.Services;
 using DkcDesktopClient.Core.Api;
 using DkcDesktopClient.Core.Services;
 
@@ -24,6 +26,7 @@ public partial class NeaViewModel : ViewModelBase
 {
     private readonly DkcApiFactory _apiFactory;
     private readonly AuthService _authService;
+    private readonly IFilePickerService _filePicker;
 
     // List state
     [ObservableProperty] private bool _isLoading;
@@ -90,25 +93,34 @@ public partial class NeaViewModel : ViewModelBase
     public static IReadOnlyList<string> FuelTypeOptions { get; } =
         new[] { "Diesel", "Gas", "Hybrid", "Benzin", "Erdgas" };
 
-    public NeaViewModel(DkcApiFactory apiFactory, AuthService authService)
+    public NeaViewModel(DkcApiFactory apiFactory, AuthService authService, IFilePickerService filePicker)
     {
         _apiFactory = apiFactory;
         _authService = authService;
+        _filePicker = filePicker;
+        // Wire CollectionChanged on the initial collection instance;
+        // OnInspectionsChanged handles re-subscription if the collection property is replaced.
+        Inspections.CollectionChanged += OnInspectionsCollectionChanged;
     }
 
     [RelayCommand]
     public async Task LoadSystemsAsync()
     {
+        var ct = StartLoad();
         IsLoading = true;
         ErrorMessage = null;
         try
         {
             var api = _apiFactory.Create(_authService.CurrentToken);
-            var result = await api.GetNeaSystemsAsync();
+            var result = await api.GetNeaSystemsAsync(ct: ct);
             Systems.Clear();
             if (result.Success && result.Systems != null)
                 foreach (var s in result.Systems)
                     Systems.Add(s);
+        }
+        catch (OperationCanceledException)
+        {
+            // Navigation away – discard silently.
         }
         catch (Exception ex)
         {
@@ -123,6 +135,7 @@ public partial class NeaViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadInspectionsAsync()
     {
+        var ct = StartLoad();
         IsLoading = true;
         ErrorMessage = null;
         CurrentOffset = 0;
@@ -134,12 +147,17 @@ public partial class NeaViewModel : ViewModelBase
                 year: FilterYear,
                 status: FilterStatus,
                 limit: PageSize,
-                offset: 0);
+                offset: 0,
+                ct: ct);
             Inspections.Clear();
             TotalInspections = result.Total ?? 0;
             if (result.Success && result.Inspections != null)
                 foreach (var i in result.Inspections)
                     Inspections.Add(i);
+        }
+        catch (OperationCanceledException)
+        {
+            // Navigation away – discard silently.
         }
         catch (Exception ex)
         {
@@ -549,4 +567,51 @@ public partial class NeaViewModel : ViewModelBase
     partial void OnIsSavingSystemChanged(bool value) => SaveSystemCommand.NotifyCanExecuteChanged();
     partial void OnIsSavingInspectionChanged(bool value) => SaveInspectionCommand.NotifyCanExecuteChanged();
     partial void OnIsSavingChecklistChanged(bool value) => SaveChecklistCommand.NotifyCanExecuteChanged();
+
+    // ── CSV Export ────────────────────────────────────────────────────────────
+
+    [RelayCommand(CanExecute = nameof(CanExportInspections))]
+    public async Task ExportInspectionsToCsvAsync()
+    {
+        var path = await _filePicker.PickSaveFileAsync(
+            $"nea_pruefungen_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
+            new[] { ("CSV-Datei", "*.csv") });
+        if (path == null) return;
+
+        var columns = new (string, Func<NeaInspection, string?>)[]
+        {
+            ("ID",              i => i.Id.ToString()),
+            ("Anlage",          i => i.SystemName),
+            ("Typ",             i => i.InspectionType),
+            ("Datum",           i => i.InspectionDate),
+            ("Prüfer",          i => i.InspectorName),
+            ("Status",          i => i.Status),
+            ("Ergebnis",        i => i.OverallResult),
+            ("Laufzeit (h)",    i => i.RuntimeHours?.ToString()),
+            ("Notizen",         i => i.Notes),
+        };
+
+        try
+        {
+            CsvExportService.ExportToCsv(path, Inspections, columns);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"CSV-Export fehlgeschlagen: {ex.Message}";
+        }
+    }
+
+    private bool CanExportInspections() => Inspections.Count > 0;
+
+    partial void OnInspectionsChanged(ObservableCollection<NeaInspection>? oldValue, ObservableCollection<NeaInspection> newValue)
+    {
+        // Re-subscribe to the new collection instance so CollectionChanged keeps notifying the command
+        if (oldValue != null)
+            oldValue.CollectionChanged -= OnInspectionsCollectionChanged;
+        newValue.CollectionChanged += OnInspectionsCollectionChanged;
+        ExportInspectionsToCsvCommand.NotifyCanExecuteChanged();
+    }
+
+    private void OnInspectionsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        => ExportInspectionsToCsvCommand.NotifyCanExecuteChanged();
 }

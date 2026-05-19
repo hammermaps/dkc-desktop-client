@@ -148,6 +148,9 @@
             <Button Content="Neu" Command="{Binding ShowCreateRecordFormCommand}"/>
             <Button Content="Bearbeiten" Command="{Binding ShowEditRecordFormCommand}"/>
             <Button Content="Löschen" Command="{Binding DeleteRecordCommand}" Foreground="Red"/>
+            <Separator Width="1" Background="#CCCCCC" Margin="4,0"/>
+            <Button Content="📥 CSV-Export" Command="{Binding ExportRecordsToCsvCommand}"
+                    ToolTip.Tip="Erfassungen als CSV exportieren"/>
           </StackPanel>
 
           <!-- Filter bar -->
