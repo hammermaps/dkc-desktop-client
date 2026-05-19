@@ -41,6 +41,22 @@ public class DkcApiFactory
         };
         return RestService.For<IDkcApi>(httpClient, settings);
     }
+
+    public virtual DkcProtobufApiClient CreateProtobuf(
+        string? token = null,
+        string? serverUrl = null,
+        HttpMessageHandler? innerHandler = null)
+    {
+        var url = serverUrl ?? _tokenStore.LoadServerUrl() ?? "https://localhost";
+        _logger.LogDebug("Creating protobuf API client for base URL {BaseUrl}", url);
+
+        var httpClient = new HttpClient(innerHandler ?? new HttpClientHandler())
+        {
+            BaseAddress = new Uri(url)
+        };
+
+        return new DkcProtobufApiClient(httpClient, () => token ?? _authService?.CurrentToken);
+    }
 }
 
 internal class AuthorizationHandler : DelegatingHandler
