@@ -136,15 +136,12 @@ public class HtmlHelperTests
     // ── Double-encoding safety: &amp;lt; should not become < ─────────────────
 
     [Fact]
-    public void StripTags_DoubleEncoded_AmpNotFollowedByBracket()
+    public void StripTags_DoubleEncoded_DecodesSequentially()
     {
-        // "&amp;lt;" should decode to "&lt;" (not "<"), preserving safe output
+        // "&amp;lt;" decodes in two passes: &amp; → & producing "&lt;", then &lt; → "<".
+        // This documents the expected sequential-decoding behavior.
         var result = HtmlHelper.StripTags("&amp;lt;");
-        // First &amp; → &, then &lt; → <? No: decoding is done in order so
-        // &amp; → & and then the resulting "&lt;" is decoded to "<" by the second pass.
-        // This is expected behavior since we apply each replace sequentially.
-        // The important thing is it does not throw.
-        Assert.NotNull(result);
+        Assert.Equal("<", result);
     }
 
     // ── Whitespace collapsing ─────────────────────────────────────────────────
@@ -166,7 +163,7 @@ public class HtmlHelperTests
     // ── CKEditor-typical output ───────────────────────────────────────────────
 
     [Fact]
-    public void StripTags_CkEditorOutput_TextExtracted()
+    public void StripTags_CkEditorOutput_TextExtractedWithSeparators()
     {
         const string ck = """
             <p>First paragraph.</p>
@@ -182,5 +179,11 @@ public class HtmlHelperTests
         Assert.Contains("Item one", result);
         Assert.Contains("Item two", result);
         Assert.Contains("A quote.", result);
+
+        // Block-level tags must have been converted to separators so content segments
+        // are not run together; adjacent whitespace (including multiple newlines) is
+        // collapsed by the whitespace-normaliser to a single space or newline.
+        Assert.DoesNotContain("First paragraph.Item one", result);
+        Assert.DoesNotContain("Item oneItem two", result);
     }
 }

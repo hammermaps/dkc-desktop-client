@@ -149,9 +149,9 @@ public partial class HtmlDisplayControl : UserControl
               if (typeof DOMPurify !== 'undefined') {
                 safe = DOMPurify.sanitize(html, PURIFY_CONFIG);
               } else {
-                // DOMPurify failed to load (offline / CDN blocked) — show nothing
+                // DOMPurify failed to load (offline / CDN blocked) — show a notice
                 // rather than risk rendering unsanitized HTML.
-                safe = '';
+                safe = '<em style="color:#718096">(Inhalt nicht verfügbar – Darstellungsbibliothek konnte nicht geladen werden.)</em>';
               }
               document.getElementById('content').innerHTML = safe;
             }
