@@ -1246,3 +1246,54 @@ Die Navigation erfolgt über eine `SplitView` mit einer Sidebar-`ListBox` (NavIt
 | `notifications.tpl` | — | ❌ Fehlt |
 | `meter.tpl` | — | ❌ Fehlt (Session-abhängig) |
 | `admin/users.tpl` | In `SettingsView` | ⚠️ Eingebettet |
+
+---
+
+## 10. Phase 5 – Qualität & Abschluss (abgeschlossen)
+
+### 10.1 Test-Coverage
+
+Die Test-Suite wurde von 68 auf **151 Tests** ausgebaut. Alle Tests liegen in `DkcDesktopClient.Tests/`.
+
+| Test-Datei | Beschreibung | Anzahl Tests |
+|---|---|---|
+| `AuthServiceTests` | IsAuthenticated, TryAutoLogin, Logout, Permissions, AuthStateChanged | 5 |
+| `ConnectivityServiceTests` | Online/Offline-Erkennung | 2 |
+| `CsvExportServiceTests` | CSV-Formatierung, Sonderzeichen, Encoding | — |
+| `DataCacheServiceTests` | TTL, Invalidierung, Parallelität, Null-Werte | 11 |
+| `NavigationServiceTests` | Back-Stack, Breadcrumbs, Events, Typ-Navigation | 15 |
+| `TokenStoreTests` | Save/Load/Delete Token + ServerURL | — |
+| `UpdateServiceTests` | Version-Vergleich, Asset-Auswahl, Fehlerbehandlung | — |
+| `BackgroundRefreshServiceTests` | Pause bei Logout, DataRefreshed-Event, NotifyUserActivity | 5 |
+| `DtoTests` | MmMessage computed properties (StatusText, Farben) | 13 |
+| `ViewModelTests` | Dashboard, Notifications, Mm, Building, Nea, Klima, Keys, Login, Settings, Wls | 57 |
+
+**Produktions-Änderungen für Testbarkeit:**
+- `DkcApiFactory.Create()` ist jetzt `virtual` → Subclassing mit Mock-API in Tests
+- `BackgroundRefreshService.TickInterval` ist jetzt `protected virtual` → überschreibbar für kurze Test-Zyklen
+
+**Test-Hilfsklassen (nur in Tests):**
+- `FakeDkcApiFactory` – gibt vorkonfigurierten `IDkcApi`-Mock zurück
+- `FastBackgroundRefreshService` – überschreibt `TickInterval` für schnelle Test-Loops
+
+### 10.2 Dokumentation
+
+- **`README.md`** komplett überarbeitet: Setup-Anleitung, Feature-Tabelle, Build-Befehle für alle Plattformen, Projektstruktur
+- **`CHANGELOG.md`** hinzugefügt: Versionshistorie aller 5 Phasen nach Keep-a-Changelog-Format
+- **`ROADMAP.md`** Phase-5-Einträge als erledigt markiert
+
+### 10.3 CI/CD
+
+- `build.yml` erweitert: macOS `osx-x64` und `osx-arm64` Builds zur Build-Matrix hinzugefügt
+- Rename-Schritt für Linux/macOS konsolidiert (`matrix.rid == 'linux-x64' || startsWith(matrix.rid, 'osx-')`)
+- GitHub Release bei Git-Tag `v*` bereits vorhanden (seit Phase 1)
+
+### 10.4 Aktueller Projektstatus
+
+| Bereich | Status |
+|---|---|
+| Plattform-Support | Windows (win-x64), Linux (linux-x64), macOS (osx-x64, osx-arm64) |
+| Build | `dotnet build DkcDesktopClient.slnx --configuration Release` |
+| Test | `dotnet test DkcDesktopClient.Tests/DkcDesktopClient.Tests.csproj --configuration Release` |
+| Test-Anzahl | 151 Tests |
+| CI | GitHub Actions (Build + Test + Release auf Tag) |

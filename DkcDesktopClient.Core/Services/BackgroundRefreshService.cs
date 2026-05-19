@@ -32,7 +32,8 @@ public class BackgroundRefreshService : BackgroundService
     // Background refresh only runs when Now >= lastLoad + interval.
     private readonly ConcurrentDictionary<string, DateTime> _lastLoaded = new(StringComparer.Ordinal);
 
-    private static readonly TimeSpan TickInterval = TimeSpan.FromSeconds(10);
+    // Overridable in tests to avoid slow 10-second waits.
+    protected virtual TimeSpan TickInterval => TimeSpan.FromSeconds(10);
 
     public BackgroundRefreshService(
         AuthService authService,

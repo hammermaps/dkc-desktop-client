@@ -43,7 +43,7 @@ public class DkcApiFactory
 
     public void SetAuthService(AuthService authService) => _authService = authService;
 
-    public IDkcApi Create(string? token = null, string? serverUrl = null, HttpMessageHandler? innerHandler = null)
+    public virtual IDkcApi Create(string? token = null, string? serverUrl = null, HttpMessageHandler? innerHandler = null)
     {
         var url = serverUrl ?? _tokenStore.LoadServerUrl() ?? "https://localhost";
         var handler = new AuthorizationHandler(token, _authService, _loggerFactory.CreateLogger<AuthorizationHandler>(), innerHandler);

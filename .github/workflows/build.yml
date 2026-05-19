@@ -18,6 +18,12 @@ jobs:
           - os: windows-latest
             rid: win-x64
             asset_name: DkcDesktopClient-win-x64.exe
+          - os: macos-latest
+            rid: osx-x64
+            asset_name: DkcDesktopClient-osx-x64
+          - os: macos-latest
+            rid: osx-arm64
+            asset_name: DkcDesktopClient-osx-arm64
 
     runs-on: ${{ matrix.os }}
 
@@ -51,8 +57,8 @@ jobs:
       - name: Publish
         run: dotnet publish DkcDesktopClient.App/DkcDesktopClient.App.csproj --configuration Release --runtime ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -p:Version=${{ steps.version.outputs.value }} --output ./publish/${{ matrix.rid }}
 
-      - name: Rename binary (Linux)
-        if: matrix.rid == 'linux-x64'
+      - name: Rename binary (Linux / macOS)
+        if: matrix.rid == 'linux-x64' || startsWith(matrix.rid, 'osx-')
         run: mv ./publish/${{ matrix.rid }}/DkcDesktopClient.App ./publish/${{ matrix.rid }}/${{ matrix.asset_name }}
 
       - name: Rename binary (Windows)
