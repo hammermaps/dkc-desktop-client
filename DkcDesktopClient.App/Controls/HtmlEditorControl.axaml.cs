@@ -112,7 +112,8 @@ public partial class HtmlEditorControl : UserControl
 
     private void OnWebMessageReceived(object? sender, WebMessageReceivedEventArgs e)
     {
-        // Messages arrive on the UI thread from NativeWebView.
+        // NativeWebView may raise WebMessageReceived on a non-UI thread on some platforms.
+        // Always dispatch to the UI thread before setting the AvaloniaProperty.
         Dispatcher.UIThread.Post(() =>
         {
             _suppressUpdate = true;
@@ -131,8 +132,9 @@ public partial class HtmlEditorControl : UserControl
     }
 
     // ── Embedded editor HTML ──────────────────────────────────────────────────
-    // CKEditor 5 Classic loaded from CDN with a <textarea> fallback when the
-    // CDN is unreachable (offline usage).
+    // CKEditor 5 Classic Build loaded from jsDelivr CDN with Subresource Integrity
+    // (SHA-384 hash of @ckeditor/ckeditor5-build-classic@41.3.1/build/ckeditor.js).
+    // Falls back to a plain <textarea> when the CDN is unreachable (offline usage).
     private const string EditorHtml = """
         <!DOCTYPE html>
         <html>
@@ -156,6 +158,9 @@ public partial class HtmlEditorControl : UserControl
           <script>
             var editor = null;
             var useFallback = false;
+            // Guard flag: prevents change:data from echoing back to the host
+            // while setContent is applying content programmatically.
+            var _settingContent = false;
 
             function initFallback() {
               useFallback = true;
@@ -167,7 +172,8 @@ public partial class HtmlEditorControl : UserControl
               if (useFallback) {
                 document.getElementById('fallback').value = html;
               } else if (editor) {
-                editor.setData(html);
+                _settingContent = true;
+                try { editor.setData(html); } finally { _settingContent = false; }
               } else {
                 window.__pendingContent = html;
               }
@@ -189,7 +195,9 @@ public partial class HtmlEditorControl : UserControl
             }
 
             var script = document.createElement('script');
-            script.src = 'https://cdn.ckeditor.com/ckeditor5/41.3.1/classic/ckeditor.js';
+            script.src = 'https://cdn.jsdelivr.net/npm/@ckeditor/ckeditor5-build-classic@41.3.1/build/ckeditor.js';
+            script.integrity = 'sha384-gNZAdF3+6QYlu7Dv5Xpz8G4GVhiFXkuaI2jfgepC8Po2PTJ0eME2QZOgTPF/sJLx';
+            script.crossOrigin = 'anonymous';
             script.onload = function () {
               ClassicEditor.create(document.querySelector('#editor'), {
                 toolbar: [
@@ -201,10 +209,15 @@ public partial class HtmlEditorControl : UserControl
               }).then(function (ed) {
                 editor = ed;
                 editor.model.document.on('change:data', function () {
-                  sendToHost(editor.getData());
+                  // Only notify the host when the user edited content, not during
+                  // programmatic setContent calls.
+                  if (!_settingContent) {
+                    sendToHost(editor.getData());
+                  }
                 });
                 if (window.__pendingContent !== undefined) {
-                  editor.setData(window.__pendingContent);
+                  _settingContent = true;
+                  try { editor.setData(window.__pendingContent); } finally { _settingContent = false; }
                   delete window.__pendingContent;
                 }
               }).catch(function (err) {

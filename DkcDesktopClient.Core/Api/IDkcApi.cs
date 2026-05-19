@@ -206,14 +206,6 @@ public interface IDkcApi
     [Get("/api.php?action=get_notification_count")]
     Task<NotificationCountResponse> GetNotificationCountAsync(CancellationToken ct = default);
 
-    // CKEditor draft (session-based – web frontend only; defined for completeness)
-    // NOTE: Requires PHP session authentication; cannot be used with API-token auth.
-    [Post("/api.php?action=ckeditor_draft")]
-    Task<ApiError> SaveCkEditorDraftAsync([Body] CkEditorDraftSaveRequest request, CancellationToken ct = default);
-
-    [Get("/api.php?action=ckeditor_draft")]
-    Task<CkEditorDraftLoadResponse> LoadCkEditorDraftAsync([Query] string key, CancellationToken ct = default);
-
     // WLS Buildings
     [Get("/buildings/list")]
     Task<WlsBuildingListResponse> GetWlsBuildingsAsync(CancellationToken ct = default);

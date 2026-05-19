@@ -761,17 +761,3 @@ public record WlsRecordUpdateRequest(
     [property: JsonPropertyName("latitude")] double? Latitude,
     [property: JsonPropertyName("longitude")] double? Longitude,
     [property: JsonPropertyName("location_accuracy")] double? LocationAccuracy);
-
-// CKEditor draft
-// NOTE: The ckeditor_draft action is session-based (PHP session auth) and is intended
-// for the web frontend. In the desktop client this endpoint is defined for completeness
-// but cannot be used with API-token authentication.
-public record CkEditorDraftSaveRequest(
-    [property: JsonPropertyName("key")] string Key,
-    [property: JsonPropertyName("content")] string Content);
-
-public record CkEditorDraftLoadResponse(
-    [property: JsonPropertyName("success")] bool Success,
-    [property: JsonPropertyName("key")] string? Key,
-    [property: JsonPropertyName("content")] string? Content,
-    [property: JsonPropertyName("error")] string? Error);

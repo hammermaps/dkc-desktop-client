@@ -97,6 +97,8 @@ public partial class HtmlDisplayControl : UserControl
     }
 
     // ── Embedded display HTML ─────────────────────────────────────────────────
+    // DOMPurify (3.2.4) is loaded with SRI to sanitize server-supplied HTML before
+    // injection via innerHTML, preventing XSS from stored CKEditor content.
     private const string DisplayHtml = """
         <!DOCTYPE html>
         <html>
@@ -122,12 +124,36 @@ public partial class HtmlDisplayControl : UserControl
             }
             a { color: #2b6cb0; }
           </style>
+          <!-- DOMPurify for XSS sanitization; SRI ensures integrity of the script. -->
+          <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js"
+                  integrity="sha384-eEu5CTj3qGvu9PdJuS+YlkNi7d2XxQROAFYOr59zgObtlcux1ae1Il3u7jvdCSWu"
+                  crossorigin="anonymous"></script>
         </head>
         <body>
           <div id="content"></div>
           <script>
+            // Allowed subset of HTML tags and attributes produced by CKEditor 5 Classic.
+            var PURIFY_CONFIG = {
+              ALLOWED_TAGS: [
+                'p','br','strong','em','b','i',
+                'ul','ol','li',
+                'blockquote','pre','code',
+                'a','span',
+                'h2','h3','h4','h5','h6'
+              ],
+              ALLOWED_ATTR: ['href', 'class', 'target', 'rel']
+            };
+
             function setContent(html) {
-              document.getElementById('content').innerHTML = html;
+              var safe;
+              if (typeof DOMPurify !== 'undefined') {
+                safe = DOMPurify.sanitize(html, PURIFY_CONFIG);
+              } else {
+                // DOMPurify failed to load (offline / CDN blocked) — show nothing
+                // rather than risk rendering unsanitized HTML.
+                safe = '';
+              }
+              document.getElementById('content').innerHTML = safe;
             }
           </script>
         </body>
