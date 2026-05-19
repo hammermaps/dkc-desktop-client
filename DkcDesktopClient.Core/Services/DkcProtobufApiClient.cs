@@ -68,6 +68,6 @@ public sealed class DkcProtobufApiClient : IDisposable
     private static string CreateUserAgent()
     {
         var version = typeof(DkcProtobufApiClient).Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
-        return $"DkcDesktopClient/{version} (Avalonia; .NET8; protobuf)";
+        return $"DkcDesktopClient/{version} (Avalonia; .NET {Environment.Version.ToString(3)}; protobuf)";
     }
 }
