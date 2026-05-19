@@ -66,8 +66,9 @@
           <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding FormKeyName}" PlaceholderText="Key name (required)"/>
           <TextBlock Grid.Row="0" Grid.Column="4" Text="Total" VerticalAlignment="Center"/>
           <NumericUpDown Grid.Row="0" Grid.Column="6" Value="{Binding FormKeyTotal}" Minimum="1" Maximum="999" Width="80"/>
-          <TextBlock Grid.Row="2" Grid.Column="0" Text="Description" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="5" Text="{Binding FormKeyDescription}" PlaceholderText="Optional description"/>
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="Description" VerticalAlignment="Top" Margin="0,4,0,0"/>
+          <TextBox Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="5" Text="{Binding FormKeyDescription}"
+                   PlaceholderText="Optional description" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"/>
         </Grid>
         <StackPanel Orientation="Horizontal" Spacing="8">
           <Button Content="Save" Command="{Binding SaveKeyCommand}"/>
@@ -89,8 +90,9 @@
           <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding FormIssuedTo}" PlaceholderText="Personenname (Pflichtfeld)"/>
           <TextBlock Grid.Row="0" Grid.Column="4" Text="Datum *" VerticalAlignment="Center"/>
           <TextBox Grid.Row="0" Grid.Column="6" Text="{Binding FormIssuedAt}" PlaceholderText="YYYY-MM-DD"/>
-          <TextBlock Grid.Row="2" Grid.Column="0" Text="Notizen" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="5" Text="{Binding FormIssueNotes}" PlaceholderText="Optionale Notizen"/>
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="Notizen" VerticalAlignment="Top" Margin="0,4,0,0"/>
+          <TextBox Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="5" Text="{Binding FormIssueNotes}"
+                   PlaceholderText="Optionale Notizen" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"/>
         </Grid>
         <StackPanel Orientation="Horizontal" Spacing="8">
           <Button Content="Ausgeben" Command="{Binding IssueKeyCommand}"/>
@@ -110,8 +112,9 @@
         <Grid ColumnDefinitions="130,8,*,16,130,8,*">
           <TextBlock Grid.Column="0" Text="Rückgabedatum *" VerticalAlignment="Center"/>
           <TextBox   Grid.Column="2" Text="{Binding FormReturnDate}" PlaceholderText="YYYY-MM-DD"/>
-          <TextBlock Grid.Column="4" Text="Notizen" VerticalAlignment="Center"/>
-          <TextBox   Grid.Column="6" Text="{Binding FormReturnNotes}" PlaceholderText="Optionale Notizen"/>
+          <TextBlock Grid.Column="4" Text="Notizen" VerticalAlignment="Top" Margin="0,4,0,0"/>
+          <TextBox   Grid.Column="6" Text="{Binding FormReturnNotes}"
+                     PlaceholderText="Optionale Notizen" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"/>
         </Grid>
         <StackPanel Orientation="Horizontal" Spacing="8">
           <Button Content="Rückgabe bestätigen" Command="{Binding ReturnKeyCommand}"/>

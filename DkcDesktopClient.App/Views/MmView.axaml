@@ -143,9 +143,7 @@
 
         <!-- Zeile 6: Meldungstext -->
         <TextBlock Text="Meldungstext" FontWeight="SemiBold"/>
-        <TextBox Text="{Binding FormMeldung}"
-                 PlaceholderText="Beschreibung der Mängelmeldung…"
-                 Height="70" AcceptsReturn="True" TextWrapping="Wrap"/>
+        <controls:HtmlEditorControl HtmlContent="{Binding FormMeldung}" MinHeight="140"/>
 
         <!-- Aktions-Buttons -->
         <StackPanel Orientation="Horizontal" Spacing="8">
@@ -221,8 +219,8 @@
           <TextBlock Grid.Row="2" Grid.Column="0" Text="Betreff:" FontWeight="SemiBold"/>
           <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding SelectedDetail.Betreff}" TextWrapping="Wrap"/>
 
-          <TextBlock Grid.Row="3" Grid.Column="0" Text="Meldungstext:" FontWeight="SemiBold"/>
-          <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding SelectedDetail.MeldungMassage}" TextWrapping="Wrap"/>
+          <TextBlock Grid.Row="3" Grid.Column="0" Text="Meldungstext:" FontWeight="SemiBold" VerticalAlignment="Top"/>
+          <controls:HtmlDisplayControl Grid.Row="3" Grid.Column="2" HtmlContent="{Binding SelectedDetail.MeldungMassage}" MaxHeight="120"/>
 
           <!-- Kontakt -->
           <TextBlock Grid.Row="4" Grid.Column="0" Text="Telefon / E-Mail:" FontWeight="SemiBold"/>
