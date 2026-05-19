@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -611,6 +612,6 @@ public partial class NeaViewModel : ViewModelBase
         ExportInspectionsToCsvCommand.NotifyCanExecuteChanged();
     }
 
-    private void OnInspectionsCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    private void OnInspectionsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         => ExportInspectionsToCsvCommand.NotifyCanExecuteChanged();
 }

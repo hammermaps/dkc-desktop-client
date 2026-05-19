@@ -10,7 +10,7 @@ namespace DkcDesktopClient.Core.Services;
 /// </summary>
 public class ConnectivityService : BackgroundService
 {
-    private readonly TokenStore _tokenStore;
+    private readonly TokenStore? _tokenStore;
     private readonly ILogger<ConnectivityService> _logger;
     private readonly Func<HttpClient> _createHttpClient;
     private readonly string? _serverUrlOverride;
@@ -104,7 +104,7 @@ public class ConnectivityService : BackgroundService
 
     private async Task CheckConnectivityAsync(CancellationToken ct)
     {
-        var serverUrl = _serverUrlOverride ?? _tokenStore.LoadServerUrl();
+        var serverUrl = _serverUrlOverride ?? _tokenStore?.LoadServerUrl();
         if (string.IsNullOrEmpty(serverUrl))
         {
             // No server configured yet – treat as online (login screen will show any errors)

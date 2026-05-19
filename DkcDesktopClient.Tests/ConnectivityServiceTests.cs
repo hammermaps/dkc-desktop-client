@@ -144,10 +144,11 @@ public class ConnectivityServiceTests
             if (_statusCode == null)
             {
                 // Simulate a slow server that triggers the client timeout
-                await Task.Delay(Timeout.Infinite, cancellationToken);
-                cancellationToken.ThrowIfCancellationRequested();
+                await Task.Delay(Timeout.Infinite, cancellationToken).ConfigureAwait(false);
+                // Task.Delay throws TaskCanceledException on cancellation; the line below is a safety net.
             }
 
+            cancellationToken.ThrowIfCancellationRequested();
             return new HttpResponseMessage(_statusCode!.Value);
         }
     }

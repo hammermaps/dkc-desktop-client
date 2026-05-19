@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DkcDesktopClient.App.Services;
@@ -622,6 +623,6 @@ public partial class WlsViewModel : ViewModelBase
         ExportRecordsToCsvCommand.NotifyCanExecuteChanged();
     }
 
-    private void OnRecordsCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    private void OnRecordsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         => ExportRecordsToCsvCommand.NotifyCanExecuteChanged();
 }

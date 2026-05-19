@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DkcDesktopClient.App.Services;
@@ -436,6 +437,6 @@ public partial class KeysViewModel : ViewModelBase
         ExportInventoryToCsvCommand.NotifyCanExecuteChanged();
     }
 
-    private void OnInventoryCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    private void OnInventoryCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         => ExportInventoryToCsvCommand.NotifyCanExecuteChanged();
 }
