@@ -25,6 +25,25 @@
         </StackPanel>
       </Border>
 
+      <!-- Logging -->
+      <Border BorderThickness="1" BorderBrush="#DDDDDD" CornerRadius="8" Padding="16">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Logging" FontSize="18" FontWeight="SemiBold"/>
+          <TextBlock Text="Log-Level"/>
+          <Grid ColumnDefinitions="220,8,Auto,8,Auto,*">
+            <ComboBox Grid.Column="0"
+                      ItemsSource="{Binding LogLevelOptions}"
+                      SelectedItem="{Binding SelectedLogLevel}"/>
+            <Button Grid.Column="2" Content="Save" Command="{Binding SaveLoggingSettingsCommand}"/>
+            <Button Grid.Column="4" Content="Reload" Command="{Binding ReloadLoggingSettingsCommand}"/>
+          </Grid>
+          <TextBlock Text="Aenderungen am Log-Level werden nach einem Neustart der App wirksam." Foreground="#4A5568"/>
+          <TextBlock Text="{Binding LoggingMessage}"
+                     Foreground="#2B6CB0"
+                     IsVisible="{Binding LoggingMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+        </StackPanel>
+      </Border>
+
       <!-- Application Update -->
       <Border BorderThickness="1" BorderBrush="#DDDDDD" CornerRadius="8" Padding="16">
         <StackPanel Spacing="8">

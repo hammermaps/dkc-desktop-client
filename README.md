@@ -135,7 +135,19 @@ Workflow: [`.github/workflows/build.yml`](.github/workflows/build.yml)
 Beim ersten Start wird die Server-URL und der API-Token über den Login-Dialog eingegeben.  
 Gespeicherte Zugangsdaten (Token, Server-URL) werden mit **DPAPI / Data Protection API** verschlüsselt im lokalen `AppData`-Verzeichnis abgelegt.
 
-Log-Datei: `%LOCALAPPDATA%\DkcDesktopClient\debug.log` (Windows) bzw. `~/.local/share/DkcDesktopClient/debug.log` (Linux/macOS)
+### Logging
+
+- Log-Dateien: `%APPDATA%\DkcDesktopClient\logs\dkc-<datum>.log` (Windows) bzw. `~/.config/DkcDesktopClient/logs/dkc-<datum>.log` (Linux/macOS)
+- Standard-Loglevel: `Debug` in Development, `Information` in Production
+- Override per Umgebungsvariable: `DKC_LOG_LEVEL=Verbose|Debug|Information|Warning|Error|Fatal`
+- Optional per Datei: `logging.json` im AppData-Ordner mit Inhalt `{"logLevel":"Debug"}`
+
+Beispiel (Linux/macOS):
+
+```bash
+export DKC_LOG_LEVEL=Debug
+dotnet run --project DkcDesktopClient.App
+```
 
 ---
 

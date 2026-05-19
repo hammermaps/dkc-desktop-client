@@ -12,6 +12,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Serilog;
+using Serilog.Events;
+using System.Text.Json;
 
 namespace DkcDesktopClient.App;
 
@@ -103,19 +105,46 @@ public partial class App : Application
         Directory.CreateDirectory(dataDir);
 
         var cacheDir = Path.Combine(dataDir, "cache");
-        var logPath  = Path.Combine(dataDir, "logs", "dkc-.log");
+        var logDir = Path.Combine(dataDir, "logs");
+        Directory.CreateDirectory(logDir);
+        var logPath = Path.Combine(logDir, "dkc-.log");
+
+        var environment =
+            Environment.GetEnvironmentVariable("DKC_ENVIRONMENT")
+            ?? Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")
+#if DEBUG
+            ?? "Development";
+#else
+            ?? "Production";
+#endif
+
+        var configuredLevel = ResolveLogLevel(dataDir, environment);
 
         Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Information()
-            .WriteTo.File(logPath, rollingInterval: RollingInterval.Day, retainedFileCountLimit: 7)
+            .MinimumLevel.Is(configuredLevel)
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+            .MinimumLevel.Override("System", LogEventLevel.Warning)
+            .Enrich.FromLogContext()
+            .Enrich.WithProperty("Environment", environment)
+            .WriteTo.File(
+                logPath,
+                rollingInterval: RollingInterval.Day,
+                retainedFileCountLimit: 14,
+                fileSizeLimitBytes: 10 * 1024 * 1024,
+                rollOnFileSizeLimit: true,
+                shared: true,
+                outputTemplate:
+                    "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] ({Environment}) {SourceContext} {Message:lj}{NewLine}{Exception}")
             .CreateLogger();
+
+        Log.Information("Logging initialized with level {LogLevel} in {Environment}. Log path: {LogPath}", configuredLevel, environment, logPath);
 
         services.AddLogging(b => b.AddSerilog(Log.Logger, dispose: true));
 
         services.AddHttpClient();
 
         services.AddDataProtection()
-            .PersistKeysToFileSystem(new System.IO.DirectoryInfo(Path.Combine(dataDir, "keys")));
+            .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(dataDir, "keys")));
 
         // ── Core infrastructure services ──────────────────────────────────────
         services.AddSingleton<TokenStore>();
@@ -163,5 +192,51 @@ public partial class App : Application
         services.AddTransient<WlsViewModel>();
         services.AddTransient<NotificationsViewModel>();
         services.AddTransient<MainWindowViewModel>();
+    }
+
+    private static LogEventLevel ResolveLogLevel(string dataDir, string environment)
+    {
+        var envLevel = Environment.GetEnvironmentVariable("DKC_LOG_LEVEL");
+        if (TryParseLogLevel(envLevel, out var parsedFromEnv))
+            return parsedFromEnv;
+
+        var configPath = Path.Combine(dataDir, "logging.json");
+        if (TryLoadLogLevelFromFile(configPath, out var parsedFromFile))
+            return parsedFromFile;
+
+        // Development soll standardmaessig maximal sichtbar loggen.
+        return environment.Equals("Development", StringComparison.OrdinalIgnoreCase)
+            ? LogEventLevel.Debug
+            : LogEventLevel.Information;
+    }
+
+    private static bool TryLoadLogLevelFromFile(string configPath, out LogEventLevel level)
+    {
+        level = default;
+        if (!File.Exists(configPath))
+            return false;
+
+        try
+        {
+            using var stream = File.OpenRead(configPath);
+            using var document = JsonDocument.Parse(stream);
+            if (!document.RootElement.TryGetProperty("logLevel", out var levelElement))
+                return false;
+
+            return TryParseLogLevel(levelElement.GetString(), out level);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool TryParseLogLevel(string? rawLevel, out LogEventLevel level)
+    {
+        level = default;
+        if (string.IsNullOrWhiteSpace(rawLevel))
+            return false;
+
+        return Enum.TryParse(rawLevel.Trim(), ignoreCase: true, out level);
     }
 }

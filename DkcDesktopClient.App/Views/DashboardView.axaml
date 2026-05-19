@@ -38,16 +38,16 @@
       <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}" Height="4"/>
 
       <!-- Stats tiles -->
-      <WrapPanel Orientation="Horizontal" ItemWidth="190" ItemHeight="124">
-        <controls:StatCard Title="Mängelmeldungen" Value="{Binding MmTotalText}" Icon="🔧" BackgroundColor="#EFF6FF"
+      <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="12" HorizontalAlignment="Stretch">
+        <controls:StatCard Grid.Column="0" Title="Mängelmeldungen" Value="{Binding MmTotalText}" Icon="🔧" BackgroundColor="#EFF6FF"
                            ToolTip.Tip="Gesamtzahl der geladenen Mängelmeldungen"/>
-        <controls:StatCard Title="NEA-Systeme" Value="{Binding NeaTotalSystemsText}" Icon="⚡" BackgroundColor="#EEF2FF"
+        <controls:StatCard Grid.Column="1" Title="NEA-Systeme" Value="{Binding NeaTotalSystemsText}" Icon="⚡" BackgroundColor="#EEF2FF"
                            ToolTip.Tip="Gesamtzahl der NEA-Systeme"/>
-        <controls:StatCard Title="Schlüssel verfügbar" Value="{Binding KeysAvailableText}" Icon="🔑" BackgroundColor="#ECFDF5" TrendColor="#10B981"
+        <controls:StatCard Grid.Column="2" Title="Schlüssel verfügbar" Value="{Binding KeysAvailableText}" Icon="🔑" BackgroundColor="#ECFDF5" TrendColor="#10B981"
                            ToolTip.Tip="Anzahl verfügbarer Schlüssel"/>
-        <controls:StatCard Title="Überfällige Prüfungen" Value="{Binding NeaOverdueInspectionsText}" Icon="⚠" BackgroundColor="#FEF2F2" TrendColor="#EF4444"
+        <controls:StatCard Grid.Column="3" Title="Überfällige Prüfungen" Value="{Binding NeaOverdueInspectionsText}" Icon="⚠" BackgroundColor="#FEF2F2" TrendColor="#EF4444"
                            ToolTip.Tip="Anzahl überfälliger NEA-Prüfungen"/>
-      </WrapPanel>
+      </Grid>
 
       <!-- MM stats row -->
       <Border Classes="card">

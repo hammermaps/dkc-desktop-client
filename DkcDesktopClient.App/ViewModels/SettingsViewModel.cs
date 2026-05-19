@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DkcDesktopClient.Core.Api;
@@ -52,6 +53,23 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty] private double _downloadProgress;
     [ObservableProperty] private UpdateInfo? _availableUpdate;
 
+    // Logging
+    private static readonly string[] SupportedLogLevels =
+    [
+        "Verbose",
+        "Debug",
+        "Information",
+        "Warning",
+        "Error",
+        "Fatal"
+    ];
+    private readonly string _dataDir = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "DkcDesktopClient");
+    [ObservableProperty] private ObservableCollection<string> _logLevelOptions = new(SupportedLogLevels);
+    [ObservableProperty] private string _selectedLogLevel = "Debug";
+    [ObservableProperty] private string? _loggingMessage;
+
     public bool IsAdmin => _authService.CurrentUser?.IsAdmin ?? false;
     public string CurrentVersion => UpdateService.CurrentVersion.ToString(3);
     public string? CurrentUsername => _authService.CurrentUser?.Username;
@@ -64,6 +82,7 @@ public partial class SettingsViewModel : ViewModelBase
         _updateService = updateService;
         ServerUrl = tokenStore.LoadServerUrl() ?? string.Empty;
         _authService.AuthStateChanged += OnAuthStateChanged;
+        LoadLoggingSettings();
     }
 
     private void OnAuthStateChanged(object? sender, EventArgs e)
@@ -80,6 +99,40 @@ public partial class SettingsViewModel : ViewModelBase
             _tokenStore.SaveServerUrl(ServerUrl);
             StatusMessage = "Server URL saved.";
         }
+    }
+
+    [RelayCommand]
+    public void SaveLoggingSettings()
+    {
+        if (!LogLevelOptions.Contains(SelectedLogLevel))
+        {
+            LoggingMessage = "Ungueltiges Log-Level.";
+            return;
+        }
+
+        try
+        {
+            Directory.CreateDirectory(_dataDir);
+            var filePath = Path.Combine(_dataDir, "logging.json");
+            var json = JsonSerializer.Serialize(new LoggingConfig(SelectedLogLevel), new JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+            File.WriteAllText(filePath, json);
+            LoggingMessage = "Log-Level gespeichert. Aenderung greift nach App-Neustart.";
+            StatusMessage = "Logging-Einstellungen gespeichert.";
+        }
+        catch (Exception ex)
+        {
+            LoggingMessage = $"Fehler beim Speichern: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    public void ReloadLoggingSettings()
+    {
+        LoadLoggingSettings();
+        LoggingMessage = "Logging-Einstellungen neu geladen.";
     }
 
     [RelayCommand]
@@ -490,6 +543,56 @@ public partial class SettingsViewModel : ViewModelBase
     }
 
     partial void OnSelectedTokenChanged(TokenListItem? value) => DeleteTokenCommand.NotifyCanExecuteChanged();
+
+    private void LoadLoggingSettings()
+    {
+        var fromEnv = Environment.GetEnvironmentVariable("DKC_LOG_LEVEL");
+        if (TryNormalizeLogLevel(fromEnv, out var envLevel))
+        {
+            SelectedLogLevel = envLevel;
+            LoggingMessage = "Log-Level wird ueber DKC_LOG_LEVEL aus der Umgebung gesteuert.";
+            return;
+        }
+
+        var configPath = Path.Combine(_dataDir, "logging.json");
+        if (File.Exists(configPath))
+        {
+            try
+            {
+                var raw = File.ReadAllText(configPath);
+                var config = JsonSerializer.Deserialize<LoggingConfig>(raw);
+                if (TryNormalizeLogLevel(config?.LogLevel, out var fileLevel))
+                {
+                    SelectedLogLevel = fileLevel;
+                    return;
+                }
+            }
+            catch
+            {
+                // Fallback auf Default erfolgt unten.
+            }
+        }
+
+#if DEBUG
+        SelectedLogLevel = "Debug";
+#else
+        SelectedLogLevel = "Information";
+#endif
+    }
+
+    private bool TryNormalizeLogLevel(string? raw, out string normalized)
+    {
+        normalized = string.Empty;
+        if (string.IsNullOrWhiteSpace(raw))
+            return false;
+
+        normalized = SupportedLogLevels.FirstOrDefault(l =>
+            string.Equals(l, raw.Trim(), StringComparison.OrdinalIgnoreCase)) ?? string.Empty;
+
+        return !string.IsNullOrWhiteSpace(normalized);
+    }
+
+    private sealed record LoggingConfig(string LogLevel);
     partial void OnIsLoadingChanged(bool value) => DeleteTokenCommand.NotifyCanExecuteChanged();
     partial void OnSelectedProjectChanged(Project? value)
     {

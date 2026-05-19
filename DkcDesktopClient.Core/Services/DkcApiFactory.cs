@@ -1,31 +1,12 @@
 using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using DkcDesktopClient.Core.Api;
 using Microsoft.Extensions.Logging;
 using Refit;
 
 namespace DkcDesktopClient.Core.Services;
-
-internal static class DebugLog
-{
-    private static readonly string LogPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "DkcDesktopClient", "debug.log");
-
-    private static readonly object _lock = new();
-
-    public static void Write(string message)
-    {
-        try
-        {
-            var dir = Path.GetDirectoryName(LogPath)!;
-            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-            var line = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] {message}{Environment.NewLine}";
-            lock (_lock) File.AppendAllText(LogPath, line);
-        }
-        catch { /* Logging darf die App nicht zum Absturz bringen */ }
-    }
-}
 
 public class DkcApiFactory
 {
@@ -46,6 +27,7 @@ public class DkcApiFactory
     public virtual IDkcApi Create(string? token = null, string? serverUrl = null, HttpMessageHandler? innerHandler = null)
     {
         var url = serverUrl ?? _tokenStore.LoadServerUrl() ?? "https://localhost";
+        _logger.LogDebug("Creating API client for base URL {BaseUrl}", url);
         var handler = new AuthorizationHandler(token, _authService, _loggerFactory.CreateLogger<AuthorizationHandler>(), innerHandler);
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri(url) };
         httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("DkcDesktopClient/1.0 (Avalonia; .NET8)");
@@ -63,6 +45,10 @@ public class DkcApiFactory
 
 internal class AuthorizationHandler : DelegatingHandler
 {
+    private static readonly Regex SensitiveJsonFieldsRegex = new(
+        "\\\"(password|token|apikey)\\\"\\s*:\\s*\\\".*?\\\"",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
     private readonly string? _token;
     private readonly AuthService? _authService;
     private readonly ILogger<AuthorizationHandler> _logger;
@@ -81,43 +67,66 @@ internal class AuthorizationHandler : DelegatingHandler
         if (tok != null)
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tok);
 
-        // --- Request Debug-Ausgabe ---
-        var requestBody = string.Empty;
-        if (request.Content != null)
-            requestBody = await request.Content.ReadAsStringAsync(ct);
-
-        var requestMsg = $"[API REQUEST] {request.Method} {request.RequestUri}" +
-            (string.IsNullOrEmpty(requestBody) ? string.Empty : $"\n  Body: {requestBody}");
-        _logger.LogDebug("{Message}", requestMsg);
-        DebugLog.Write(requestMsg);
+        var requestBody = await ReadContentSafelyAsync(request.Content, ct);
+        var sanitizedRequestBody = SanitizeSensitiveContent(requestBody);
+        _logger.LogDebug(
+            "API request {Method} {Uri} Body: {RequestBody}",
+            request.Method,
+            request.RequestUri,
+            sanitizedRequestBody);
 
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         var response = await base.SendAsync(request, ct);
         stopwatch.Stop();
 
-        // --- Response Debug-Ausgabe ---
-        var responseBody = string.Empty;
-        if (response.Content != null)
-        {
-            responseBody = await response.Content.ReadAsStringAsync(ct);
-            // Inhalt neu schreiben, damit Refit ihn noch lesen kann
-            response.Content = new StringContent(responseBody,
-                System.Text.Encoding.UTF8,
-                response.Content.Headers.ContentType?.MediaType ?? "application/json");
-        }
+        var responseContentType = response.Content.Headers.ContentType?.MediaType ?? "application/json";
+        var responseBody = await ReadContentSafelyAsync(response.Content, ct);
 
-        var responseMsg = $"[API RESPONSE] {request.Method} {request.RequestUri} => {(int)response.StatusCode} ({stopwatch.ElapsedMilliseconds} ms)" +
-            (string.IsNullOrEmpty(responseBody) ? string.Empty : $"\n  Body: {responseBody}");
-        _logger.LogDebug("{Message}", responseMsg);
-        DebugLog.Write(responseMsg);
+        // Inhalt neu schreiben, damit Refit ihn weiter lesen kann.
+        response.Content = new StringContent(responseBody, Encoding.UTF8, responseContentType);
+
+        var sanitizedResponseBody = SanitizeSensitiveContent(responseBody);
+        _logger.LogInformation(
+            "API response {Method} {Uri} => {StatusCode} ({ElapsedMs} ms)",
+            request.Method,
+            request.RequestUri,
+            (int)response.StatusCode,
+            stopwatch.ElapsedMilliseconds);
+        _logger.LogDebug(
+            "API response body {Method} {Uri}: {ResponseBody}",
+            request.Method,
+            request.RequestUri,
+            sanitizedResponseBody);
 
         if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized && _authService != null)
         {
             _logger.LogWarning("Received 401 - triggering logout");
-            DebugLog.Write("[WARNING] Received 401 - triggering logout");
             await _authService.LogoutAsync(ct);
         }
 
         return response;
+    }
+
+    private static async Task<string> ReadContentSafelyAsync(HttpContent? content, CancellationToken ct)
+    {
+        if (content == null)
+            return string.Empty;
+
+        try
+        {
+            return await content.ReadAsStringAsync(ct);
+        }
+        catch
+        {
+            return "<content-unavailable>";
+        }
+    }
+
+    private static string SanitizeSensitiveContent(string payload)
+    {
+        if (string.IsNullOrWhiteSpace(payload))
+            return payload;
+
+        return SensitiveJsonFieldsRegex.Replace(payload, "\"$1\":\"***\"");
     }
 }
