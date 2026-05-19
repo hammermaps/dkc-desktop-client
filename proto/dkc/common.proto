@@ -1,0 +1,211 @@
+// DKC Desktop Client – common envelope, auth, and error types.
+//
+// All client/server traffic over /api.php is exchanged as a single
+// ApiRequest/ApiResponse envelope with an action discriminator and an
+// action-specific protobuf payload serialised into the `payload` field.
+//
+// Wire format on /api.php:
+//   POST /api.php
+//   Content-Type: application/x-protobuf
+//   Accept:       application/x-protobuf
+//   X-DKC-Protocol: protobuf
+//   Content-Encoding: dkc-lz4 | gzip | identity
+//   Accept-Encoding:  dkc-lz4, gzip
+//
+// Health probes do not use protobuf; see docs/PROTOBUF_API.md.
+syntax = "proto3";
+
+package dkc.api.v1;
+
+option csharp_namespace = "DkcDesktopClient.Core.Protocol";
+
+// Wire-level compression applied to ApiRequest.payload / ApiResponse.payload.
+// The same encoding is also signalled via the HTTP Content-Encoding header.
+enum Compression {
+    COMPRESSION_UNSPECIFIED = 0; // Server picks; treated as IDENTITY.
+    COMPRESSION_IDENTITY    = 1; // No compression.
+    COMPRESSION_LZ4         = 2; // K4os/LZ4-block frame (preferred).
+    COMPRESSION_GZIP        = 3; // RFC 1952 gzip (fallback).
+}
+
+// Stable, exhaustive list of API actions. Field numbers MUST NOT be reused
+// once assigned. Removed actions must be marked `reserved`.
+enum Action {
+    ACTION_UNSPECIFIED              = 0;
+
+    // Auth & users
+    AUTH_LOGIN                      = 1;
+    AUTH_LOGOUT                     = 2;
+    AUTH_STATUS                     = 3;
+    USER_INFO                       = 4;
+    USER_TOKENS_LIST                = 5;
+    USER_TOKEN_DELETE               = 6;
+
+    // Mängelmeldungen
+    MM_LIST                         = 20;
+    MM_DETAIL                       = 21;
+    MM_CREATE                       = 22;
+    MM_UPDATE                       = 23;
+    MM_UPDATE_STATUS                = 24;
+    MM_ASSIGN_CONTRACTOR            = 25;
+    MM_DELETE                       = 26;
+
+    // NEA – Netzersatzanlagen
+    NEA_SYSTEMS                     = 40;
+    NEA_SYSTEM_CREATE               = 41;
+    NEA_SYSTEM_UPDATE               = 42;
+    NEA_SYSTEM_DELETE               = 43;
+    NEA_INSPECTIONS                 = 44;
+    NEA_INSPECTION_DETAIL           = 45;
+    NEA_INSPECTION_CREATE           = 46;
+    NEA_INSPECTION_UPDATE           = 47;
+    NEA_INSPECTION_COMPLETE         = 48;
+    NEA_CHECKLIST_UPDATE            = 49;
+    NEA_DASHBOARD                   = 50;
+
+    // Gebäudebegehungen
+    BUILDING_LIST                   = 60;
+    BUILDING_CREATE                 = 61;
+    BUILDING_UPDATE                 = 62;
+    BUILDING_INSPECTIONS            = 63;
+    BUILDING_INSPECTION_DETAIL      = 64;
+    BUILDING_INSPECTION_CREATE      = 65;
+    BUILDING_INSPECTION_UPDATE      = 66;
+    BUILDING_INSPECTION_COMPLETE    = 67;
+    BUILDING_CHECKPOINT_UPDATE      = 68;
+    BUILDING_CHECKPOINTS_LIST       = 69;
+
+    // Klima / HVAC
+    KLIMA_DEVICES                   = 80;
+    KLIMA_STATUS                    = 81;
+    KLIMA_REALTIME_STATUS           = 82;
+    KLIMA_DEVICE_CONTROL            = 83;
+    KLIMA_GROUP_CONTROL             = 84;
+    KLIMA_GROUPS_LIST               = 85;
+    KLIMA_DEVICE_UPDATE             = 86;
+
+    // Schlüsselverwaltung
+    KEYS_INVENTORY                  = 100;
+    KEYS_ISSUED                     = 101;
+    KEYS_CREATE                     = 102;
+    KEYS_UPDATE                     = 103;
+    KEYS_ISSUE                      = 104;
+    KEYS_RETURN                     = 105;
+    KEYS_DELETE                     = 106;
+
+    // Dashboard & Projekte
+    DASHBOARD_DATA                  = 120;
+    PROJECTS_LIST                   = 121;
+    PROJECT_CREATE                  = 122;
+    PROJECT_UPDATE                  = 123;
+    PROJECT_SET_ACTIVE              = 124;
+
+    // Benutzerverwaltung (Admin)
+    USERS_LIST                      = 140;
+    USER_CREATE                     = 141;
+    USER_UPDATE                     = 142;
+    USER_DELETE                     = 143;
+
+    // Benachrichtigungen
+    NOTIFICATIONS                   = 160;
+    NOTIFICATION_COUNT              = 161;
+
+    // WLS – Wohnungsleerstand
+    WLS_BUILDINGS_LIST              = 180;
+    WLS_BUILDING_CREATE             = 181;
+    WLS_BUILDING_UPDATE             = 182;
+    WLS_BUILDING_DELETE             = 183;
+    WLS_APARTMENTS_LIST             = 184;
+    WLS_APARTMENTS_BY_BUILDING      = 185;
+    WLS_APARTMENT_CREATE            = 186;
+    WLS_APARTMENT_UPDATE            = 187;
+    WLS_APARTMENT_DELETE            = 188;
+    WLS_RECORDS_LIST                = 189;
+    WLS_RECORD_CREATE               = 190;
+    WLS_RECORD_UPDATE               = 191;
+    WLS_RECORD_DELETE               = 192;
+}
+
+// Stable error codes. The HTTP status is set to match.
+enum ErrorCode {
+    ERROR_UNSPECIFIED          = 0;
+    INVALID_REQUEST            = 1;  // 400
+    UNAUTHENTICATED            = 2;  // 401
+    FORBIDDEN                  = 3;  // 403
+    NOT_FOUND                  = 4;  // 404
+    VALIDATION_ERROR           = 5;  // 422
+    CONFLICT                   = 6;  // 409
+    RATE_LIMITED               = 7;  // 429
+    UNSUPPORTED_COMPRESSION    = 8;  // 400 (with Accept-Encoding hint)
+    INTERNAL_ERROR             = 9;  // 500
+    SERVICE_UNAVAILABLE        = 10; // 503
+    PROTOCOL_VERSION_MISMATCH  = 11; // 400
+}
+
+// Authentication context carried with every request.
+message AuthContext {
+    // User-API token of the form `dkc_<64-hex>`. Mutually exclusive with
+    // api_key in normal client use.
+    string bearer_token = 1;
+
+    // System-integration UUID-v4 API key. Only set by integrations.
+    string api_key      = 2;
+
+    // Optional opaque PHP session id (browser-bridge scenarios only).
+    string session_id   = 3;
+}
+
+// Structured error returned in ApiResponse.error. `details` carries
+// field-level validation messages or codes (keys/values are free-form).
+message ApiError {
+    ErrorCode code               = 1;
+    string    message            = 2;
+    map<string, string> details  = 3;
+    // Hint for clients on RATE_LIMITED / SERVICE_UNAVAILABLE.
+    int32     retry_after_seconds = 4;
+}
+
+// Single request envelope. Exactly one envelope per HTTP request.
+//
+// The action-specific payload message (e.g. AuthLoginRequest, MmListRequest)
+// is serialised and placed in `payload`. This avoids a multi-thousand-entry
+// `oneof` and keeps each action's contract in its own .proto file.
+message ApiRequest {
+    // Wire-protocol version. Current = 1.
+    uint32      protocol_version = 1;
+    // Client-chosen correlation id; echoed in ApiResponse.request_id.
+    string      request_id       = 2;
+    Action      action           = 3;
+    AuthContext auth             = 4;
+    // Compression applied to `payload`. The HTTP Content-Encoding header
+    // MUST match this field.
+    Compression compression      = 5;
+    bytes       payload          = 6;
+}
+
+// Single response envelope.
+message ApiResponse {
+    uint32      protocol_version = 1;
+    string      request_id       = 2;
+    bool        success          = 3;
+    ApiError    error            = 4;
+    // Server unix timestamp (UTC, seconds) – mirrors REST `server_time`.
+    int64       server_time      = 5;
+    Compression compression      = 6;
+    bytes       payload          = 7;
+}
+
+// Empty payload helper – used by actions that have no request or response body.
+message Empty {}
+
+// Generic ack payload – used by actions that only need to confirm success.
+message Ack {
+    string message = 1;
+}
+
+// Common pagination block, reused by list responses.
+message PageInfo {
+    int32 total  = 1;
+    int32 limit  = 2;
+    int32 offset = 3;
+}

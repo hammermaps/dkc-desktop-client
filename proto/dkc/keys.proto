@@ -1,0 +1,82 @@
+// Schlüsselverwaltung.
+syntax = "proto3";
+
+package dkc.api.v1;
+
+import "dkc/common.proto";
+
+option csharp_namespace = "DkcDesktopClient.Core.Protocol";
+
+message KeysInventoryRequest {
+    string status = 1; // active | inactive | ""
+    int32  limit  = 2;
+    int32  offset = 3;
+}
+
+message KeyInventoryItem {
+    int32  id          = 1;
+    string number      = 2;
+    string name        = 3;
+    string description = 4;
+    int32  type_id     = 5;
+    int32  cabinet_id  = 6;
+    int32  total_count = 7;
+    int32  available   = 8;
+    bool   enabled     = 9;
+}
+
+message KeysInventoryResponse {
+    PageInfo                  page = 1;
+    repeated KeyInventoryItem keys = 2;
+}
+
+message KeysIssuedRequest {
+    int32 limit  = 1;
+    int32 offset = 2;
+}
+
+message KeyIssuedItem {
+    int32  id             = 1;
+    int32  key_id         = 2;
+    string key_name       = 3;
+    string issued_to      = 4;
+    string recipient_name = 5;
+    string issued_at      = 6;
+    string returned_at    = 7;
+    string notes          = 8;
+}
+
+message KeysIssuedResponse {
+    PageInfo               page   = 1;
+    repeated KeyIssuedItem issued = 2;
+}
+
+message KeyInventorySaveRequest {
+    int32  id          = 1; // 0 = create
+    string number      = 2;
+    string name        = 3;
+    string description = 4;
+    int32  type_id     = 5;
+    int32  cabinet_id  = 6;
+    int32  total_count = 7;
+    bool   enabled     = 8;
+}
+
+message KeyCreateResponse { int32 id = 1; }
+
+message KeyIssueRequest {
+    int32  key_id    = 1;
+    string issued_to = 2;
+    string issued_at = 3;
+    string notes     = 4;
+}
+
+message KeyIssueResponse { int32 id = 1; }
+
+message KeyReturnRequest {
+    int32  id          = 1; // id of the issued record
+    string returned_at = 2;
+    string notes       = 3;
+}
+
+message KeyDeleteRequest { int32 id = 1; }

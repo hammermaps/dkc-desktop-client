@@ -1,0 +1,92 @@
+// Klima / HVAC.
+syntax = "proto3";
+
+package dkc.api.v1;
+
+option csharp_namespace = "DkcDesktopClient.Core.Protocol";
+
+message KlimaDevice {
+    int32  address  = 1;
+    string name     = 2;
+    int32  group_id = 3;
+    bool   enabled  = 4;
+    int32  sort     = 5;
+}
+
+message KlimaDevicesResponse {
+    repeated KlimaDevice devices = 1;
+}
+
+message KlimaStatusDevice {
+    int32  address        = 1;
+    string name           = 2;
+    bool   enabled        = 3;
+    int32  group_id       = 4;
+    string operating_mode = 5;
+    string note           = 6;
+}
+
+message KlimaStatusResponse {
+    repeated KlimaStatusDevice devices = 1;
+}
+
+message KlimaRealtimeStatusDevice {
+    int32  address        = 1;
+    string name           = 2;
+    bool   online         = 3;
+    bool   power          = 4;
+    string operating_mode = 5;
+    double setpoint       = 6;
+    double current_temp   = 7;
+    string fan_speed      = 8;
+    string error_code     = 9;
+}
+
+message KlimaRealtimeStatusResponse {
+    string                              timestamp = 1;
+    repeated KlimaRealtimeStatusDevice  devices   = 2;
+}
+
+message KlimaDeviceControlRequest {
+    int32  address   = 1;
+    bool   power     = 2;
+    string mode      = 3;
+    double setpoint  = 4;
+    string fan_speed = 5;
+    // Use *_set flags to distinguish "no change" from explicit 0/false.
+    bool   power_set    = 6;
+    bool   setpoint_set = 7;
+}
+
+message KlimaGroupControlRequest {
+    int32  group_id  = 1;
+    bool   power     = 2;
+    string mode      = 3;
+    double setpoint  = 4;
+    string fan_speed = 5;
+    bool   power_set    = 6;
+    bool   setpoint_set = 7;
+}
+
+message KlimaGroup {
+    int32  id           = 1;
+    string name         = 2;
+    int32  device_count = 3;
+}
+
+message KlimaGroupsResponse {
+    repeated KlimaGroup groups = 1;
+}
+
+message KlimaDeviceUpdateRequest {
+    int32  address     = 1;
+    string name        = 2;
+    int32  group_id    = 3;
+    bool   enabled     = 4;
+    int32  sort        = 5;
+    // *_set markers: which fields were explicitly provided.
+    bool   name_set     = 6;
+    bool   group_id_set = 7;
+    bool   enabled_set  = 8;
+    bool   sort_set     = 9;
+}

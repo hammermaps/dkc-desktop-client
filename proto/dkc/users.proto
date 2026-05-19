@@ -1,0 +1,34 @@
+// Benutzerverwaltung (Admin).
+syntax = "proto3";
+
+package dkc.api.v1;
+
+option csharp_namespace = "DkcDesktopClient.Core.Protocol";
+
+message AdminUser {
+    int32  id                = 1;
+    string username          = 2;
+    string vname             = 3;
+    string nname             = 4;
+    string email             = 5;
+    bool   is_admin          = 6;
+    int32  active_project_id = 7;
+}
+
+message UsersListResponse {
+    repeated AdminUser users = 1;
+}
+
+message UserSaveRequest {
+    int32  id       = 1; // 0 = create
+    string username = 2;
+    string password = 3; // optional on update
+    string vname    = 4;
+    string nname    = 5;
+    string email    = 6;
+    bool   is_admin = 7;
+}
+
+message UserCreateResponse { int32 id = 1; }
+
+message UserDeleteRequest { int32 id = 1; }

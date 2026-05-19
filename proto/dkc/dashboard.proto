@@ -1,0 +1,65 @@
+// Dashboard und Projekte.
+syntax = "proto3";
+
+package dkc.api.v1;
+
+option csharp_namespace = "DkcDesktopClient.Core.Protocol";
+
+message DashboardMmStats {
+    int32 total     = 1;
+    int32 pending   = 2;
+    int32 approved  = 3;
+    int32 completed = 4;
+}
+
+message DashboardNeaStats {
+    int32 total_systems          = 1;
+    int32 inspections_this_month = 2;
+}
+
+message DashboardBuildingStats {
+    int32 open        = 1;
+    int32 in_progress = 2;
+    int32 completed   = 3;
+}
+
+message DashboardKeysStats {
+    int32 total_inventory   = 1;
+    int32 currently_issued  = 2;
+}
+
+message DashboardNotificationsStats {
+    int32 unread = 1;
+}
+
+message DashboardDataResponse {
+    int32                       project_id    = 1;
+    DashboardMmStats            mm            = 2;
+    DashboardNeaStats           nea           = 3;
+    DashboardBuildingStats      building      = 4;
+    DashboardKeysStats          keys          = 5;
+    DashboardNotificationsStats notifications = 6;
+}
+
+message Project {
+    int32  id          = 1;
+    string name        = 2;
+    string description = 3;
+    string status      = 4;
+    string created_at  = 5;
+}
+
+message ProjectsListResponse {
+    int32             active_project_id = 1;
+    repeated Project  projects          = 2;
+}
+
+message ProjectSaveRequest {
+    int32  id          = 1; // 0 = create
+    string name        = 2;
+    string description = 3;
+}
+
+message ProjectCreateResponse { int32 id = 1; }
+
+message ProjectSetActiveRequest { int32 project_id = 1; }

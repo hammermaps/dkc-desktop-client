@@ -1,0 +1,94 @@
+// Mängelmeldungen (defect reports) actions.
+syntax = "proto3";
+
+package dkc.api.v1;
+
+import "dkc/common.proto";
+
+option csharp_namespace = "DkcDesktopClient.Core.Protocol";
+
+// MM_LIST ─────────────────────────────────────────────────────────────────────
+message MmListRequest {
+    // Optional filter on status (0..3). -1 = unset.
+    int32  status = 1;
+    string street = 2;
+    int32  limit  = 3;
+    int32  offset = 4;
+}
+
+message MmMessage {
+    string uid             = 1;
+    int32  status          = 2;
+    string betreff         = 3;
+    int32  street          = 4;
+    string whg             = 5;
+    string melder          = 6;
+    string datetime        = 7;
+    string dringlichkeit   = 8;
+    int32  nachunternehmer = 9;
+    bool   scanned         = 10;
+    string zugeh           = 11;
+}
+
+message MmListResponse {
+    PageInfo            page     = 1;
+    repeated MmMessage  messages = 2;
+}
+
+// MM_DETAIL ───────────────────────────────────────────────────────────────────
+message MmDetailRequest { string uid = 1; }
+
+message MmDetail {
+    string uid              = 1;
+    int32  status           = 2;
+    string betreff          = 3;
+    string meldung_massage  = 4;
+    int32  street           = 5;
+    string whg              = 6;
+    string melder           = 7;
+    string tel              = 8;
+    string email            = 9;
+    string datetime         = 10;
+    string dringlichkeit    = 11;
+    int32  nachunternehmer  = 12;
+    bool   scanned          = 13;
+    string zugeh            = 14;
+    string zeit             = 15;
+    string planon           = 16;
+}
+
+message MmDetailResponse { MmDetail message = 1; }
+
+// MM_CREATE / MM_UPDATE ───────────────────────────────────────────────────────
+message MmSaveRequest {
+    // For MM_UPDATE, set `uid`; for MM_CREATE leave empty.
+    string uid              = 1;
+    string betreff          = 2;
+    string meldung_massage  = 3;
+    string street           = 4;
+    string whg              = 5;
+    string melder           = 6;
+    string tel              = 7;
+    string email            = 8;
+    string dringlichkeit    = 9;
+    string nachunternehmer  = 10;
+    string zugeh            = 11;
+}
+
+message MmCreateResponse { string uid = 1; }
+
+// MM_UPDATE_STATUS ────────────────────────────────────────────────────────────
+message MmUpdateStatusRequest {
+    string uid     = 1;
+    int32  status  = 2;
+    string comment = 3;
+}
+
+// MM_ASSIGN_CONTRACTOR ────────────────────────────────────────────────────────
+message MmAssignContractorRequest {
+    string uid             = 1;
+    string nachunternehmer = 2;
+}
+
+// MM_DELETE ───────────────────────────────────────────────────────────────────
+message MmDeleteRequest { string uid = 1; }

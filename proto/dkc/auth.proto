@@ -1,0 +1,60 @@
+// Auth and user-token actions.
+syntax = "proto3";
+
+package dkc.api.v1;
+
+option csharp_namespace = "DkcDesktopClient.Core.Protocol";
+
+// ── AUTH_LOGIN ───────────────────────────────────────────────────────────────
+message AuthLoginRequest {
+    string username   = 1;
+    string password   = 2;
+    string token_name = 3; // default "DKC Desktop"
+    int32  ttl_days   = 4; // 0 = no expiry
+}
+
+message AuthLoginResponse {
+    string   token      = 1; // dkc_<64-hex>
+    string   token_type = 2; // "Bearer"
+    string   expires_at = 3; // ISO-8601 or empty
+    UserInfo user       = 4;
+}
+
+// ── AUTH_LOGOUT / AUTH_STATUS / USER_INFO ────────────────────────────────────
+message AuthStatusResponse {
+    bool     authenticated = 1;
+    UserInfo user          = 2;
+}
+
+message UserInfo {
+    int32  id                = 1;
+    string username          = 2;
+    string vname             = 3;
+    string nname             = 4;
+    string email             = 5;
+    bool   is_admin          = 6;
+    int32  active_project_id = 7;
+}
+
+message UserInfoResponse {
+    UserInfo            user        = 1;
+    map<string, bool>   permissions = 2;
+}
+
+// ── USER_TOKENS_LIST / USER_TOKEN_DELETE ─────────────────────────────────────
+message UserTokenItem {
+    int32  id           = 1;
+    string name         = 2;
+    string created_at   = 3;
+    string expires_at   = 4;
+    string last_used_at = 5;
+    string last_ip      = 6;
+}
+
+message UserTokensListResponse {
+    repeated UserTokenItem tokens = 1;
+}
+
+message UserTokenDeleteRequest {
+    int32 token_id = 1;
+}
