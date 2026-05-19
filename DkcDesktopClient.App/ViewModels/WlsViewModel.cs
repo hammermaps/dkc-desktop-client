@@ -71,6 +71,9 @@ public partial class WlsViewModel : ViewModelBase
         _apiFactory  = apiFactory;
         _authService = authService;
         _filePicker  = filePicker;
+        // Wire CollectionChanged so the CSV export button reflects loaded state
+        Records.CollectionChanged += (_, _) =>
+            ExportRecordsToCsvCommand.NotifyCanExecuteChanged();
     }
 
     // ══════════════════════════════  Buildings  ════════════════════════════════
@@ -371,6 +374,7 @@ public partial class WlsViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadRecordsAsync()
     {
+        var ct = StartLoad();
         IsLoading    = true;
         ErrorMessage = null;
         try
@@ -386,13 +390,17 @@ public partial class WlsViewModel : ViewModelBase
                 Order:       "DESC",
                 Limit:       100,
                 Offset:      0);
-            var result = await api.GetWlsRecordsAsync(req);
+            var result = await api.GetWlsRecordsAsync(req, ct);
             Records.Clear();
             if (result.Success && result.Data != null)
                 foreach (var r in result.Data)
                     Records.Add(r);
             else if (!result.Success)
                 ErrorMessage = result.Error ?? "Laden der Erfassungen fehlgeschlagen.";
+        }
+        catch (OperationCanceledException)
+        {
+            // Navigation away – discard silently.
         }
         catch (Exception ex)
         {
@@ -607,5 +615,13 @@ public partial class WlsViewModel : ViewModelBase
     private bool CanExportRecords() => Records.Count > 0;
 
     partial void OnRecordsChanged(ObservableCollection<WlsRecord>? oldValue, ObservableCollection<WlsRecord> newValue)
+    {
+        if (oldValue != null)
+            oldValue.CollectionChanged -= OnRecordsCollectionChanged;
+        newValue.CollectionChanged += OnRecordsCollectionChanged;
+        ExportRecordsToCsvCommand.NotifyCanExecuteChanged();
+    }
+
+    private void OnRecordsCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         => ExportRecordsToCsvCommand.NotifyCanExecuteChanged();
 }

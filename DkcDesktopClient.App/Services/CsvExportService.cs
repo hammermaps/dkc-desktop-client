@@ -23,14 +23,16 @@ public static class CsvExportService
     {
         var sb = new StringBuilder();
 
-        // Header row
-        sb.AppendLine(string.Join(";", columns.Select(c => EscapeField(c.Header))));
+        // Header row (RFC-4180 requires CRLF line endings)
+        sb.Append(string.Join(";", columns.Select(c => EscapeField(c.Header))));
+        sb.Append("\r\n");
 
         // Data rows
         foreach (var row in rows)
         {
             var fields = columns.Select(c => EscapeField(c.Selector(row)));
-            sb.AppendLine(string.Join(";", fields));
+            sb.Append(string.Join(";", fields));
+            sb.Append("\r\n");
         }
 
         File.WriteAllText(filePath, sb.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));

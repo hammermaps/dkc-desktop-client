@@ -12,8 +12,10 @@ public class ConnectivityService : BackgroundService
 {
     private readonly TokenStore _tokenStore;
     private readonly ILogger<ConnectivityService> _logger;
+    private readonly Func<HttpClient> _createHttpClient;
+    private readonly string? _serverUrlOverride;
 
-    // Normal polling interval (in seconds) when the server is reachable.
+    // Normal polling interval when the server is reachable.
     private static readonly TimeSpan NormalInterval = TimeSpan.FromSeconds(30);
 
     // Back-off steps when offline: 5 s, 10 s, 20 s, 40 s, 60 s (cap).
@@ -40,9 +42,31 @@ public class ConnectivityService : BackgroundService
     public event EventHandler<bool>? ConnectivityChanged;
 
     public ConnectivityService(TokenStore tokenStore, ILogger<ConnectivityService> logger)
+        : this(tokenStore, logger,
+               () => new HttpClient { Timeout = TimeSpan.FromSeconds(8) })
+    { }
+
+    /// <summary>Internal constructor allowing injection of a custom <see cref="HttpClient"/>
+    /// factory for unit tests.</summary>
+    internal ConnectivityService(
+        TokenStore tokenStore,
+        ILogger<ConnectivityService> logger,
+        Func<HttpClient> createHttpClient)
     {
-        _tokenStore = tokenStore;
-        _logger     = logger;
+        _tokenStore        = tokenStore;
+        _logger            = logger;
+        _createHttpClient  = createHttpClient;
+    }
+
+    /// <summary>Internal constructor for unit tests: uses a fixed server URL so tests
+    /// do not write to disk via <see cref="TokenStore"/>.</summary>
+    internal ConnectivityService(
+        string serverUrl,
+        ILogger<ConnectivityService> logger,
+        Func<HttpClient> createHttpClient)
+        : this((TokenStore)null!, logger, createHttpClient)
+    {
+        _serverUrlOverride = serverUrl;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -59,7 +83,14 @@ public class ConnectivityService : BackgroundService
                     MinBackoff.TotalSeconds * Math.Pow(2, _consecutiveFailures - 1),
                     MaxBackoff.TotalSeconds));
 
-            await Task.Delay(delay, stoppingToken).ConfigureAwait(false);
+            try
+            {
+                await Task.Delay(delay, stoppingToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
         }
 
         _logger.LogInformation("ConnectivityService stopped");
@@ -73,7 +104,7 @@ public class ConnectivityService : BackgroundService
 
     private async Task CheckConnectivityAsync(CancellationToken ct)
     {
-        var serverUrl = _tokenStore.LoadServerUrl();
+        var serverUrl = _serverUrlOverride ?? _tokenStore.LoadServerUrl();
         if (string.IsNullOrEmpty(serverUrl))
         {
             // No server configured yet – treat as online (login screen will show any errors)
@@ -84,21 +115,39 @@ public class ConnectivityService : BackgroundService
 
         try
         {
-            // Use a lightweight HEAD/GET to the health endpoint.
-            using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(8) };
+            using var http = _createHttpClient();
             http.DefaultRequestHeaders.UserAgent.ParseAdd("DkcDesktopClient/1.0 (ConnectivityCheck)");
             var url = $"{serverUrl.TrimEnd('/')}/api.php/health";
             var response = await http.GetAsync(url, ct).ConfigureAwait(false);
 
-            // Any HTTP response (even 4xx) means the server is reachable.
-            IsOnline = response.IsSuccessStatusCode || (int)response.StatusCode < 500;
-            _consecutiveFailures = 0;
+            // Any HTTP response with status < 500 means the server is reachable.
+            if (response.IsSuccessStatusCode || (int)response.StatusCode < 500)
+            {
+                _consecutiveFailures = 0;
+                IsOnline = true;
+            }
+            else
+            {
+                // 5xx: server is responding but unhealthy – count as a failure
+                _consecutiveFailures++;
+                _logger.LogDebug("Connectivity check: server returned {StatusCode} ({Failures} consecutive)",
+                    (int)response.StatusCode, _consecutiveFailures);
+                IsOnline = false;
+            }
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
-            // Shutting down
+            // Service is shutting down – exit silently.
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        catch (OperationCanceledException ex)
+        {
+            // HTTP request timed out (not a service shutdown).
+            _consecutiveFailures++;
+            _logger.LogDebug("Connectivity check timed out ({Failures} consecutive): {Message}",
+                _consecutiveFailures, ex.Message);
+            IsOnline = false;
+        }
+        catch (HttpRequestException ex)
         {
             _consecutiveFailures++;
             _logger.LogDebug("Connectivity check failed ({Failures} consecutive): {Message}",

@@ -97,21 +97,29 @@ public partial class NeaViewModel : ViewModelBase
         _apiFactory = apiFactory;
         _authService = authService;
         _filePicker = filePicker;
+        // Wire CollectionChanged on the initial collection instance;
+        // OnInspectionsChanged handles re-subscription if the collection property is replaced.
+        Inspections.CollectionChanged += OnInspectionsCollectionChanged;
     }
 
     [RelayCommand]
     public async Task LoadSystemsAsync()
     {
+        var ct = StartLoad();
         IsLoading = true;
         ErrorMessage = null;
         try
         {
             var api = _apiFactory.Create(_authService.CurrentToken);
-            var result = await api.GetNeaSystemsAsync();
+            var result = await api.GetNeaSystemsAsync(ct: ct);
             Systems.Clear();
             if (result.Success && result.Systems != null)
                 foreach (var s in result.Systems)
                     Systems.Add(s);
+        }
+        catch (OperationCanceledException)
+        {
+            // Navigation away – discard silently.
         }
         catch (Exception ex)
         {
@@ -126,6 +134,7 @@ public partial class NeaViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadInspectionsAsync()
     {
+        var ct = StartLoad();
         IsLoading = true;
         ErrorMessage = null;
         CurrentOffset = 0;
@@ -137,12 +146,17 @@ public partial class NeaViewModel : ViewModelBase
                 year: FilterYear,
                 status: FilterStatus,
                 limit: PageSize,
-                offset: 0);
+                offset: 0,
+                ct: ct);
             Inspections.Clear();
             TotalInspections = result.Total ?? 0;
             if (result.Success && result.Inspections != null)
                 foreach (var i in result.Inspections)
                     Inspections.Add(i);
+        }
+        catch (OperationCanceledException)
+        {
+            // Navigation away – discard silently.
         }
         catch (Exception ex)
         {
@@ -589,5 +603,14 @@ public partial class NeaViewModel : ViewModelBase
     private bool CanExportInspections() => Inspections.Count > 0;
 
     partial void OnInspectionsChanged(ObservableCollection<NeaInspection>? oldValue, ObservableCollection<NeaInspection> newValue)
+    {
+        // Re-subscribe to the new collection instance so CollectionChanged keeps notifying the command
+        if (oldValue != null)
+            oldValue.CollectionChanged -= OnInspectionsCollectionChanged;
+        newValue.CollectionChanged += OnInspectionsCollectionChanged;
+        ExportInspectionsToCsvCommand.NotifyCanExecuteChanged();
+    }
+
+    private void OnInspectionsCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         => ExportInspectionsToCsvCommand.NotifyCanExecuteChanged();
 }

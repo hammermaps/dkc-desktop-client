@@ -9,7 +9,8 @@ public abstract class ViewModelBase : ObservableObject
     /// <summary>
     /// Returns a fresh <see cref="CancellationToken"/> for the next data load.
     /// Cancels and disposes any previous load token so that in-flight requests
-    /// for this view are cancelled when the user navigates away.
+    /// for this view are cancelled when a new load starts or when the user
+    /// navigates away.
     /// </summary>
     protected CancellationToken StartLoad()
     {
@@ -21,9 +22,10 @@ public abstract class ViewModelBase : ObservableObject
 
     /// <summary>
     /// Cancels any in-flight data load started by <see cref="StartLoad"/>.
+    /// Called by <see cref="MainWindowViewModel"/> when the user navigates away.
     /// Safe to call multiple times.
     /// </summary>
-    protected void CancelLoad()
+    internal void CancelLoad()
     {
         _loadCts?.Cancel();
     }

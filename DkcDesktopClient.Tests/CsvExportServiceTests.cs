@@ -24,14 +24,6 @@ public class CsvExportServiceTests
             new { Id = 3, Name = "Gamma",  Note = "with\"quote" },
         };
 
-        var columns = new (string, Func<object, string?>)[]
-        {
-            ("ID",   r => ((dynamic)r).Id.ToString()),
-            ("Name", r => ((dynamic)r).Name),
-            ("Note", r => ((dynamic)r).Note),
-        };
-
-        // Use typed overload with anonymous record
         var typedColumns = new (string, Func<dynamic, string?>)[]
         {
             ("ID",   r => ((int)r.Id).ToString()),
@@ -41,6 +33,12 @@ public class CsvExportServiceTests
 
         CsvExportService.ExportToCsv<dynamic>(path, rows, typedColumns);
 
+        // Verify UTF-8 BOM (EF BB BF)
+        var rawBytes = File.ReadAllBytes(path);
+        Assert.True(rawBytes.Length >= 3 &&
+                    rawBytes[0] == 0xEF && rawBytes[1] == 0xBB && rawBytes[2] == 0xBF,
+                    "File should start with UTF-8 BOM for Excel compatibility");
+
         var lines = File.ReadAllLines(path);
         Assert.Equal(4, lines.Length); // header + 3 rows
         Assert.Equal("ID;Name;Note", lines[0]);
@@ -48,6 +46,26 @@ public class CsvExportServiceTests
         Assert.Contains("with;semicolon", lines[2]); // semicolon must be quoted
         Assert.True(lines[2].Contains('"'), "Field with semicolon should be quoted");
         Assert.Contains("with\"\"quote", lines[3]); // double-quote should be escaped
+    }
+
+    [Fact]
+    public void ExportToCsv_UsesCrlfLineEndings()
+    {
+        var path = Path.Combine(TmpDir, $"test_{Guid.NewGuid():N}.csv");
+
+        var rows = new[] { "row1", "row2" };
+        var columns = new (string, Func<string, string?>)[]
+        {
+            ("Text", r => r),
+        };
+
+        CsvExportService.ExportToCsv(path, rows, columns);
+
+        // Read raw text and verify CRLF (RFC-4180 §2)
+        using var reader = new StreamReader(path, detectEncodingFromByteOrderMarks: true);
+        var text = reader.ReadToEnd();
+        Assert.Contains("\r\n", text);
+        Assert.DoesNotContain("\n", text.Replace("\r\n", ""), StringComparison.Ordinal);
     }
 
     [Fact]

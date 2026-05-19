@@ -60,18 +60,22 @@ public partial class KeysViewModel : ViewModelBase
         _apiFactory = apiFactory;
         _authService = authService;
         _filePicker = filePicker;
+        // Wire CollectionChanged so the CSV export button reflects loaded state
+        Inventory.CollectionChanged += (_, _) =>
+            ExportInventoryToCsvCommand.NotifyCanExecuteChanged();
     }
 
     [RelayCommand]
     public async Task LoadDataAsync()
     {
+        var ct = StartLoad();
         IsLoading = true;
         ErrorMessage = null;
         try
         {
             var api = _apiFactory.Create(_authService.CurrentToken);
-            var inventoryTask = api.GetKeysInventoryAsync();
-            var issuedTask = api.GetKeysIssuedAsync();
+            var inventoryTask = api.GetKeysInventoryAsync(ct);
+            var issuedTask = api.GetKeysIssuedAsync(ct);
             await Task.WhenAll(inventoryTask, issuedTask);
 
             Inventory.Clear();
@@ -91,6 +95,10 @@ public partial class KeysViewModel : ViewModelBase
                     }
                 }
             }
+        }
+        catch (OperationCanceledException)
+        {
+            // Navigation away – discard silently.
         }
         catch (Exception ex)
         {
@@ -421,5 +429,13 @@ public partial class KeysViewModel : ViewModelBase
     private bool CanExportInventory() => Inventory.Count > 0;
 
     partial void OnInventoryChanged(ObservableCollection<KeyInventoryItem>? oldValue, ObservableCollection<KeyInventoryItem> newValue)
+    {
+        if (oldValue != null)
+            oldValue.CollectionChanged -= OnInventoryCollectionChanged;
+        newValue.CollectionChanged += OnInventoryCollectionChanged;
+        ExportInventoryToCsvCommand.NotifyCanExecuteChanged();
+    }
+
+    private void OnInventoryCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         => ExportInventoryToCsvCommand.NotifyCanExecuteChanged();
 }

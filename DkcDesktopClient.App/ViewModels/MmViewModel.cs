@@ -145,14 +145,18 @@ public partial class MmViewModel : ViewModelBase
         ExportMessagesToCsvCommand.NotifyCanExecuteChanged();
     }
 
-    private void OnMessagesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) =>
+    private void OnMessagesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
         OnPropertyChanged(nameof(HasNoMessages));
+        ExportMessagesToCsvCommand.NotifyCanExecuteChanged();
+    }
 
     // ── Commands ──────────────────────────────────────────────────────────────
 
     [RelayCommand]
     public async Task LoadMessagesAsync()
     {
+        var ct = StartLoad();
         IsLoading = true;
         ErrorMessage = null;
         CurrentOffset = 0;
@@ -163,7 +167,8 @@ public partial class MmViewModel : ViewModelBase
                 status: FilterStatusOption.Value,
                 street: FilterStreet,
                 limit: PageSize,
-                offset: 0);
+                offset: 0,
+                ct: ct);
             if (result.Success)
             {
                 Messages.Clear();
@@ -179,6 +184,10 @@ public partial class MmViewModel : ViewModelBase
             {
                 ErrorMessage = result.Error ?? "Laden der Mängelmeldungen fehlgeschlagen.";
             }
+        }
+        catch (OperationCanceledException)
+        {
+            // Navigation away – discard silently.
         }
         catch (Exception ex)
         {

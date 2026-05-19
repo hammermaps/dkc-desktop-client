@@ -133,7 +133,7 @@
             <Border Background="#FEF2F2" BorderBrush="#FECACA" BorderThickness="1" CornerRadius="4"
                     Padding="8,4" VerticalAlignment="Center"
                     IsVisible="{Binding IsOffline}"
-                    ToolTip.Tip="Server nicht erreichbar – Daten aus Cache werden angezeigt">
+                    ToolTip.Tip="Server nicht erreichbar – Verbindung wird automatisch wiederhergestellt">
               <StackPanel Orientation="Horizontal" Spacing="4">
                 <TextBlock Text="⚠" Foreground="#DC2626" VerticalAlignment="Center"/>
                 <TextBlock Text="Offline" Foreground="#DC2626" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center"/>

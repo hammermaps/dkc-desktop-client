@@ -143,6 +143,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
     partial void OnSelectedNavItemChanged(NavItem? value)
     {
+        // Cancel any in-flight load on the view we are leaving.
+        CurrentView?.CancelLoad();
         if (value != null)
         {
             _navigationService.NavigateTo(value.ViewModel, value.Title);
@@ -178,7 +180,11 @@ public partial class MainWindowViewModel : ViewModelBase
         switch (CurrentView)
         {
             case DashboardViewModel vm:     _ = vm.LoadDataCommand.ExecuteAsync(null);          break;
-            case NeaViewModel vm:           _ = vm.LoadSystemsCommand.ExecuteAsync(null);       break;
+            case NeaViewModel vm:
+                // Refresh both systems and inspections (inspection data depends on selected system)
+                _ = vm.LoadSystemsCommand.ExecuteAsync(null);
+                _ = vm.LoadInspectionsCommand.ExecuteAsync(null);
+                break;
             case MmViewModel vm:            _ = vm.LoadMessagesCommand.ExecuteAsync(null);      break;
             case BuildingViewModel vm:      _ = vm.LoadBuildingsCommand.ExecuteAsync(null);     break;
             case KlimaViewModel vm:         _ = vm.LoadDataCommand.ExecuteAsync(null);          break;
