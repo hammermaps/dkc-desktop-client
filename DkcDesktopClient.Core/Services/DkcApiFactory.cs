@@ -26,7 +26,7 @@ public class DkcApiFactory
 
     public virtual IDkcApi Create(string? token = null, string? serverUrl = null, HttpMessageHandler? innerHandler = null)
     {
-        var url = serverUrl ?? _tokenStore.LoadServerUrl() ?? "https://localhost";
+        var url = ResolveBaseUrl(serverUrl);
         _logger.LogDebug("Creating API client for base URL {BaseUrl}", url);
         var handler = new AuthorizationHandler(token, _authService, _loggerFactory.CreateLogger<AuthorizationHandler>(), innerHandler);
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri(url) };
@@ -40,6 +40,35 @@ public class DkcApiFactory
             })
         };
         return RestService.For<IDkcApi>(httpClient, settings);
+    }
+
+    public virtual DkcProtobufApiClient CreateProtobuf(
+        string? token = null,
+        string? serverUrl = null,
+        HttpMessageHandler? innerHandler = null)
+    {
+        var url = ResolveBaseUrl(serverUrl);
+        _logger.LogDebug("Creating protobuf API client for base URL {BaseUrl}", url);
+
+        var httpClient = new HttpClient(innerHandler ?? new HttpClientHandler())
+        {
+            BaseAddress = new Uri(url)
+        };
+
+        return new DkcProtobufApiClient(
+            httpClient,
+            () => token ?? _authService?.CurrentToken,
+            disposeHttpClient: true);
+    }
+
+    private string ResolveBaseUrl(string? serverUrl)
+    {
+        var url = serverUrl ?? _tokenStore.LoadServerUrl();
+        if (!string.IsNullOrWhiteSpace(url))
+            return url;
+
+        _logger.LogWarning("No server URL configured; falling back to https://localhost");
+        return "https://localhost";
     }
 }
 
