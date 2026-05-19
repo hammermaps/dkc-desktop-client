@@ -92,12 +92,15 @@ public class BackgroundRefreshService : BackgroundService
                 ct => api.GetNeaDashboardAsync(ct),
                 stoppingToken);
 
-            await TryRefreshAsync(
-                CacheKeys.NotificationCount,
-                _config.NotificationCount,
-                now,
-                ct => api.GetNotificationCountAsync(ct),
-                stoppingToken);
+            if (!IsTokenBasedDesktopAuth())
+            {
+                await TryRefreshAsync(
+                    CacheKeys.NotificationCount,
+                    _config.NotificationCount,
+                    now,
+                    ct => api.GetNotificationCountAsync(ct),
+                    stoppingToken);
+            }
 
             await TryRefreshAsync(
                 CacheKeys.MmList,
@@ -158,5 +161,11 @@ public class BackgroundRefreshService : BackgroundService
         {
             _logger.LogWarning(ex, "Background refresh failed for key: {Key}", key);
         }
+    }
+
+    private bool IsTokenBasedDesktopAuth()
+    {
+        var token = _authService.CurrentToken;
+        return !string.IsNullOrWhiteSpace(token) && token.StartsWith("dkc_", StringComparison.OrdinalIgnoreCase);
     }
 }

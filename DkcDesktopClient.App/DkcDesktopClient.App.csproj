@@ -12,6 +12,10 @@
   <ItemGroup>
     <Folder Include="Models\" />
     <AvaloniaResource Include="Assets\**" />
+    <None Update="start-linux.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -36,4 +40,9 @@
   <ItemGroup>
     <ProjectReference Include="..\DkcDesktopClient.Core\DkcDesktopClient.Core.csproj" />
   </ItemGroup>
+
+  <Target Name="MakeLinuxStartScriptExecutable" AfterTargets="Build">
+    <Exec Condition="$([MSBuild]::IsOsPlatform('Linux')) and Exists('$(TargetDir)start-linux.sh')"
+          Command="chmod +x &quot;$(TargetDir)start-linux.sh&quot;" />
+  </Target>
 </Project>

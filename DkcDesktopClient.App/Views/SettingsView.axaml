@@ -200,6 +200,27 @@
         </StackPanel>
       </Border>
 
+      <!-- Admin: API status check -->
+      <Border BorderThickness="1" BorderBrush="#DDDDDD" CornerRadius="8" Padding="16"
+              IsVisible="{Binding IsAdmin}">
+        <StackPanel Spacing="8">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="API-Status (Admin)" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            <Button Content="Statuscheck starten" Command="{Binding RunApiStatusCheckCommand}"/>
+            <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsRunningApiStatusCheck}" Width="120" Height="14" VerticalAlignment="Center"/>
+          </StackPanel>
+          <TextBlock Text="Prueft zentrale Endpunkte und zeigt HTTP-Status bzw. Fehlermeldungen an."
+                     Foreground="#4A5568"/>
+          <DataGrid ItemsSource="{Binding ApiStatusItems}" IsReadOnly="True" AutoGenerateColumns="False" Height="220">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="Endpoint" Binding="{Binding Endpoint}" Width="180"/>
+              <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="120"/>
+              <DataGridTextColumn Header="Details" Binding="{Binding Details}" Width="*"/>
+            </DataGrid.Columns>
+          </DataGrid>
+        </StackPanel>
+      </Border>
+
     </StackPanel>
   </ScrollViewer>
 </UserControl>

@@ -22,6 +22,7 @@ public class NotificationPollingService : BackgroundService
 
     private readonly List<NotificationItem> _unreadNotifications = new();
     private readonly object _notificationLock = new();
+    private bool _sessionOnlyNoticeLogged;
 
     /// <summary>Total unread count. Thread-safe.</summary>
     public int UnreadCount
@@ -105,6 +106,16 @@ public class NotificationPollingService : BackgroundService
 
     private async Task PollAsync(CancellationToken ct)
     {
+        if (IsTokenBasedDesktopAuth())
+        {
+            if (!_sessionOnlyNoticeLogged)
+            {
+                _sessionOnlyNoticeLogged = true;
+                _logger.LogInformation("Notification polling skipped: endpoint requires session auth, desktop client uses bearer token auth.");
+            }
+            return;
+        }
+
         try
         {
             var api = _apiFactory.Create(_authService.CurrentToken);
@@ -151,5 +162,11 @@ public class NotificationPollingService : BackgroundService
         {
             _logger.LogWarning(ex, "Notification poll failed");
         }
+    }
+
+    private bool IsTokenBasedDesktopAuth()
+    {
+        var token = _authService.CurrentToken;
+        return !string.IsNullOrWhiteSpace(token) && token.StartsWith("dkc_", StringComparison.OrdinalIgnoreCase);
     }
 }

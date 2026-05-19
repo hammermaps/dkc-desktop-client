@@ -105,8 +105,7 @@ public partial class App : Application
         Directory.CreateDirectory(dataDir);
 
         var cacheDir = Path.Combine(dataDir, "cache");
-        var logDir = Path.Combine(dataDir, "logs");
-        Directory.CreateDirectory(logDir);
+        var logDir = ResolveLogDirectory(dataDir);
         var logPath = Path.Combine(logDir, "dkc-.log");
 
         var environment =
@@ -238,5 +237,46 @@ public partial class App : Application
             return false;
 
         return Enum.TryParse(rawLevel.Trim(), ignoreCase: true, out level);
+    }
+
+    private static string ResolveLogDirectory(string dataDir)
+    {
+        const string centralLogDir = "/logs";
+        var fallbackLogDir = Path.Combine(dataDir, "logs");
+
+        try
+        {
+            Directory.CreateDirectory(centralLogDir);
+            if (CanWriteToDirectory(centralLogDir))
+                return centralLogDir;
+        }
+        catch
+        {
+            // Kein Zugriff auf /logs -> Fallback unten.
+        }
+
+        Directory.CreateDirectory(fallbackLogDir);
+        return fallbackLogDir;
+    }
+
+    private static bool CanWriteToDirectory(string directory)
+    {
+        try
+        {
+            var probePath = Path.Combine(directory, $".write-test-{Guid.NewGuid():N}.tmp");
+            using var stream = new FileStream(
+                probePath,
+                FileMode.CreateNew,
+                FileAccess.Write,
+                FileShare.None,
+                1,
+                FileOptions.DeleteOnClose);
+            stream.WriteByte(0x1);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

@@ -137,7 +137,8 @@ Gespeicherte Zugangsdaten (Token, Server-URL) werden mit **DPAPI / Data Protecti
 
 ### Logging
 
-- Log-Dateien: `%APPDATA%\DkcDesktopClient\logs\dkc-<datum>.log` (Windows) bzw. `~/.config/DkcDesktopClient/logs/dkc-<datum>.log` (Linux/macOS)
+- Log-Dateien: zentral in `/logs/dkc-<datum>.log` (wenn schreibbar)
+- Fallback bei fehlenden Rechten auf `/logs`: `%APPDATA%\DkcDesktopClient\logs\dkc-<datum>.log` (Windows) bzw. `~/.config/DkcDesktopClient/logs/dkc-<datum>.log` (Linux/macOS)
 - Standard-Loglevel: `Debug` in Development, `Information` in Production
 - Override per Umgebungsvariable: `DKC_LOG_LEVEL=Verbose|Debug|Information|Warning|Error|Fatal`
 - Optional per Datei: `logging.json` im AppData-Ordner mit Inhalt `{"logLevel":"Debug"}`

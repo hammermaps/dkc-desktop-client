@@ -1,9 +1,11 @@
 using System.Collections.ObjectModel;
+using System.Net;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DkcDesktopClient.Core.Api;
 using DkcDesktopClient.Core.Services;
+using Refit;
 
 namespace DkcDesktopClient.App.ViewModels;
 
@@ -70,6 +72,10 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty] private string _selectedLogLevel = "Debug";
     [ObservableProperty] private string? _loggingMessage;
 
+    // Admin API status
+    [ObservableProperty] private bool _isRunningApiStatusCheck;
+    [ObservableProperty] private ObservableCollection<ApiStatusItem> _apiStatusItems = new();
+
     public bool IsAdmin => _authService.CurrentUser?.IsAdmin ?? false;
     public string CurrentVersion => UpdateService.CurrentVersion.ToString(3);
     public string? CurrentUsername => _authService.CurrentUser?.Username;
@@ -89,6 +95,7 @@ public partial class SettingsViewModel : ViewModelBase
     {
         OnPropertyChanged(nameof(IsAdmin));
         OnPropertyChanged(nameof(CurrentUsername));
+        RunApiStatusCheckCommand.NotifyCanExecuteChanged();
     }
 
     [RelayCommand]
@@ -133,6 +140,40 @@ public partial class SettingsViewModel : ViewModelBase
     {
         LoadLoggingSettings();
         LoggingMessage = "Logging-Einstellungen neu geladen.";
+    }
+
+    [RelayCommand(CanExecute = nameof(CanRunApiStatusCheck))]
+    public async Task RunApiStatusCheckAsync()
+    {
+        if (!IsAdmin)
+            return;
+
+        IsRunningApiStatusCheck = true;
+        ErrorMessage = null;
+        ApiStatusItems.Clear();
+
+        try
+        {
+            var api = _apiFactory.Create(_authService.CurrentToken);
+            using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+
+            await CheckEndpointAsync("user_info", async () => await api.GetUserInfoAsync(timeoutCts.Token));
+            await CheckEndpointAsync("projects_list", async () => await api.GetProjectsListAsync(timeoutCts.Token));
+            await CheckEndpointAsync("dashboard_data", async () => await api.GetDashboardDataAsync(timeoutCts.Token));
+            await CheckEndpointAsync("keys_inventory", async () => await api.GetKeysInventoryAsync(timeoutCts.Token));
+            await CheckEndpointAsync("klima_status", async () => await api.GetKlimaRealtimeStatusAsync(timeoutCts.Token));
+            await CheckEndpointAsync("nea_dashboard", async () => await api.GetNeaDashboardAsync(timeoutCts.Token));
+
+            StatusMessage = "API-Statuscheck abgeschlossen.";
+        }
+        catch (OperationCanceledException)
+        {
+            ErrorMessage = "API-Statuscheck wurde wegen Timeout abgebrochen.";
+        }
+        finally
+        {
+            IsRunningApiStatusCheck = false;
+        }
     }
 
     [RelayCommand]
@@ -532,6 +573,7 @@ public partial class SettingsViewModel : ViewModelBase
     private bool CanSaveUser() => !IsSavingUser;
     private bool HasSelectedProject() => SelectedProject != null;
     private bool HasSelectedUser() => SelectedUser != null;
+    private bool CanRunApiStatusCheck() => IsAdmin && !IsRunningApiStatusCheck;
 
     partial void OnServerUrlChanged(string value)
     {
@@ -543,6 +585,7 @@ public partial class SettingsViewModel : ViewModelBase
     }
 
     partial void OnSelectedTokenChanged(TokenListItem? value) => DeleteTokenCommand.NotifyCanExecuteChanged();
+    partial void OnIsRunningApiStatusCheckChanged(bool value) => RunApiStatusCheckCommand.NotifyCanExecuteChanged();
 
     private void LoadLoggingSettings()
     {
@@ -592,7 +635,36 @@ public partial class SettingsViewModel : ViewModelBase
         return !string.IsNullOrWhiteSpace(normalized);
     }
 
+    private async Task CheckEndpointAsync(string endpoint, Func<Task> call)
+    {
+        try
+        {
+            await call();
+            ApiStatusItems.Add(new ApiStatusItem(endpoint, "OK", "Erreichbar", "#2F855A"));
+        }
+        catch (ApiException ex)
+        {
+            var statusCode = ex.StatusCode == HttpStatusCode.Unused ? "HTTP ?" : $"HTTP {(int)ex.StatusCode}";
+            var details = string.IsNullOrWhiteSpace(ex.Content) ? ex.Message : ex.Content;
+            ApiStatusItems.Add(new ApiStatusItem(endpoint, statusCode, TrimForUi(details), "#C53030"));
+        }
+        catch (Exception ex)
+        {
+            ApiStatusItems.Add(new ApiStatusItem(endpoint, "Fehler", TrimForUi(ex.Message), "#C53030"));
+        }
+    }
+
+    private static string TrimForUi(string message)
+    {
+        const int maxLength = 220;
+        if (string.IsNullOrWhiteSpace(message) || message.Length <= maxLength)
+            return message;
+
+        return message[..maxLength] + "...";
+    }
+
     private sealed record LoggingConfig(string LogLevel);
+    public sealed record ApiStatusItem(string Endpoint, string Status, string Details, string StatusColor);
     partial void OnIsLoadingChanged(bool value) => DeleteTokenCommand.NotifyCanExecuteChanged();
     partial void OnSelectedProjectChanged(Project? value)
     {

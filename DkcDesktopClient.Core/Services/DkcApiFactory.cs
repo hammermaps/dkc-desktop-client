@@ -45,6 +45,26 @@ public class DkcApiFactory
 
 internal class AuthorizationHandler : DelegatingHandler
 {
+    private static readonly HashSet<string> SessionOnlyActions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "notifications",
+        "get_notification_count",
+        "client_cache_version",
+        "ckeditor_draft",
+        "meter_list",
+        "meter_submit",
+        "meter_batch_sync",
+        "meter_readings",
+        "meter_qr_list",
+        "meter_deactivate",
+        "meter_activate",
+        "meter_buildings",
+        "meter_whg",
+        "meter_users",
+        "meter_topology",
+        "dropdown_data"
+    };
+
     private static readonly Regex SensitiveJsonFieldsRegex = new(
         "\\\"(password|token|apikey)\\\"\\s*:\\s*\\\".*?\\\"",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -100,8 +120,25 @@ internal class AuthorizationHandler : DelegatingHandler
 
         if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized && _authService != null)
         {
-            _logger.LogWarning("Received 401 - triggering logout");
-            await _authService.LogoutAsync(ct);
+            var action = TryGetActionName(request.RequestUri);
+            var isSessionOnlyAction = !string.IsNullOrWhiteSpace(action) && SessionOnlyActions.Contains(action);
+            var isLogoutAction = string.Equals(action, "auth_logout", StringComparison.OrdinalIgnoreCase);
+
+            if (isSessionOnlyAction)
+            {
+                _logger.LogWarning(
+                    "Received 401 on session-only action '{Action}'. Skipping auto-logout for token-based desktop auth.",
+                    action);
+            }
+            else if (isLogoutAction)
+            {
+                _logger.LogDebug("Received 401 for auth_logout. Skipping recursive auto-logout.");
+            }
+            else
+            {
+                _logger.LogWarning("Received 401 for action '{Action}' - triggering logout", action ?? "<unknown>");
+                await _authService.LogoutAsync(ct);
+            }
         }
 
         return response;
@@ -128,5 +165,32 @@ internal class AuthorizationHandler : DelegatingHandler
             return payload;
 
         return SensitiveJsonFieldsRegex.Replace(payload, "\"$1\":\"***\"");
+    }
+
+    private static string? TryGetActionName(Uri? requestUri)
+    {
+        if (requestUri == null)
+            return null;
+
+        var query = requestUri.Query;
+        if (string.IsNullOrWhiteSpace(query))
+            return null;
+
+        var trimmed = query.TrimStart('?');
+        foreach (var pair in trimmed.Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var separatorIndex = pair.IndexOf('=');
+            if (separatorIndex <= 0)
+                continue;
+
+            var key = pair[..separatorIndex];
+            if (!key.Equals("action", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var value = pair[(separatorIndex + 1)..];
+            return Uri.UnescapeDataString(value);
+        }
+
+        return null;
     }
 }
