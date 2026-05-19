@@ -39,6 +39,6 @@ public static class HtmlHelper
             .Replace("&quot;", "\"", StringComparison.Ordinal)
             .Replace("&#39;",  "'",  StringComparison.Ordinal);
 
-        return result.Trim();
+        return MultipleSpaces.Replace(result, " ").Trim();
     }
 }
