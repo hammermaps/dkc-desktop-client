@@ -385,14 +385,14 @@ Vollständig neues Modul.
 - [x] Unit-Tests für `DataCacheService` (TTL, Invalidierung, Parallelität)
 - [x] Unit-Tests für `BackgroundRefreshService` (Timer, Pause bei Logout)
 - [x] Unit-Tests für `NavigationService` (Back-Stack)
-- [x] Unit-Tests für alle ViewModels (Mocks via `IDkcApi`)
+- [x] Unit-Tests für alle ViewModels: Dashboard, Notifications, Mm, Building, Nea, Klima, Keys, Login, Settings, Wls (Mocks via `IDkcApi`)
 - [ ] Integration-Tests für API-Mapping (Refit + WireMock)
 
 ---
 
 ### 5.2 Dokumentation
 
-- [x] `agent.md` aktuell halten (nach jeder Phase)
+- [x] `agent.md` mit Phase-5-Abschnitt (Section 10) aktuell halten
 - [x] Inline-Kommentare für komplexe Service-Logik
 - [x] `README.md` mit Setup-Anleitung, Build-Befehlen, Features
 - [x] Changelog (`CHANGELOG.md`) für Releases

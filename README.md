@@ -73,7 +73,7 @@ dotnet run --project DkcDesktopClient.App/DkcDesktopClient.App.csproj
 dotnet test DkcDesktopClient.Tests/DkcDesktopClient.Tests.csproj --configuration Release
 ```
 
-Aktuell **115 Tests** für:
+Aktuell **151 Tests** für:
 - `DataCacheService` (TTL, Invalidierung, Parallelität)
 - `BackgroundRefreshService` (Pause bei Logout, DataRefreshed-Event)
 - `NavigationService` (Back-Stack, Breadcrumbs, Events)

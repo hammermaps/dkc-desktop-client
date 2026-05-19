@@ -18,8 +18,8 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
 - **Test-Coverage** (Phase 5.1)
   - `BackgroundRefreshServiceTests`: Pause bei Logout, DataRefreshed-Event, NotifyUserActivity-Deferral (5 Tests)
   - `DtoTests`: MmMessage computed properties – StatusText, DringlichkeitText, StatusColorHex, DringlichkeitColorHex (13 Tests)
-  - `ViewModelTests`: DashboardViewModel, NotificationsViewModel, MmViewModel static options (21 Tests)
-  - Gesamt: 115 Tests (zuvor 68)
+  - `ViewModelTests`: alle 10 ViewModels (Dashboard, Notifications, Mm, Building, Nea, Klima, Keys, Login, Settings, Wls) – state, derived properties, command guards, events (57 Tests)
+  - Gesamt: **151 Tests** (zuvor 68)
 - **Dokumentation** (Phase 5.2)
   - `README.md`: Setup-Anleitung, Build-Befehle, Feature-Übersicht, Projektstruktur
   - `CHANGELOG.md`: initiale Versionshistorie

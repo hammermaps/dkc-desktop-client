@@ -1,3 +1,4 @@
+using DkcDesktopClient.App.Services;
 using DkcDesktopClient.App.ViewModels;
 using DkcDesktopClient.Core.Api;
 using DkcDesktopClient.Core.Services;
@@ -5,6 +6,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Moq;
 
 namespace DkcDesktopClient.Tests;
 
@@ -223,4 +225,327 @@ public class ViewModelTests : IDisposable
 
     private NotificationPollingService CreatePollingService() =>
         new(_authService, _factory, NullLogger<NotificationPollingService>.Instance);
+
+    // ── BuildingViewModel ─────────────────────────────────────────────────────
+
+    private BuildingViewModel CreateBuilding() => new(_factory, _authService);
+
+    [Fact]
+    public void Building_InitialState_IsNotLoading()
+    {
+        var vm = CreateBuilding();
+        Assert.False(vm.IsLoading);
+    }
+
+    [Fact]
+    public void Building_InitialState_StatsAreZero()
+    {
+        var vm = CreateBuilding();
+        Assert.Equal(0, vm.StatTotalBuildings);
+        Assert.Equal(0, vm.StatOpenInspections);
+        Assert.Equal(0, vm.StatCompletedInspections);
+    }
+
+    [Fact]
+    public void Building_InspectionStatusOptions_ContainsExpectedValues()
+    {
+        Assert.Contains("open",        BuildingViewModel.InspectionStatusOptions);
+        Assert.Contains("in_progress", BuildingViewModel.InspectionStatusOptions);
+        Assert.Contains("completed",   BuildingViewModel.InspectionStatusOptions);
+    }
+
+    [Fact]
+    public void Building_ResultOptions_ContainsExpectedValues()
+    {
+        Assert.Contains("ok",            BuildingViewModel.ResultOptions);
+        Assert.Contains("defects_found", BuildingViewModel.ResultOptions);
+        Assert.Contains("failed",        BuildingViewModel.ResultOptions);
+    }
+
+    [Fact]
+    public void Building_IsBuildingFormVisible_FalseInitially()
+    {
+        var vm = CreateBuilding();
+        Assert.False(vm.IsBuildingFormVisible);
+    }
+
+    [Fact]
+    public void Building_IsInspectionFormVisible_FalseInitially()
+    {
+        var vm = CreateBuilding();
+        Assert.False(vm.IsInspectionFormVisible);
+    }
+
+    // ── NeaViewModel ──────────────────────────────────────────────────────────
+
+    private NeaViewModel CreateNea()
+    {
+        var filePicker = new Mock<IFilePickerService>().Object;
+        return new NeaViewModel(_factory, _authService, filePicker);
+    }
+
+    [Fact]
+    public void Nea_InitialState_IsNotLoading()
+    {
+        var vm = CreateNea();
+        Assert.False(vm.IsLoading);
+    }
+
+    [Fact]
+    public void Nea_InspectionTypeOptions_ContainsExpectedValues()
+    {
+        Assert.Contains("annual",    NeaViewModel.InspectionTypeOptions);
+        Assert.Contains("monthly",   NeaViewModel.InspectionTypeOptions);
+        Assert.Contains("quarterly", NeaViewModel.InspectionTypeOptions);
+        Assert.Contains("ad_hoc",    NeaViewModel.InspectionTypeOptions);
+    }
+
+    [Fact]
+    public void Nea_StatusOptions_ContainsExpectedValues()
+    {
+        Assert.Contains("open",        NeaViewModel.StatusOptions);
+        Assert.Contains("in_progress", NeaViewModel.StatusOptions);
+        Assert.Contains("completed",   NeaViewModel.StatusOptions);
+    }
+
+    [Fact]
+    public void Nea_FuelTypeOptions_ContainsDiesel()
+    {
+        Assert.Contains("Diesel", NeaViewModel.FuelTypeOptions);
+    }
+
+    [Fact]
+    public void Nea_IsSystemFormVisible_FalseInitially()
+    {
+        var vm = CreateNea();
+        Assert.False(vm.IsSystemFormVisible);
+    }
+
+    [Fact]
+    public void Nea_IsInspectionFormVisible_FalseInitially()
+    {
+        var vm = CreateNea();
+        Assert.False(vm.IsInspectionFormVisible);
+    }
+
+    // ── KlimaViewModel ────────────────────────────────────────────────────────
+
+    private KlimaViewModel CreateKlima() => new(_factory, _authService, CreateBrs());
+
+    [Fact]
+    public void Klima_InitialState_IsNotLoading()
+    {
+        var vm = CreateKlima();
+        Assert.False(vm.IsLoading);
+    }
+
+    [Fact]
+    public void Klima_ModeOptions_ContainsExpectedValues()
+    {
+        Assert.Contains("cooling", KlimaViewModel.ModeOptions);
+        Assert.Contains("heating", KlimaViewModel.ModeOptions);
+        Assert.Contains("fan",     KlimaViewModel.ModeOptions);
+        Assert.Contains("auto",    KlimaViewModel.ModeOptions);
+        Assert.Contains("dry",     KlimaViewModel.ModeOptions);
+    }
+
+    [Fact]
+    public void Klima_FanSpeedOptions_ContainsExpectedValues()
+    {
+        Assert.Contains("auto",   KlimaViewModel.FanSpeedOptions);
+        Assert.Contains("low",    KlimaViewModel.FanSpeedOptions);
+        Assert.Contains("medium", KlimaViewModel.FanSpeedOptions);
+        Assert.Contains("high",   KlimaViewModel.FanSpeedOptions);
+    }
+
+    [Fact]
+    public void Klima_IsControlPanelVisible_FalseInitially()
+    {
+        var vm = CreateKlima();
+        Assert.False(vm.IsControlPanelVisible);
+    }
+
+    [Fact]
+    public void Klima_DefaultSetpoint_Is22Degrees()
+    {
+        var vm = CreateKlima();
+        Assert.Equal(22.0, vm.ControlSetpoint);
+    }
+
+    // ── KeysViewModel ─────────────────────────────────────────────────────────
+
+    private KeysViewModel CreateKeys()
+    {
+        var filePicker = new Mock<IFilePickerService>().Object;
+        return new KeysViewModel(_factory, _authService, filePicker);
+    }
+
+    [Fact]
+    public void Keys_InitialState_IsNotLoading()
+    {
+        var vm = CreateKeys();
+        Assert.False(vm.IsLoading);
+    }
+
+    [Fact]
+    public void Keys_InitialState_StatsAreZero()
+    {
+        var vm = CreateKeys();
+        Assert.Equal(0, vm.StatTotalKeys);
+        Assert.Equal(0, vm.StatIssuedKeys);
+        Assert.Equal(0, vm.StatAvailableKeys);
+    }
+
+    [Fact]
+    public void Keys_IsKeyFormVisible_FalseInitially()
+    {
+        var vm = CreateKeys();
+        Assert.False(vm.IsKeyFormVisible);
+    }
+
+    [Fact]
+    public void Keys_IsIssueFormVisible_FalseInitially()
+    {
+        var vm = CreateKeys();
+        Assert.False(vm.IsIssueFormVisible);
+    }
+
+    // ── LoginViewModel ────────────────────────────────────────────────────────
+
+    private LoginViewModel CreateLogin() => new(_authService, _tokenStore);
+
+    [Fact]
+    public void Login_InitialState_IsNotLoading()
+    {
+        var vm = CreateLogin();
+        Assert.False(vm.IsLoading);
+    }
+
+    [Fact]
+    public void Login_CanLogin_FalseWhenCredentialsEmpty()
+    {
+        var vm = CreateLogin();
+        vm.ServerUrl = string.Empty;
+        Assert.False(vm.LoginCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void Login_CanLogin_FalseWhenUsernameEmpty()
+    {
+        var vm = CreateLogin();
+        vm.ServerUrl = "https://example.com";
+        vm.Username  = string.Empty;
+        vm.Password  = "pass";
+        Assert.False(vm.LoginCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void Login_CanLogin_TrueWhenAllFieldsFilled()
+    {
+        var vm = CreateLogin();
+        vm.ServerUrl = "https://example.com";
+        vm.Username  = "user";
+        vm.Password  = "pass";
+        Assert.True(vm.LoginCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void Login_CanLogin_FalseWhenLoading()
+    {
+        var vm = CreateLogin();
+        vm.ServerUrl = "https://example.com";
+        vm.Username  = "user";
+        vm.Password  = "pass";
+        vm.IsLoading = true;
+        Assert.False(vm.LoginCommand.CanExecute(null));
+    }
+
+    // ── SettingsViewModel ─────────────────────────────────────────────────────
+
+    private SettingsViewModel CreateSettings()
+    {
+        var httpFactory = new Mock<IHttpClientFactory>().Object;
+        var updateService = new UpdateService(NullLogger<UpdateService>.Instance, httpFactory);
+        return new SettingsViewModel(_factory, _authService, _tokenStore, updateService);
+    }
+
+    [Fact]
+    public void Settings_InitialState_IsNotLoading()
+    {
+        var vm = CreateSettings();
+        Assert.False(vm.IsLoading);
+    }
+
+    [Fact]
+    public void Settings_IsAdmin_FalseWhenNotAuthenticated()
+    {
+        var vm = CreateSettings();
+        Assert.False(vm.IsAdmin);
+    }
+
+    [Fact]
+    public void Settings_CurrentUsername_NullWhenNotAuthenticated()
+    {
+        var vm = CreateSettings();
+        Assert.Null(vm.CurrentUsername);
+    }
+
+    [Fact]
+    public void Settings_CurrentVersion_IsNotEmpty()
+    {
+        var vm = CreateSettings();
+        Assert.NotEmpty(vm.CurrentVersion);
+    }
+
+    [Fact]
+    public void Settings_IsProjectFormVisible_FalseInitially()
+    {
+        var vm = CreateSettings();
+        Assert.False(vm.IsProjectFormVisible);
+    }
+
+    // ── WlsViewModel ──────────────────────────────────────────────────────────
+
+    private WlsViewModel CreateWls()
+    {
+        var filePicker = new Mock<IFilePickerService>().Object;
+        return new WlsViewModel(_factory, _authService, filePicker);
+    }
+
+    [Fact]
+    public void Wls_InitialState_IsNotLoading()
+    {
+        var vm = CreateWls();
+        Assert.False(vm.IsLoading);
+    }
+
+    [Fact]
+    public void Wls_InitialState_CollectionsAreEmpty()
+    {
+        var vm = CreateWls();
+        Assert.Empty(vm.Buildings);
+        Assert.Empty(vm.Apartments);
+        Assert.Empty(vm.Records);
+    }
+
+    [Fact]
+    public void Wls_IsBuildingFormVisible_FalseInitially()
+    {
+        var vm = CreateWls();
+        Assert.False(vm.IsBuildingFormVisible);
+    }
+
+    [Fact]
+    public void Wls_IsApartmentFormVisible_FalseInitially()
+    {
+        var vm = CreateWls();
+        Assert.False(vm.IsApartmentFormVisible);
+    }
+
+    [Fact]
+    public void Wls_IsRecordFormVisible_FalseInitially()
+    {
+        var vm = CreateWls();
+        Assert.False(vm.IsRecordFormVisible);
+    }
 }
