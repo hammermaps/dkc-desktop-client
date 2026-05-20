@@ -2,7 +2,7 @@ using System.Net.Http.Headers;
 
 namespace DkcDesktopClient.Core.Services;
 
-public sealed class DkcProtobufApiClient : IDisposable
+public sealed partial class DkcProtobufApiClient : IDisposable
 {
     public const string EndpointPath = "/api.php";
     public const string ProtocolHeaderName = "X-DKC-Protocol";

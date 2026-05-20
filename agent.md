@@ -1,5 +1,13 @@
 # DKC Desktop Client – API-Referenz (`api.php`)
 
+> **Aktueller Status (Protobuf-Migration):** Die produktive Schnittstelle wird
+> auf eine einzige, Protobuf-basierte API umgestellt. Die vollständige
+> Schnittstellen-Dokumentation befindet sich in
+> [`docs/PROTOBUF_API.md`](./docs/PROTOBUF_API.md), die Contracts unter
+> [`proto/dkc/*.proto`](./proto/dkc). Die unten beschriebene JSON/REST-API
+> bleibt während der Migration als Legacy-Pfad verfügbar (siehe
+> [`ROADMAP.md`](./ROADMAP.md)).
+
 > **Backend-Dokumentation:** Architektur, Controller, Models, Templates und Template↔C#-Mapping befinden sich in  
 > [`/ProxyServer/Backend.md`](./ProxyServer/Backend.md)
 

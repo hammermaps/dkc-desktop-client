@@ -1,0 +1,166 @@
+// NEA – Netzersatzanlagen.
+syntax = "proto3";
+
+package dkc.api.v1;
+
+import "dkc/common.proto";
+
+option csharp_namespace = "DkcDesktopClient.Core.Protocol";
+
+message NeaSystemsRequest { int32 project_id = 1; }
+
+message NeaSystem {
+    int32  id                      = 1;
+    string name                    = 2;
+    string description             = 3;
+    string location                = 4;
+    string manufacturer            = 5;
+    string model                   = 6;
+    string serial_number           = 7;
+    string installation_date       = 8;
+    bool   enabled                 = 9;
+    int32  project_id              = 10;
+    string last_inspection_date    = 11;
+    string last_inspection_result  = 12;
+    double rated_power             = 13;
+    string fuel_type               = 14;
+}
+
+message NeaSystemsResponse {
+    int32              project_id = 1;
+    repeated NeaSystem systems    = 2;
+}
+
+message NeaSystemSaveRequest {
+    int32  id                = 1; // 0 for create
+    string name              = 2;
+    string description       = 3;
+    string location          = 4;
+    string manufacturer      = 5;
+    string model             = 6;
+    string serial_number     = 7;
+    string installation_date = 8;
+    bool   enabled           = 9;
+    int32  project_id        = 10;
+    double rated_power       = 11;
+    string fuel_type         = 12;
+}
+
+message NeaSystemCreateResponse { int32 id = 1; }
+
+message NeaSystemDeleteRequest { int32 id = 1; }
+
+message NeaInspectionsRequest {
+    int32  system_id = 1;
+    int32  year      = 2;
+    string status    = 3;
+    int32  limit     = 4;
+    int32  offset    = 5;
+}
+
+message NeaInspection {
+    int32  id              = 1;
+    int32  nea_system_id   = 2;
+    string system_name     = 3;
+    string inspection_type = 4;
+    string inspection_date = 5;
+    string inspector_name  = 6;
+    string status          = 7;
+    string overall_result  = 8;
+    int32  runtime_hours   = 9;
+    string notes           = 10;
+    string created_at      = 11;
+}
+
+message NeaInspectionsResponse {
+    int32                  project_id  = 1;
+    PageInfo               page        = 2;
+    repeated NeaInspection inspections = 3;
+}
+
+message NeaInspectionDetailRequest { int32 id = 1; }
+
+message NeaInspectionDetail {
+    int32  id                  = 1;
+    int32  nea_system_id       = 2;
+    string system_name         = 3;
+    string inspection_type     = 4;
+    string inspection_date     = 5;
+    int32  inspector_id        = 6;
+    string inspector_name      = 7;
+    string status              = 8;
+    string overall_result      = 9;
+    int32  runtime_hours       = 10;
+    int32  runtime_hours_after = 11;
+    string defects_found       = 12;
+    string corrective_actions  = 13;
+    string notes               = 14;
+    string created_at          = 15;
+    // Free-form JSON for checklist payload (server stores JSON).
+    string checklist_json      = 16;
+}
+
+message NeaInspectionDetailResponse { NeaInspectionDetail inspection = 1; }
+
+message NeaInspectionSaveRequest {
+    int32  id                 = 1; // 0 = create
+    int32  nea_system_id      = 2;
+    string inspection_type    = 3;
+    string inspection_date    = 4;
+    string status             = 5;
+    string overall_result     = 6;
+    int32  runtime_hours      = 7;
+    string notes              = 8;
+    string defects_found      = 9;
+    string corrective_actions = 10;
+}
+
+message NeaInspectionCreateResponse { int32 id = 1; }
+
+message NeaInspectionCompleteRequest {
+    int32  id             = 1;
+    string overall_result = 2;
+    string notes          = 3;
+}
+
+message NeaChecklistItem {
+    int32  checkpoint_id = 1;
+    string status        = 2; // ok|nok|n_a
+    string note          = 3;
+    string comment       = 4;
+}
+
+message NeaChecklistUpdateRequest {
+    int32                     inspection_id = 1;
+    repeated NeaChecklistItem items         = 2;
+}
+
+message NeaDashboardStats {
+    int32 total_systems          = 1;
+    int32 inspections_this_week  = 2;
+    int32 inspections_this_month = 3;
+    int32 failed_last_30_days    = 4;
+}
+
+message NeaOverdueItem {
+    int32  system_id        = 1;
+    string system_name      = 2;
+    int32  days_overdue     = 3;
+    string last_inspection  = 4;
+}
+
+message NeaRecentInspection {
+    int32  id              = 1;
+    int32  nea_system_id   = 2;
+    string inspection_date = 3;
+    string inspector_name  = 4;
+    string status          = 5;
+    string overall_result  = 6;
+}
+
+message NeaDashboardResponse {
+    int32                        project_id         = 1;
+    NeaDashboardStats            stats              = 2;
+    repeated NeaOverdueItem      due_tests          = 3;
+    repeated NeaRecentInspection recent_inspections = 4;
+}

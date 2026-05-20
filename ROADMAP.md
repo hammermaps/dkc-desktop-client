@@ -432,6 +432,56 @@ Vollständig neues Modul.
 
 ---
 
+## Phase 6 – Protobuf-API-Migration
+
+Vollständige Ablösung der bestehenden JSON/REST-Schnittstelle durch eine
+einzige, Protobuf-basierte API über `POST /api.php`. Komplette
+Spezifikation der Wire-Ebene siehe [`docs/PROTOBUF_API.md`](./docs/PROTOBUF_API.md);
+Contracts unter [`proto/dkc/*.proto`](./proto/dkc).
+
+### 6.1 Contract & Client-Transport _(✓ in diesem Repo umgesetzt)_
+
+- [x] `.proto`-Dateien (`common`, `auth`, `mm`, `nea`, `building`, `klima`,
+      `keys`, `dashboard`, `users`, `notifications`, `wls`) inklusive
+      `Action`-Enum und `ApiRequest`/`ApiResponse`-Envelope.
+- [x] C#-Codegenerierung via `Grpc.Tools` (`DkcDesktopClient.Core.Protocol`).
+- [x] `EnvelopeCodec` (LZ4 mit `dkc-lz4` Framing, Gzip-Fallback, Identity
+      für kleine Payloads; Zip-Bomb-Schutz bei 64 MiB).
+- [x] `DkcProtobufApiClient.SendAsync<TResponse>` mit transparentem
+      Compression-Fallback (lz4 → gzip → identity).
+- [x] `IDkcProtobufApi` + `DkcProtobufApi`: eine typisierte Methode pro
+      `Action`.
+- [x] Tests für Envelope-Encoding, Auth, LZ4/Gzip-Roundtrip,
+      Compression-Fallback, Fehler-Mapping und Request-ID-Korrelation.
+
+### 6.2 Backend _(separates PHP-Repository)_
+
+> **Agent-Anweisung:** Vollständige, schrittweise Umsetzungs-Anleitung mit
+> Verzeichnisstruktur, Codegen-Befehlen, Router-Pseudocode, Test- und
+> Sicherheits-Checkliste liegt unter
+> [`docs/BACKEND_AGENT.md`](./docs/BACKEND_AGENT.md).
+
+- [ ] PHP-Protobuf-Library einbinden, Klassen aus `proto/dkc/*.proto`
+      generieren.
+- [ ] `/api.php` erweitern: Protokollerkennung über `X-DKC-Protocol`,
+      Envelope dekodieren, Action dispatchen, Auth zentral erzwingen.
+- [ ] LZ4-/Gzip-De-/Encoder (PECL `lz4`, native `gzencode`/`gzdecode`).
+- [ ] Migration der Action-Handler in Reihenfolge: Auth/Status →
+      Dashboard → MM/NEA/Building list/detail → Writes → Klima/Keys.
+- [ ] HTTP-Health-Endpoint `GET /api.php/health` bleibt JSON/Plain.
+
+### 6.3 Desktop-Client – REST entfernen
+
+- [ ] ViewModels nacheinander von `IDkcApi` (Refit) auf `IDkcProtobufApi`
+      umstellen. Adapter zwischen Protobuf-Messages und bestehenden DTOs
+      sind erlaubt, um die ViewModel-Änderungen klein zu halten.
+- [ ] `IDkcApi`/Refit-Abhängigkeit aus `DkcDesktopClient.Core.csproj`
+      entfernen.
+- [ ] Token-Migration: Login liefert `dkc_<64-hex>` weiterhin, Speicherung
+      via `TokenStore` unverändert.
+
+---
+
 ## Nächste Schritte (Start-Sequenz)
 
 1. **`DataCacheService`** in `DkcDesktopClient.Core/Services/` implementieren + Unit-Tests

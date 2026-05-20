@@ -1,0 +1,134 @@
+// Gebäudebegehungen.
+syntax = "proto3";
+
+package dkc.api.v1;
+
+import "dkc/common.proto";
+
+option csharp_namespace = "DkcDesktopClient.Core.Protocol";
+
+message BuildingListRequest { int32 project_id = 1; }
+
+message Building {
+    int32  id          = 1;
+    string name        = 2;
+    string address     = 3;
+    string description = 4;
+    bool   enabled     = 5;
+    int32  project_id  = 6;
+}
+
+message BuildingListResponse {
+    int32             project_id = 1;
+    repeated Building buildings  = 2;
+}
+
+message BuildingSaveRequest {
+    int32  id          = 1; // 0 = create
+    string name        = 2;
+    string address     = 3;
+    string description = 4;
+    bool   enabled     = 5;
+    int32  project_id  = 6;
+}
+
+message BuildingCreateResponse { int32 id = 1; }
+
+message BuildingInspectionsRequest {
+    int32  building_id = 1;
+    string status      = 2;
+    int32  year        = 3;
+    int32  limit       = 4;
+    int32  offset      = 5;
+}
+
+message BuildingInspection {
+    int32  id               = 1;
+    int32  building_id      = 2;
+    string building_name    = 3;
+    string title            = 4;
+    string inspection_date  = 5;
+    string status           = 6;
+    string overall_result   = 7;
+    string created_by_name  = 8;
+    string last_editor_name = 9;
+    string weather          = 10;
+    string attendees        = 11;
+}
+
+message BuildingInspectionsResponse {
+    int32                       project_id  = 1;
+    PageInfo                    page        = 2;
+    repeated BuildingInspection inspections = 3;
+}
+
+message BuildingInspectionDetailRequest { int32 id = 1; }
+
+message CheckpointResult {
+    int32  id              = 1;
+    int32  checkpoint_id   = 2;
+    string checkpoint_name = 3;
+    string status          = 4;
+    string note            = 5;
+    string comment         = 6;
+    string edited_by_name  = 7;
+    string edited_at       = 8;
+}
+
+message BuildingInspectionDetail {
+    int32  id               = 1;
+    int32  building_id      = 2;
+    string building_name    = 3;
+    string title            = 4;
+    string inspection_date  = 5;
+    string status           = 6;
+    string overall_result   = 7;
+    string created_by_name  = 8;
+    string last_editor_name = 9;
+    string weather          = 10;
+    string attendees        = 11;
+    string general_notes    = 12;
+    repeated CheckpointResult results = 13;
+}
+
+message BuildingInspectionDetailResponse { BuildingInspectionDetail inspection = 1; }
+
+message BuildingInspectionSaveRequest {
+    int32  id              = 1; // 0 = create
+    int32  building_id     = 2;
+    string title           = 3;
+    string inspection_date = 4;
+    string status          = 5;
+    string weather         = 6;
+    string attendees       = 7;
+    string general_notes   = 8;
+}
+
+message BuildingInspectionCreateResponse { int32 id = 1; }
+
+message BuildingInspectionCompleteRequest {
+    int32  id             = 1;
+    string overall_result = 2;
+    string general_notes  = 3;
+}
+
+message BuildingCheckpointUpdateRequest {
+    int32  inspection_id = 1;
+    int32  checkpoint_id = 2;
+    string status        = 3; // ok|nok|n_a
+    string note          = 4;
+    string comment       = 5;
+}
+
+message BuildingCheckpointsListRequest { int32 building_id = 1; }
+
+message CheckpointListItem {
+    int32  id       = 1;
+    string name     = 2;
+    string category = 3;
+    int32  sort     = 4;
+}
+
+message BuildingCheckpointsListResponse {
+    repeated CheckpointListItem checkpoints = 1;
+}

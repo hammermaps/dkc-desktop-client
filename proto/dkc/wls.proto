@@ -1,0 +1,113 @@
+// WLS – Wohnungsleerstandserfassung.
+syntax = "proto3";
+
+package dkc.api.v1;
+
+import "dkc/common.proto";
+
+option csharp_namespace = "DkcDesktopClient.Core.Protocol";
+
+message WlsBuilding {
+    int32  id              = 1;
+    string name            = 2;
+    bool   hidden          = 3;
+    int32  sorted          = 4;
+    string created         = 5;
+    string updated         = 6;
+    int32  apartments_count = 7;
+}
+
+message WlsBuildingsListResponse {
+    repeated WlsBuilding buildings = 1;
+}
+
+message WlsBuildingSaveRequest {
+    int32  id     = 1; // 0 = create
+    string name   = 2;
+    bool   hidden = 3;
+    int32  sorted = 4;
+}
+
+message WlsBuildingResponse { WlsBuilding building = 1; }
+
+message WlsBuildingDeleteRequest { int32 id = 1; }
+
+message WlsApartment {
+    int32  id          = 1;
+    int32  building_id = 2;
+    string number      = 3;
+    string value       = 4;
+    string name        = 5;
+    int32  sorted      = 6;
+    bool   empty       = 7;
+}
+
+message WlsApartmentsListRequest { int32 building_id = 1; } // 0 = all
+
+message WlsApartmentsListResponse {
+    repeated WlsApartment apartments = 1;
+}
+
+message WlsApartmentSaveRequest {
+    int32  id          = 1; // 0 = create
+    int32  building_id = 2;
+    string value       = 3;
+    string name        = 4;
+    int32  sorted      = 5;
+    bool   empty       = 6;
+    bool   empty_set   = 7; // distinguishes 'no change' on update
+}
+
+message WlsApartmentResponse { WlsApartment apartment = 1; }
+
+message WlsApartmentDeleteRequest { int32 id = 1; }
+
+message WlsRecord {
+    int32  id                = 1;
+    int32  apartment_id      = 2;
+    int32  building_id       = 3;
+    int32  user_id           = 4;
+    string start_time        = 5;
+    string end_time          = 6;
+    int32  duration          = 7;
+    double latitude          = 8;
+    double longitude         = 9;
+    double location_accuracy = 10;
+    string created_at        = 11;
+    string user_name         = 12;
+    string user_firstname    = 13;
+    string user_lastname     = 14;
+}
+
+message WlsRecordsListRequest {
+    int32  apartment_id = 1;
+    int32  building_id  = 2;
+    int32  user_id      = 3;
+    string start_date   = 4;
+    string end_date     = 5;
+    string order_by     = 6;
+    string order        = 7;
+    int32  limit        = 8;
+    int32  offset       = 9;
+}
+
+message WlsRecordsListResponse {
+    PageInfo            page    = 1;
+    repeated WlsRecord  records = 2;
+}
+
+message WlsRecordSaveRequest {
+    int32  id                = 1; // 0 = create
+    int32  apartment_id      = 2;
+    int32  building_id       = 3;
+    string start_time        = 4;
+    string end_time          = 5;
+    int32  user_id           = 6;
+    double latitude          = 7;
+    double longitude         = 8;
+    double location_accuracy = 9;
+}
+
+message WlsRecordResponse { WlsRecord record = 1; }
+
+message WlsRecordDeleteRequest { int32 id = 1; }

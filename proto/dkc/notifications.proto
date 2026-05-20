@@ -1,0 +1,26 @@
+// Benachrichtigungen.
+syntax = "proto3";
+
+package dkc.api.v1;
+
+option csharp_namespace = "DkcDesktopClient.Core.Protocol";
+
+message NotificationItem {
+    int32  id         = 1;
+    string type       = 2;
+    string title      = 3;
+    string message    = 4;
+    bool   read       = 5;
+    string created_at = 6;
+}
+
+message NotificationsResponse {
+    bool                      authenticated = 1;
+    int32                     count         = 2;
+    repeated NotificationItem notifications = 3;
+    string                    version       = 4;
+}
+
+message NotificationCountResponse {
+    int32 count = 1;
+}
