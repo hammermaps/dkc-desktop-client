@@ -3,6 +3,10 @@
 > Wire-level documentation for the DKC backend's protobuf API.
 > Audience: backend developers (PHP / `api.php`), desktop-client developers,
 > integration partners writing alternative clients.
+>
+> **Backend-Implementierung:** Eine vollständige, ausführbare Agent-Anweisung
+> für das PHP-Backend (Router, Codegen, Dispatcher, Tests) liegt unter
+> [`BACKEND_AGENT.md`](./BACKEND_AGENT.md).
 
 The DKC platform exposes a single, action-oriented HTTP endpoint that speaks
 [Protocol&nbsp;Buffers&nbsp;v3](https://protobuf.dev/) end-to-end. The desktop

@@ -456,6 +456,11 @@ Contracts unter [`proto/dkc/*.proto`](./proto/dkc).
 
 ### 6.2 Backend _(separates PHP-Repository)_
 
+> **Agent-Anweisung:** Vollständige, schrittweise Umsetzungs-Anleitung mit
+> Verzeichnisstruktur, Codegen-Befehlen, Router-Pseudocode, Test- und
+> Sicherheits-Checkliste liegt unter
+> [`docs/BACKEND_AGENT.md`](./docs/BACKEND_AGENT.md).
+
 - [ ] PHP-Protobuf-Library einbinden, Klassen aus `proto/dkc/*.proto`
       generieren.
 - [ ] `/api.php` erweitern: Protokollerkennung über `X-DKC-Protocol`,
