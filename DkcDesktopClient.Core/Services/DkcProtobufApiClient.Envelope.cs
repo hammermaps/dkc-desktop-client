@@ -43,8 +43,32 @@ public sealed partial class DkcProtobufApiClient
             var envelope = EnvelopeCodec.BuildRequest(
                 action, requestPayload, auth, requestId, attempt, out var used);
 
-            var (status, responseBytes) = await PostEnvelopeAsync(envelope.ToByteArray(), used, ct).ConfigureAwait(false);
-            var response = EnvelopeCodec.DecodeResponse(responseBytes);
+            HttpStatusCode status;
+            byte[] responseBytes;
+            try
+            {
+                (status, responseBytes) = await PostEnvelopeAsync(envelope.ToByteArray(), used, requestId, ct).ConfigureAwait(false);
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new DkcProtobufApiException(
+                    ErrorCode.ServiceUnavailable,
+                    $"HTTP transport error: {ex.Message}",
+                    new Dictionary<string, string>(), 0, requestId);
+            }
+
+            ApiResponse response;
+            try
+            {
+                response = EnvelopeCodec.DecodeResponse(responseBytes);
+            }
+            catch (InvalidProtocolBufferException ex)
+            {
+                throw new DkcProtobufApiException(
+                    ErrorCode.ServiceUnavailable,
+                    $"Server returned non-protobuf response (HTTP {(int)status}): {ex.Message}",
+                    new Dictionary<string, string>(), 0, requestId);
+            }
 
             if (response.Success)
                 return EnvelopeCodec.DecodePayload<TResponse>(response);
@@ -101,6 +125,7 @@ public sealed partial class DkcProtobufApiClient
     private async Task<(HttpStatusCode Status, byte[] Body)> PostEnvelopeAsync(
         byte[] envelopeBytes,
         Compression compression,
+        string requestId,
         CancellationToken ct)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, EndpointPath)
@@ -136,7 +161,7 @@ public sealed partial class DkcProtobufApiClient
             throw new DkcProtobufApiException(
                 ErrorCode.ServiceUnavailable,
                 $"Empty response from server (HTTP {(int)response.StatusCode})",
-                new Dictionary<string, string>(), 0, string.Empty);
+                new Dictionary<string, string>(), 0, requestId);
         }
 
         return (response.StatusCode, body);

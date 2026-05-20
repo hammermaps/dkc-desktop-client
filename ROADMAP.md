@@ -465,7 +465,7 @@ Contracts unter [`proto/dkc/*.proto`](./proto/dkc).
       generieren.
 - [ ] `/api.php` erweitern: Protokollerkennung über `X-DKC-Protocol`,
       Envelope dekodieren, Action dispatchen, Auth zentral erzwingen.
-- [ ] LZ4-/Gzip-De-/Encoder (PECL `lz4`, native `gzdeflate`).
+- [ ] LZ4-/Gzip-De-/Encoder (PECL `lz4`, native `gzencode`/`gzdecode`).
 - [ ] Migration der Action-Handler in Reihenfolge: Auth/Status →
       Dashboard → MM/NEA/Building list/detail → Writes → Klima/Keys.
 - [ ] HTTP-Health-Endpoint `GET /api.php/health` bleibt JSON/Plain.

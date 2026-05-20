@@ -11,7 +11,9 @@
 The DKC platform exposes a single, action-oriented HTTP endpoint that speaks
 [Protocol&nbsp;Buffers&nbsp;v3](https://protobuf.dev/) end-to-end. The desktop
 client uses exactly this endpoint for everything except the lightweight
-HTTP health probe; there is no parallel JSON/REST API in the new model.
+HTTP health probe. The long-term target is protobuf-only; during the
+migration period (Phase&nbsp;6.3) the existing JSON/REST API (Refit) continues
+to run in parallel.
 
 - **Endpoint:** `POST /api.php`
 - **Content-Type:** `application/x-protobuf` (request *and* response)
