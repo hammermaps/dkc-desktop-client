@@ -56,6 +56,7 @@ message WlsApartmentSaveRequest {
     int32  sorted      = 5;
     bool   empty       = 6;
     bool   empty_set   = 7; // distinguishes 'no change' on update
+    string number      = 8; // Wohnungsnummer
 }
 
 message WlsApartmentResponse { WlsApartment apartment = 1; }

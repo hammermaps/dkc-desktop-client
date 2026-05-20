@@ -31,6 +31,7 @@ public sealed partial class DkcProtobufApiClient
 
         var requestId = Guid.NewGuid().ToString("N");
         var auth = BuildAuthContext();
+        var token = auth?.BearerToken;
 
         // Build envelope and attempt with the requested compression; on
         // UNSUPPORTED_COMPRESSION transparently retry once with the next
@@ -47,7 +48,7 @@ public sealed partial class DkcProtobufApiClient
             byte[] responseBytes;
             try
             {
-                (status, responseBytes) = await PostEnvelopeAsync(envelope.ToByteArray(), used, requestId, ct).ConfigureAwait(false);
+                (status, responseBytes) = await PostEnvelopeAsync(envelope.ToByteArray(), used, requestId, token, ct).ConfigureAwait(false);
             }
             catch (HttpRequestException ex)
             {
@@ -126,6 +127,7 @@ public sealed partial class DkcProtobufApiClient
         byte[] envelopeBytes,
         Compression compression,
         string requestId,
+        string? bearerToken,
         CancellationToken ct)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, EndpointPath)
@@ -138,9 +140,8 @@ public sealed partial class DkcProtobufApiClient
         request.Headers.TryAddWithoutValidation("Accept-Encoding", AcceptEncodingValue);
         request.Headers.UserAgent.ParseAdd(UserAgent);
 
-        var token = _tokenProvider?.Invoke();
-        if (!string.IsNullOrWhiteSpace(token))
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        if (!string.IsNullOrWhiteSpace(bearerToken))
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
 
         request.Content.Headers.ContentType = new MediaTypeHeaderValue(ProtobufMediaType);
         // Mirror the envelope's compression field as a Content-Encoding header
