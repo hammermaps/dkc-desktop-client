@@ -243,7 +243,7 @@ $wire     = pack('V', strlen($inner)) . $compressed;
 PHP-Decoder:
 
 ```php
-if (strlen($wire) < 4) throw new ApiError(UNSUPPORTED_COMPRESSION, 'lz4 header missing');
+if (strlen($wire) < 4) throw new ApiError(INVALID_REQUEST, 'lz4 header missing');
 $origSize = unpack('V', substr($wire, 0, 4))[1];
 if ($origSize > self::MAX_INFLATED_BYTES) {        // 64 MiB
     throw new ApiError(UNSUPPORTED_COMPRESSION, 'inflated size exceeds cap');
