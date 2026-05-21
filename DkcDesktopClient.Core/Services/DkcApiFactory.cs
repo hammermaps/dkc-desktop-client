@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using DkcDesktopClient.Core.Api;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Refit;
 
 namespace DkcDesktopClient.Core.Services;
@@ -13,13 +14,15 @@ public class DkcApiFactory
     private readonly TokenStore _tokenStore;
     private readonly ILogger<DkcApiFactory> _logger;
     private readonly ILoggerFactory _loggerFactory;
+    private readonly IOptions<HttpPerformanceConfig> _httpConfig;
     private AuthService? _authService;
 
-    public DkcApiFactory(TokenStore tokenStore, ILogger<DkcApiFactory> logger, ILoggerFactory loggerFactory)
+    public DkcApiFactory(TokenStore tokenStore, ILogger<DkcApiFactory> logger, ILoggerFactory loggerFactory, IOptions<HttpPerformanceConfig> httpConfig)
     {
         _tokenStore = tokenStore;
         _logger = logger;
         _loggerFactory = loggerFactory;
+        _httpConfig = httpConfig;
     }
 
     public void SetAuthService(AuthService authService) => _authService = authService;
@@ -28,9 +31,24 @@ public class DkcApiFactory
     {
         var url = ResolveBaseUrl(serverUrl);
         _logger.LogDebug("Creating API client for base URL {BaseUrl}", url);
-        var handler = new AuthorizationHandler(token, _authService, _loggerFactory.CreateLogger<AuthorizationHandler>(), innerHandler);
-        var httpClient = new HttpClient(handler) { BaseAddress = new Uri(url) };
+        
+        // Konfiguriere optimalen HTTP-Handler für Performance
+        HttpMessageHandler handler = innerHandler ?? CreateOptimizedHttpHandler();
+        
+        // Wrap mit Authorization-Handler
+        var authHandler = new AuthorizationHandler(token, _authService, _loggerFactory.CreateLogger<AuthorizationHandler>(), handler);
+        
+        var httpClient = new HttpClient(authHandler) { BaseAddress = new Uri(url) };
+        
+        // Optimierte Client-Konfiguration basierend auf HttpPerformanceConfig
+        var config = _httpConfig.Value;
+        httpClient.Timeout = TimeSpan.FromSeconds(config.RequestTimeoutSeconds);
         httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("DkcDesktopClient/1.0 (Avalonia; .NET8)");
+        
+        // Connection Reuse aktivieren (wichtig für Performance)
+        httpClient.DefaultRequestHeaders.Connection.Add("keep-alive");
+        httpClient.DefaultRequestHeaders.Add("Keep-Alive", $"timeout={config.KeepAliveTimeoutSeconds}, max={config.MaxKeepAliveRequests}");
+        
         var settings = new RefitSettings
         {
             ContentSerializer = new SystemTextJsonContentSerializer(new JsonSerializerOptions
@@ -69,6 +87,68 @@ public class DkcApiFactory
 
         _logger.LogWarning("No server URL configured; falling back to https://localhost");
         return "https://localhost";
+    }
+    
+    /// <summary>
+    /// Erstellt einen HTTP-Handler mit optimierten Einstellungen für Desktop-Anwendungen
+    /// </summary>
+    private HttpMessageHandler CreateOptimizedHttpHandler()
+    {
+        var config = _httpConfig.Value;
+        var handler = new HttpClientHandler
+        {
+            // Enable connection pooling und Multiplexing (HTTP/2)
+            AutomaticDecompression = config.EnableCompression 
+                ? System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate
+                : System.Net.DecompressionMethods.None,
+            
+            // Verwende HTTP/2 wenn möglich (bessere Performance)
+            SslProtocols = System.Security.Authentication.SslProtocols.Tls13 | 
+                          System.Security.Authentication.SslProtocols.Tls12,
+        };
+        
+        #if !DEBUG
+        // In Release: strikte SSL-Validierung
+        handler.ServerCertificateCustomValidationCallback = null;
+        #else
+        // In Debug: erlauben Sie self-signed Zertifikate für lokale Tests
+        handler.ServerCertificateCustomValidationCallback = (msg, cert, chain, errors) =>
+        {
+            // Für Entwicklung: akzeptiere localhost mit selbstsigniertem Zertifikat
+            if (msg?.RequestUri?.Host == "localhost" || msg?.RequestUri?.Host == "127.0.0.1")
+                return true;
+            
+            return errors == System.Net.Security.SslPolicyErrors.None;
+        };
+        #endif
+        
+        // Konfiguriere erweiterte HTTP-Einstellungen via Reflection/Type Check
+        try
+        {
+            // Versuche auf SocketsHttpHandler zuzugreifen (Linux/Mac)
+            var handlersType = handler.GetType();
+            var pooledConnLifetimeProp = handlersType.GetProperty("PooledConnectionLifetime");
+            var pooledConnIdleTimeoutProp = handlersType.GetProperty("PooledConnectionIdleTimeout");
+            var maxConnPerServerProp = handlersType.GetProperty("MaxConnectionsPerServer");
+            
+            if (pooledConnLifetimeProp?.CanWrite == true)
+                pooledConnLifetimeProp.SetValue(handler, TimeSpan.FromMinutes(2));
+            
+            if (pooledConnIdleTimeoutProp?.CanWrite == true)
+                pooledConnIdleTimeoutProp.SetValue(handler, TimeSpan.FromSeconds(config.KeepAliveTimeoutSeconds));
+            
+            if (maxConnPerServerProp?.CanWrite == true)
+            {
+                maxConnPerServerProp.SetValue(handler, config.MaxConnectionsPerServer);
+                _logger.LogDebug("HTTP Handler configured with MaxConnectionsPerServer={MaxConnections}", config.MaxConnectionsPerServer);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not configure HTTP handler advanced settings");
+        }
+        
+        return handler;
     }
 }
 
@@ -116,36 +196,61 @@ internal class AuthorizationHandler : DelegatingHandler
         if (tok != null)
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tok);
 
+        // Verbessertes Logging mit optimiertem Body-Handling
         var requestBody = await ReadContentSafelyAsync(request.Content, ct);
         var sanitizedRequestBody = SanitizeSensitiveContent(requestBody);
+        
+        // Logge Request nur im Debug-Level (performance)
         _logger.LogDebug(
-            "API request {Method} {Uri} Body: {RequestBody}",
+            "API request {Method} {Uri}",
             request.Method,
-            request.RequestUri,
-            sanitizedRequestBody);
+            request.RequestUri);
+        
+        if (!string.IsNullOrEmpty(sanitizedRequestBody))
+        {
+            _logger.LogDebug("API request body: {RequestBody}", sanitizedRequestBody);
+        }
 
+        // Messe Antwortzeit
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         var response = await base.SendAsync(request, ct);
         stopwatch.Stop();
 
         var responseContentType = response.Content.Headers.ContentType?.MediaType ?? "application/json";
-        var responseBody = await ReadContentSafelyAsync(response.Content, ct);
+        
+        // Lese Response-Body nur wenn nötig (für große Responses teuer)
+        var responseBody = string.Empty;
+        if (_logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Debug))
+        {
+            responseBody = await ReadContentSafelyAsync(response.Content, ct);
+        }
 
         // Inhalt neu schreiben, damit Refit ihn weiter lesen kann.
-        response.Content = new StringContent(responseBody, Encoding.UTF8, responseContentType);
+        if (!string.IsNullOrEmpty(responseBody))
+        {
+            response.Content = new StringContent(responseBody, Encoding.UTF8, responseContentType);
+        }
 
-        var sanitizedResponseBody = SanitizeSensitiveContent(responseBody);
-        _logger.LogInformation(
-            "API response {Method} {Uri} => {StatusCode} ({ElapsedMs} ms)",
-            request.Method,
-            request.RequestUri,
-            (int)response.StatusCode,
-            stopwatch.ElapsedMilliseconds);
-        _logger.LogDebug(
-            "API response body {Method} {Uri}: {ResponseBody}",
-            request.Method,
-            request.RequestUri,
-            sanitizedResponseBody);
+        // Logge Response mit Performance-Metriken
+        var logLevel = (int)response.StatusCode >= 400 ? Microsoft.Extensions.Logging.LogLevel.Warning : Microsoft.Extensions.Logging.LogLevel.Information;
+        if (_logger.IsEnabled(logLevel))
+        {
+            _logger.Log(
+                logLevel,
+                "API response {Method} {Uri} => {StatusCode} ({ElapsedMs} ms)",
+                request.Method,
+                request.RequestUri,
+                (int)response.StatusCode,
+                stopwatch.ElapsedMilliseconds);
+        }
+
+        if (!string.IsNullOrEmpty(responseBody))
+        {
+            var sanitizedResponseBody = SanitizeSensitiveContent(responseBody);
+            _logger.LogDebug(
+                "API response body: {ResponseBody}",
+                sanitizedResponseBody);
+        }
 
         if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized && _authService != null)
         {

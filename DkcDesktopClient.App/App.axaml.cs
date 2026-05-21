@@ -141,6 +141,19 @@ public partial class App : Application
         services.AddLogging(b => b.AddSerilog(Log.Logger, dispose: true));
 
         services.AddHttpClient();
+        
+        // ── HTTP Performance Konfiguration ────────────────────────────────────────
+        services.AddOptions<HttpPerformanceConfig>()
+            .Configure(config =>
+            {
+                // Lade aus Umgebungsvariablen oder verwende Standardwerte
+                if (int.TryParse(Environment.GetEnvironmentVariable("DKC_HTTP_REQUEST_TIMEOUT"), out var requestTimeout))
+                    config.RequestTimeoutSeconds = requestTimeout;
+                if (int.TryParse(Environment.GetEnvironmentVariable("DKC_HTTP_CONNECT_TIMEOUT"), out var connectTimeout))
+                    config.ConnectTimeoutSeconds = connectTimeout;
+                if (int.TryParse(Environment.GetEnvironmentVariable("DKC_HTTP_MAX_CONNECTIONS"), out var maxConnections))
+                    config.MaxConnectionsPerServer = maxConnections;
+            });
 
         services.AddDataProtection()
             .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(dataDir, "keys")));

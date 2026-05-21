@@ -19,7 +19,7 @@ internal sealed class FakeDkcApiFactory : DkcApiFactory
     private readonly IDkcApi _api;
 
     public FakeDkcApiFactory(IDkcApi api, TokenStore tokenStore)
-        : base(tokenStore, NullLogger<DkcApiFactory>.Instance, NullLoggerFactory.Instance)
+        : base(tokenStore, NullLogger<DkcApiFactory>.Instance, NullLoggerFactory.Instance, Options.Create(new HttpPerformanceConfig()))
     {
         _api = api;
     }

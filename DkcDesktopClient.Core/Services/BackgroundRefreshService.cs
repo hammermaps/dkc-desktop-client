@@ -71,6 +71,7 @@ public class BackgroundRefreshService : BackgroundService
             var api = _apiFactory.Create(_authService.CurrentToken);
             var now = DateTime.UtcNow;
 
+            // Hochfrequente Daten zuerst (Klima, Dashboard)
             await TryRefreshAsync(
                 CacheKeys.KlimaStatus,
                 _config.KlimaStatus,
@@ -85,43 +86,49 @@ public class BackgroundRefreshService : BackgroundService
                 ct => api.GetDashboardDataAsync(ct),
                 stoppingToken);
 
-            await TryRefreshAsync(
+            // Seltener aktualisierte Daten parallel laden für bessere Performance
+            var refreshTasks = new List<Task>();
+
+            refreshTasks.Add(TryRefreshAsync(
                 CacheKeys.NeaDashboard,
                 _config.DashboardStats,
                 now,
                 ct => api.GetNeaDashboardAsync(ct),
-                stoppingToken);
+                stoppingToken));
 
             if (!IsTokenBasedDesktopAuth())
             {
-                await TryRefreshAsync(
+                refreshTasks.Add(TryRefreshAsync(
                     CacheKeys.NotificationCount,
                     _config.NotificationCount,
                     now,
                     ct => api.GetNotificationCountAsync(ct),
-                    stoppingToken);
+                    stoppingToken));
             }
 
-            await TryRefreshAsync(
+            refreshTasks.Add(TryRefreshAsync(
                 CacheKeys.MmList,
                 _config.MmList,
                 now,
                 ct => api.GetMmListAsync(ct: ct),
-                stoppingToken);
+                stoppingToken));
 
-            await TryRefreshAsync(
+            refreshTasks.Add(TryRefreshAsync(
                 CacheKeys.KeysInventory,
                 CacheTtl.KeysInventory,
                 now,
                 ct => api.GetKeysInventoryAsync(ct),
-                stoppingToken);
+                stoppingToken));
 
-            await TryRefreshAsync(
+            refreshTasks.Add(TryRefreshAsync(
                 CacheKeys.NeaInspections,
                 _config.NeaInspections,
                 now,
                 ct => api.GetNeaInspectionsAsync(ct: ct),
-                stoppingToken);
+                stoppingToken));
+
+            // Warte bis alle parallelen Tasks abgeschlossen sind
+            await Task.WhenAll(refreshTasks).ConfigureAwait(false);
         }
 
         _logger.LogInformation("BackgroundRefreshService stopped");

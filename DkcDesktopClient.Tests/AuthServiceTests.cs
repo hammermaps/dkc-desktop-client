@@ -2,6 +2,7 @@ using DkcDesktopClient.Core.Services;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Xunit;
 
 namespace DkcDesktopClient.Tests;
@@ -23,7 +24,8 @@ public class AuthServiceTests : IDisposable
 
     private DkcApiFactory CreateFactory()
     {
-        return new DkcApiFactory(_tokenStore, NullLogger<DkcApiFactory>.Instance, NullLoggerFactory.Instance);
+        var httpConfig = Options.Create(new HttpPerformanceConfig());
+        return new DkcApiFactory(_tokenStore, NullLogger<DkcApiFactory>.Instance, NullLoggerFactory.Instance, httpConfig);
     }
 
     [Fact]

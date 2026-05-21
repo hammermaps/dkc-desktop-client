@@ -26,7 +26,8 @@ public class ViewModelTests : IDisposable
         _provider = services.BuildServiceProvider();
         var dp = _provider.GetRequiredService<IDataProtectionProvider>();
         _tokenStore  = new TokenStore(dp, NullLogger<TokenStore>.Instance);
-        _factory     = new DkcApiFactory(_tokenStore, NullLogger<DkcApiFactory>.Instance, NullLoggerFactory.Instance);
+        var httpConfig = Options.Create(new HttpPerformanceConfig());
+        _factory     = new DkcApiFactory(_tokenStore, NullLogger<DkcApiFactory>.Instance, NullLoggerFactory.Instance, httpConfig);
         _authService = new AuthService(_factory, _tokenStore, NullLogger<AuthService>.Instance);
         _cache       = new DataCacheService(NullLogger<DataCacheService>.Instance);
     }
