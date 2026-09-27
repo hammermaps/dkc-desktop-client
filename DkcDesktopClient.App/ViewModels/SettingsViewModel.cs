@@ -8,6 +8,8 @@ using DkcDesktopClient.Core.Protobuf;
 using DkcDesktopClient.Core.Services;
 using Refit;
 using ProtoProjectSaveRequest = DkcDesktopClient.Core.Protocol.ProjectSaveRequest;
+using ProtoUserSaveRequest = DkcDesktopClient.Core.Protocol.UserSaveRequest;
+using ProtoUserDeleteRequest = DkcDesktopClient.Core.Protocol.UserDeleteRequest;
 
 namespace DkcDesktopClient.App.ViewModels;
 
@@ -19,9 +21,8 @@ public partial class SettingsViewModel : ViewModelBase
     private readonly UpdateService _updateService;
 
     /// <summary>
-    /// project_create/project_update sind in api.php nie als REST-Route registriert worden —
-    /// nur die Protobuf-Action funktioniert. (Admin-Benutzerverwaltung user_create/update/delete
-    /// hat aktuell weder eine REST- noch eine Protobuf-Implementierung — siehe CanSaveUser-Bereich.)
+    /// project_create/project_update/user_create/user_update/user_delete sind in api.php nie als
+    /// REST-Route registriert worden — nur die Protobuf-Actions funktionieren.
     /// </summary>
     private DkcProtobufApi ProtoApi => new(_apiFactory.CreateProtobuf(_authService.CurrentToken));
 
@@ -436,36 +437,25 @@ public partial class SettingsViewModel : ViewModelBase
         UserFormError = null;
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
-            var req = new UserSaveRequest(
-                FormUsername,
-                string.IsNullOrWhiteSpace(FormPassword) ? null : FormPassword,
-                string.IsNullOrWhiteSpace(FormVname) ? null : FormVname,
-                string.IsNullOrWhiteSpace(FormNname) ? null : FormNname,
-                string.IsNullOrWhiteSpace(FormEmail) ? null : FormEmail,
-                FormIsAdmin);
+            var req = new ProtoUserSaveRequest
+            {
+                Id = IsEditingUser && _editingUserId.HasValue ? _editingUserId.Value : 0,
+                Username = FormUsername,
+                Password = FormPassword,
+                Vname = FormVname,
+                Nname = FormNname,
+                Email = FormEmail,
+                IsAdmin = FormIsAdmin,
+            };
 
-            ApiError result;
             if (IsEditingUser && _editingUserId.HasValue)
-            {
-                result = await api.UpdateUserAsync(_editingUserId.Value, req);
-            }
+                await ProtoApi.UpdateUserAsync(req);
             else
-            {
-                var cr = await api.CreateUserAsync(req);
-                result = new ApiError(cr.Success, cr.Error);
-            }
+                await ProtoApi.CreateUserAsync(req);
 
-            if (result.Success)
-            {
-                IsUserFormVisible = false;
-                await LoadUsersAsync();
-                StatusMessage = "User saved.";
-            }
-            else
-            {
-                UserFormError = result.Error ?? "Save failed.";
-            }
+            IsUserFormVisible = false;
+            await LoadUsersAsync();
+            StatusMessage = "User saved.";
         }
         catch (Exception ex)
         {
@@ -485,17 +475,9 @@ public partial class SettingsViewModel : ViewModelBase
         ErrorMessage = null;
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
-            var result = await api.DeleteUserAsync(SelectedUser.Id);
-            if (result.Success)
-            {
-                Users.Remove(SelectedUser);
-                StatusMessage = "User deleted.";
-            }
-            else
-            {
-                ErrorMessage = result.Error ?? "Delete failed.";
-            }
+            await ProtoApi.DeleteUserAsync(new ProtoUserDeleteRequest { Id = SelectedUser.Id });
+            Users.Remove(SelectedUser);
+            StatusMessage = "User deleted.";
         }
         catch (Exception ex)
         {

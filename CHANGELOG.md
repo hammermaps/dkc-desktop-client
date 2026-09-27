@@ -28,10 +28,18 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
   Inventartypen (mit Bestätigungsdialog, Web-Pendant: `KeysInventoryTrait::deleteInventory()`)
   auf dem Inventar-Tab ersetzt.
 
+- Admin-Benutzerverwaltung (Benutzer anlegen/bearbeiten/löschen, `SettingsViewModel`): die
+  Protobuf-Actions `USER_CREATE`/`USER_UPDATE`/`USER_DELETE` waren serverseitig nur als Stub
+  registriert (503 „not yet implemented“), obwohl der Vertrag bereits vollständig war und der
+  Client bereits fertige Aufrufe dafür hatte. Server-seitig jetzt implementiert (neue
+  `UserSaveHandler`/`UserDeleteHandler`, Admin-Grundfall: Benutzername/Passwort/Name/E-Mail/
+  Admin-Flag) und `SettingsViewModel` auf Protobuf umgestellt. Bewusst nicht Teil dieses
+  minimalen Vertrags (wie im Web-Formular vorhanden, aber hier ausgeklammert): Manager-Modus,
+  Mieter-Accounts, Projekt-/OIDC-/Geräte-Zuweisung.
+
 ### Bekannt, nicht behoben
-- Admin-Benutzerverwaltung (Benutzer anlegen/bearbeiten/löschen) hat weder eine REST- noch
-  eine Protobuf-Implementierung — betrifft `SettingsViewModel`. Sicherheitsrelevant
-  (Passwörter, Berechtigungen), daher bewusst nicht im Rahmen dieses Fixes mit umgesetzt.
+- Benutzerliste (`USERS_LIST`) läuft weiterhin über die bereits funktionierende REST-Action
+  `users_list`; die Protobuf-Action bleibt bewusst Stub (kein aktueller Bedarf).
 
 ### Hinzugefügt
 - Phase-5-Abschluss: vollständige Test-Coverage, Dokumentation, CI/CD-Erweiterung
