@@ -32,6 +32,22 @@ message DashboardNotificationsStats {
     int32 unread = 1;
 }
 
+// Additive Kennzahlen für die nativen Dashboard-Karten (entspricht DashboardApiHandler::widgetStats()).
+message DashboardWidgetCounts {
+    bool   issued_keys_permission     = 1;
+    int32  issued_keys                = 2;
+    bool   mm_permission              = 3;
+    int32  approvals                  = 4;
+    int32  overdue_complaints         = 5;
+    bool   ac_permission              = 6;
+    int32  ac_alarms                  = 7;
+    double average_temperature        = 8;
+    bool   nea_permission             = 9;
+    int32  nea_due                    = 10;
+    bool   wls_permission             = 11;
+    int32  wls_flushings              = 12;
+}
+
 message DashboardDataResponse {
     int32                       project_id    = 1;
     DashboardMmStats            mm            = 2;
@@ -39,6 +55,94 @@ message DashboardDataResponse {
     DashboardBuildingStats      building      = 4;
     DashboardKeysStats          keys          = 5;
     DashboardNotificationsStats notifications = 6;
+    DashboardWidgetCounts       widgets       = 7;
+}
+
+// ── Dashboard-Detaillisten (DASHBOARD_WIDGETS) ──────────────────────────────
+// Web-Pendant: ContDashboard::getIssuedKeysData()/getApprovalStatus()/
+// getOverdueComplaints()/getNEADueTests()/getWlsDueFlushings().
+// AC-Alarme und Durchschnittstemperatur bleiben Zähler-only (siehe DashboardWidgetCounts) —
+// ihre Detailwerte hängen am live gepollten Geräte-Cache des Web-Controllers und sind hier
+// bewusst nicht repliziert.
+
+message IssuedKeyItem {
+    int32  id                 = 1;
+    string empfaenger_name    = 2;
+    string ausgegeben_am      = 3;
+    string rueckgabe_geplant  = 4;
+    string type               = 5; // "key" | "bundle"
+    string name                = 6;
+}
+
+message MmApprovalItem {
+    int32  id                    = 1;
+    string uid                   = 2;
+    string nachunternehmer_name  = 3;
+    string address                = 4;
+    string title                  = 5;
+    string created_at             = 6;
+    int32  days_waiting           = 7;
+}
+
+message OverdueComplaintItem {
+    int32  id                    = 1;
+    string uid                   = 2;
+    string nachunternehmer_name  = 3;
+    string address                = 4;
+    string title                  = 5;
+    string created_at             = 6;
+    int32  days_open              = 7;
+    int32  status                 = 8;
+    string status_label           = 9;
+}
+
+message NeaDueItem {
+    int32  id                    = 1;
+    string name                  = 2;
+    string location               = 3;
+    int32  days_since_last        = 4;
+    int32  days_overdue           = 5;
+    string next_due_date          = 6;
+    string last_inspection_date   = 7;
+    string last_result            = 8;
+    bool   is_overdue             = 9;
+    string urgency                = 10;
+}
+
+message WlsFlushItem {
+    int32  id                = 1;
+    string label              = 2;
+    string building_name      = 3;
+    string last_flush_date    = 4;
+    string next_flush_due     = 5;
+    int32  days_overdue       = 6;
+    bool   never_flushed      = 7;
+}
+
+message DashboardWidgetsResponse {
+    bool                            issued_keys_permission  = 1;
+    int32                           issued_keys_count       = 2;
+    repeated IssuedKeyItem          issued_keys              = 3;
+
+    bool                            approvals_permission     = 4;
+    int32                           approvals_count          = 5;
+    repeated MmApprovalItem         approvals                = 6;
+
+    bool                            overdue_permission       = 7;
+    int32                           overdue_count             = 8;
+    int32                           overdue_count_status_0    = 9;
+    int32                           overdue_count_status_2    = 10;
+    repeated OverdueComplaintItem   overdue_complaints        = 11;
+
+    bool                            nea_permission            = 12;
+    int32                           nea_due_count             = 13;
+    int32                           nea_overdue_count         = 14;
+    repeated NeaDueItem             nea_due                   = 15;
+
+    bool                            wls_permission            = 16;
+    int32                           wls_count                 = 17;
+    int32                           wls_overdue_count         = 18;
+    repeated WlsFlushItem           wls_flushings             = 19;
 }
 
 message Project {

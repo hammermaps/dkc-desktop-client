@@ -58,3 +58,9 @@ message UserTokensListResponse {
 message UserTokenDeleteRequest {
     int32 token_id = 1;
 }
+
+// ── USER_CHANGE_PASSWORD ──────────────────────────────────────────────────────
+message ChangePasswordRequest {
+    string current_password = 1;
+    string new_password     = 2;
+}

@@ -1,0 +1,155 @@
+// Aufzug – Aufzugsanlagen & TRBS-3121-Prüfungen.
+syntax = "proto3";
+
+package dkc.api.v1;
+
+import "dkc/common.proto";
+
+option csharp_namespace = "DkcDesktopClient.Core.Protocol";
+
+message AufzugSystemsRequest {}
+
+message AufzugSystem {
+    int32  id                     = 1;
+    string name                   = 2;  // bezeichnung
+    string aufzug_nummer          = 3;
+    int32  haus_id                = 4;
+    string haus_name              = 5;
+    string zugehoerigkeit         = 6;  // haus|gw
+    bool   active                 = 7;
+    string last_inspection_date   = 8;
+    string last_inspection_result = 9;
+}
+
+message AufzugSystemsResponse {
+    int32                 project_id = 1;
+    repeated AufzugSystem systems    = 2;
+}
+
+message AufzugSystemSaveRequest {
+    int32  id             = 1; // 0 = create
+    string name            = 2;
+    string aufzug_nummer   = 3;
+    int32  haus_id         = 4;
+    string zugehoerigkeit  = 5;
+    bool   active          = 6;
+}
+
+message AufzugSystemCreateResponse { int32 id = 1; }
+
+message AufzugSystemDeleteRequest { int32 id = 1; }
+
+message AufzugInspectionsRequest {
+    int32  system_id = 1;
+    int32  year      = 2;
+    string status    = 3;
+    int32  limit     = 4;
+    int32  offset    = 5;
+}
+
+message AufzugInspection {
+    int32  id                = 1;
+    int32  aufzug_anlage_id  = 2;
+    string system_name       = 3;
+    string inspection_type   = 4;
+    string inspection_date   = 5;
+    string inspector_name    = 6;
+    string status            = 7;
+    string overall_result    = 8;
+    int32  duration_minutes  = 9;
+    string notes             = 10;
+    string created_at        = 11;
+}
+
+message AufzugInspectionsResponse {
+    int32                     project_id  = 1;
+    PageInfo                  page        = 2;
+    repeated AufzugInspection inspections = 3;
+}
+
+message AufzugInspectionDetailRequest { int32 id = 1; }
+
+message AufzugInspectionDetail {
+    int32  id                 = 1;
+    int32  aufzug_anlage_id   = 2;
+    string system_name        = 3;
+    string inspection_type    = 4;
+    string inspection_date    = 5;
+    int32  inspector_id       = 6;
+    string inspector_name     = 7;
+    string status             = 8;
+    string overall_result     = 9;
+    int32  duration_minutes   = 10;
+    string defects_found      = 11;
+    string corrective_actions = 12;
+    string notes              = 13;
+    string created_at         = 14;
+    // Free-form JSON checklist payload (server stores JSON, flaches Objekt {step_id: wert}).
+    string checklist_json     = 15;
+}
+
+message AufzugInspectionDetailResponse { AufzugInspectionDetail inspection = 1; }
+
+message AufzugInspectionSaveRequest {
+    int32  id                 = 1; // 0 = create
+    int32  aufzug_anlage_id   = 2;
+    string inspection_type    = 3;
+    string inspection_date    = 4;
+    string status             = 5;
+    string overall_result     = 6;
+    int32  duration_minutes   = 7;
+    string notes              = 8;
+    string defects_found      = 9;
+    string corrective_actions = 10;
+}
+
+message AufzugInspectionCreateResponse { int32 id = 1; }
+
+message AufzugInspectionCompleteRequest {
+    int32  id             = 1;
+    string overall_result = 2;
+    string notes          = 3;
+}
+
+// checkpoint_id ist ein String-Slug (^[a-z0-9_-]+$), keine Zahl — anders als bei NEA,
+// siehe elevator_checklist_templates.steps[].id.
+message AufzugChecklistItem {
+    string checkpoint_id = 1;
+    string status        = 2; // ok|nok|n_a
+    string note          = 3;
+}
+
+message AufzugChecklistUpdateRequest {
+    int32                       inspection_id = 1;
+    repeated AufzugChecklistItem items        = 2;
+}
+
+message AufzugDashboardStats {
+    int32 total_systems          = 1;
+    int32 inspections_this_week  = 2;
+    int32 inspections_this_month = 3;
+    int32 failed_last_30_days    = 4;
+}
+
+message AufzugOverdueItem {
+    int32  system_id       = 1;
+    string system_name     = 2;
+    int32  days_overdue    = 3;
+    string last_inspection = 4;
+}
+
+message AufzugRecentInspection {
+    int32  id               = 1;
+    int32  aufzug_anlage_id = 2;
+    string inspection_date  = 3;
+    string inspector_name   = 4;
+    string status           = 5;
+    string overall_result   = 6;
+}
+
+message AufzugDashboardResponse {
+    int32                           project_id         = 1;
+    AufzugDashboardStats            stats              = 2;
+    repeated AufzugOverdueItem      due_tests          = 3;
+    repeated AufzugRecentInspection recent_inspections = 4;
+}

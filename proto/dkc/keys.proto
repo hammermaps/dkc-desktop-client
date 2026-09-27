@@ -36,19 +36,49 @@ message KeysIssuedRequest {
 }
 
 message KeyIssuedItem {
-    int32  id             = 1;
-    int32  key_id         = 2;
-    string key_name       = 3;
-    string issued_to      = 4;
-    string recipient_name = 5;
-    string issued_at      = 6;
-    string returned_at    = 7;
-    string notes          = 8;
+    int32  id                = 1;
+    int32  key_id             = 2;
+    string key_name           = 3;
+    string issued_to          = 4;
+    string recipient_name     = 5;
+    string issued_at          = 6;
+    string returned_at        = 7;
+    string notes              = 8;
+    string planned_return_at  = 9; // date, "" if none set (rueckgabe_geplant); overdue = set + not yet returned + in the past
 }
 
 message KeysIssuedResponse {
     PageInfo               page   = 1;
     repeated KeyIssuedItem issued = 2;
+}
+
+// Full issue history for a single key (current + already-returned records) —
+// KEYS_ISSUED only ever returns currently-issued (not-yet-returned) records.
+message KeyIssueHistoryRequest {
+    int32 key_id = 1;
+    int32 limit  = 2;
+    int32 offset = 3;
+}
+
+message KeyTypeItem {
+    int32  id    = 1;
+    string name  = 2;
+    string color = 3;
+    string icon  = 4;
+}
+
+message KeysTypesListResponse {
+    repeated KeyTypeItem types = 1;
+}
+
+message KeyCabinetItem {
+    int32  id       = 1;
+    string name     = 2;
+    string location = 3;
+}
+
+message KeysCabinetsListResponse {
+    repeated KeyCabinetItem cabinets = 1;
 }
 
 message KeyInventorySaveRequest {

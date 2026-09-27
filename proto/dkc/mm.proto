@@ -55,6 +55,7 @@ message MmDetail {
     string zugeh            = 14;
     string zeit             = 15;
     string planon           = 16;
+    repeated string instructions = 17;
 }
 
 message MmDetailResponse { MmDetail message = 1; }

@@ -24,3 +24,8 @@ message NotificationsResponse {
 message NotificationCountResponse {
     int32 count = 1;
 }
+
+// id = 0 marks ALL of the user's unread notifications as read.
+message NotificationMarkReadRequest {
+    int32 id = 1;
+}

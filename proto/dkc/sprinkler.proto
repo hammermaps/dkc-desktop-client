@@ -1,0 +1,154 @@
+// Sprinkler – Sprinkleranlagen & wöchentliche Prüfungen.
+syntax = "proto3";
+
+package dkc.api.v1;
+
+import "dkc/common.proto";
+
+option csharp_namespace = "DkcDesktopClient.Core.Protocol";
+
+message SprinklerSystemsRequest {}
+
+message SprinklerSystem {
+    int32  id                     = 1;
+    string name                   = 2;  // bezeichnung
+    string anlage_nummer          = 3;
+    int32  haus_id                = 4;
+    string haus_name              = 5;
+    string zugehoerigkeit         = 6;  // haus|gw|gemischt
+    bool   active                 = 7;
+    string last_inspection_date   = 8;
+    string last_inspection_result = 9;
+}
+
+message SprinklerSystemsResponse {
+    int32                    project_id = 1;
+    repeated SprinklerSystem systems    = 2;
+}
+
+message SprinklerSystemSaveRequest {
+    int32  id             = 1; // 0 = create
+    string name            = 2;
+    string anlage_nummer   = 3;
+    int32  haus_id         = 4;
+    string zugehoerigkeit  = 5;
+    bool   active          = 6;
+}
+
+message SprinklerSystemCreateResponse { int32 id = 1; }
+
+message SprinklerSystemDeleteRequest { int32 id = 1; }
+
+message SprinklerInspectionsRequest {
+    int32  system_id = 1;
+    int32  year      = 2;
+    string status    = 3;
+    int32  limit     = 4;
+    int32  offset    = 5;
+}
+
+message SprinklerInspection {
+    int32  id                    = 1;
+    int32  sprinkler_anlage_id   = 2;
+    string system_name           = 3;
+    string inspection_type       = 4;
+    string inspection_date       = 5;
+    string inspector_name        = 6;
+    string status                = 7;
+    string overall_result        = 8;
+    int32  duration_minutes      = 9;
+    string notes                 = 10;
+    string created_at            = 11;
+}
+
+message SprinklerInspectionsResponse {
+    int32                        project_id  = 1;
+    PageInfo                     page        = 2;
+    repeated SprinklerInspection inspections = 3;
+}
+
+message SprinklerInspectionDetailRequest { int32 id = 1; }
+
+message SprinklerInspectionDetail {
+    int32  id                 = 1;
+    int32  sprinkler_anlage_id = 2;
+    string system_name        = 3;
+    string inspection_type    = 4;
+    string inspection_date    = 5;
+    int32  inspector_id       = 6;
+    string inspector_name     = 7;
+    string status             = 8;
+    string overall_result     = 9;
+    int32  duration_minutes   = 10;
+    string defects_found      = 11;
+    string corrective_actions = 12;
+    string notes              = 13;
+    string created_at         = 14;
+    // Free-form JSON checklist payload (server stores JSON, flaches Objekt {step_id: wert}).
+    string checklist_json     = 15;
+}
+
+message SprinklerInspectionDetailResponse { SprinklerInspectionDetail inspection = 1; }
+
+message SprinklerInspectionSaveRequest {
+    int32  id                  = 1; // 0 = create
+    int32  sprinkler_anlage_id = 2;
+    string inspection_type     = 3;
+    string inspection_date     = 4;
+    string status              = 5;
+    string overall_result      = 6;
+    int32  duration_minutes    = 7;
+    string notes               = 8;
+    string defects_found       = 9;
+    string corrective_actions  = 10;
+}
+
+message SprinklerInspectionCreateResponse { int32 id = 1; }
+
+message SprinklerInspectionCompleteRequest {
+    int32  id             = 1;
+    string overall_result = 2;
+    string notes          = 3;
+}
+
+// checkpoint_id ist ein String-Slug (^[a-z0-9_-]+$), analog zu Aufzug/elevator_checklist_templates.
+message SprinklerChecklistItem {
+    string checkpoint_id = 1;
+    string status        = 2; // ok|nok|n_a
+    string note          = 3;
+}
+
+message SprinklerChecklistUpdateRequest {
+    int32                           inspection_id = 1;
+    repeated SprinklerChecklistItem items         = 2;
+}
+
+message SprinklerDashboardStats {
+    int32 total_systems          = 1;
+    int32 inspections_this_week  = 2;
+    int32 inspections_this_month = 3;
+    int32 failed_last_30_days    = 4;
+}
+
+message SprinklerOverdueItem {
+    int32  system_id       = 1;
+    string system_name     = 2;
+    int32  days_overdue    = 3;
+    string last_inspection = 4;
+}
+
+message SprinklerRecentInspection {
+    int32  id                  = 1;
+    int32  sprinkler_anlage_id = 2;
+    string inspection_date     = 3;
+    string inspector_name      = 4;
+    string status               = 5;
+    string overall_result       = 6;
+}
+
+message SprinklerDashboardResponse {
+    int32                              project_id         = 1;
+    SprinklerDashboardStats            stats              = 2;
+    repeated SprinklerOverdueItem      due_tests          = 3;
+    repeated SprinklerRecentInspection recent_inspections = 4;
+}

@@ -40,6 +40,7 @@ enum Action {
     USER_INFO                       = 4;
     USER_TOKENS_LIST                = 5;
     USER_TOKEN_DELETE               = 6;
+    USER_CHANGE_PASSWORD            = 7;
 
     // Mängelmeldungen
     MM_LIST                         = 20;
@@ -92,6 +93,9 @@ enum Action {
     KEYS_ISSUE                      = 104;
     KEYS_RETURN                     = 105;
     KEYS_DELETE                     = 106;
+    KEYS_TYPES_LIST                 = 107;
+    KEYS_CABINETS_LIST              = 108;
+    KEYS_ISSUE_HISTORY              = 109;
 
     // Dashboard & Projekte
     DASHBOARD_DATA                  = 120;
@@ -99,6 +103,7 @@ enum Action {
     PROJECT_CREATE                  = 122;
     PROJECT_UPDATE                  = 123;
     PROJECT_SET_ACTIVE              = 124;
+    DASHBOARD_WIDGETS               = 125;
 
     // Benutzerverwaltung (Admin)
     USERS_LIST                      = 140;
@@ -109,6 +114,7 @@ enum Action {
     // Benachrichtigungen
     NOTIFICATIONS                   = 160;
     NOTIFICATION_COUNT              = 161;
+    NOTIFICATION_MARK_READ          = 162;
 
     // WLS – Wohnungsleerstand
     WLS_BUILDINGS_LIST              = 180;
@@ -124,6 +130,36 @@ enum Action {
     WLS_RECORD_CREATE               = 190;
     WLS_RECORD_UPDATE               = 191;
     WLS_RECORD_DELETE               = 192;
+
+    // Aufzug – Aufzugsanlagen & TRBS-3121-Prüfungen
+    AUFZUG_SYSTEMS                  = 200;
+    AUFZUG_SYSTEM_CREATE            = 201;
+    AUFZUG_SYSTEM_UPDATE            = 202;
+    AUFZUG_SYSTEM_DELETE            = 203;
+    AUFZUG_INSPECTIONS              = 204;
+    AUFZUG_INSPECTION_DETAIL        = 205;
+    AUFZUG_INSPECTION_CREATE        = 206;
+    AUFZUG_INSPECTION_UPDATE        = 207;
+    AUFZUG_INSPECTION_COMPLETE      = 208;
+    AUFZUG_CHECKLIST_UPDATE         = 209;
+    AUFZUG_DASHBOARD                = 210;
+
+    // Sprinkler – Sprinkleranlagen & wöchentliche Prüfungen
+    SPRINKLER_SYSTEMS               = 220;
+    SPRINKLER_SYSTEM_CREATE         = 221;
+    SPRINKLER_SYSTEM_UPDATE         = 222;
+    SPRINKLER_SYSTEM_DELETE         = 223;
+    SPRINKLER_INSPECTIONS           = 224;
+    SPRINKLER_INSPECTION_DETAIL     = 225;
+    SPRINKLER_INSPECTION_CREATE     = 226;
+    SPRINKLER_INSPECTION_UPDATE     = 227;
+    SPRINKLER_INSPECTION_COMPLETE   = 228;
+    SPRINKLER_CHECKLIST_UPDATE      = 229;
+    SPRINKLER_DASHBOARD             = 230;
+
+    // Passive Change Feed / server-sent events
+    CHANGE_FEED_SNAPSHOT            = 240;
+    CHANGE_FEED_TICKET              = 241;
 }
 
 // Stable error codes. The HTTP status is set to match.

@@ -1,0 +1,31 @@
+// Versions-Snapshot und Zugangsticket für den optionalen SSE Change Feed.
+syntax = "proto3";
+
+package dkc.api.v1;
+
+option csharp_namespace = "DkcDesktopClient.Core.Protocol";
+
+message ChangeFeedScope {
+    string scope = 1;
+    int64 revision = 2;
+    map<string, int64> domains = 3;
+}
+
+message ChangeFeedSnapshotResponse {
+    bool enabled = 1;
+    repeated ChangeFeedScope scopes = 2;
+}
+
+message ChangeFeedTicketResponse {
+    bool enabled = 1;
+    string ticket = 2;
+    int32 expires_in = 3;
+}
+
+message ChangeFeedEvent {
+    string scope = 1;
+    string domain = 2;
+    int64 revision = 3;
+    string state_hash = 4;
+    int64 timestamp = 5;
+}
