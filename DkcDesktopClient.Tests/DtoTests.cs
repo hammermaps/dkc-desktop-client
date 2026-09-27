@@ -39,10 +39,11 @@ public class DtoTests
     // ── MmMessage – DringlichkeitText ──────────────────────────────────────────
 
     [Theory]
-    [InlineData(null,      "Normal")]
-    [InlineData("normal",  "Normal")]
-    [InlineData("dringend","⚠ Dringend")]
-    [InlineData("notfall", "🔴 Notfall")]
+    [InlineData(null,      "⚪ Normal")]
+    [InlineData("normal",  "⚪ Normal")]
+    [InlineData("niedrig", "🔵 Niedrig")]
+    [InlineData("hoch",    "🔴 Hoch")]
+    [InlineData("kritisch","🚨 Kritisch")]
     public void MmMessage_DringlichkeitText(string? dringlichkeit, string expected)
     {
         var msg = MakeMessage(dringlichkeit: dringlichkeit);
@@ -54,8 +55,9 @@ public class DtoTests
     [Theory]
     [InlineData(null,      "#718096")]
     [InlineData("normal",  "#718096")]
-    [InlineData("dringend","#D97706")]
-    [InlineData("notfall", "#DC2626")]
+    [InlineData("niedrig", "#0EA5E9")]
+    [InlineData("hoch",    "#D97706")]
+    [InlineData("kritisch","#DC2626")]
     public void MmMessage_DringlichkeitColorHex(string? dringlichkeit, string expected)
     {
         var msg = MakeMessage(dringlichkeit: dringlichkeit);

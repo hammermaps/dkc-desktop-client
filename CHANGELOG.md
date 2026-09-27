@@ -22,6 +22,25 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
   `DASHBOARD_WIDGETS` (`GetDashboardWidgetsAsync`, erstmals genutzter Protobuf-Client).
   Durchschnittstemperatur inkl. 14-Tage-Verlauf als Balkendiagramm über die neu
   eingebundene Bibliothek `LiveChartsCore.SkiaSharpView.Avalonia`.
+- Mängelmeldungen: Volltextsuche, Dringlichkeits-/Jahr-Filter, Sortierung (Neueste/
+  Älteste/Betreff/Dringlichkeit/Status) sowie serverseitig aufgelöste Objekt-/
+  Nachunternehmer-Namen und ein Folgemeldungs-Zähler in Liste und Detail; echte
+  Seiten-Pagination (Vorherige/Nächste Seite) statt fester Begrenzung auf die ersten
+  50 Einträge. Kommentarfeld beim Statuswechsel und ein Lösch-Bestätigungsdialog
+  (`IDialogService`, bislang ungenutzt) ergänzt.
+- **Bugfix:** Die Dringlichkeits-Badges/-Filter verwendeten die erfundenen Werte
+  "dringend"/"notfall" statt der tatsächlichen DB-Enum-Werte
+  (`niedrig|normal|hoch|kritisch`) — Badges zeigten dadurch fast immer "Normal" an.
+  Auf die echten Werte korrigiert (Web-Pendant: `mm_list.tpl` `getPriorityBadge()`).
+
+### Geändert
+- Mängelmeldungen (Liste, Detail, Anlegen, Bearbeiten, Statuswechsel, NU-Zuweisung,
+  Löschen) laufen jetzt vollständig über Protobuf statt REST. Grund: die REST-
+  Schreib-Actions (`mm_create`, `mm_update`, `mm_update_status`,
+  `mm_assign_contractor`, `mm_delete`) waren in `api.php` nie registriert — diese
+  Funktionen liefen bislang real ins Leere (404). Die Protobuf-Actions
+  (`system\protobuf\Actions\ActionRegistry`) waren durchgehend vollständig
+  implementiert und sind jetzt der einzige Pfad für MM-Operationen.
 
 ---
 

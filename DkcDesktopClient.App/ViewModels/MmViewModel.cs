@@ -5,12 +5,25 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DkcDesktopClient.App.Services;
 using DkcDesktopClient.Core.Api;
+using DkcDesktopClient.Core.Protobuf;
 using DkcDesktopClient.Core.Services;
+using ProtoMmListRequest = DkcDesktopClient.Core.Protocol.MmListRequest;
+using ProtoMmDetailRequest = DkcDesktopClient.Core.Protocol.MmDetailRequest;
+using ProtoMmSaveRequest = DkcDesktopClient.Core.Protocol.MmSaveRequest;
+using ProtoMmUpdateStatusRequest = DkcDesktopClient.Core.Protocol.MmUpdateStatusRequest;
+using ProtoMmAssignContractorRequest = DkcDesktopClient.Core.Protocol.MmAssignContractorRequest;
+using ProtoMmDeleteRequest = DkcDesktopClient.Core.Protocol.MmDeleteRequest;
 
 namespace DkcDesktopClient.App.ViewModels;
 
 /// <summary>Represents a selectable status option in the MM status dropdowns.</summary>
 public record MmStatusOption(int? Value, string Label);
+
+/// <summary>Generic string-valued filter option (e.g. Dringlichkeit filter), "" = kein Filter/Alle.</summary>
+public record MmFilterOption(string Value, string Label);
+
+/// <summary>A selectable server-side sort order for the MM list (Web-Pendant: sortierbare Spalten in mm_list.tpl).</summary>
+public record MmSortOption(string Label, string Column, bool Ascending);
 
 public partial class MmViewModel : ViewModelBase, INavigationTarget
 {
@@ -18,6 +31,7 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
     private readonly AuthService _authService;
     private readonly IFilePickerService _filePicker;
     private readonly BackgroundRefreshService _backgroundRefreshService;
+    private readonly IDialogService _dialogService;
     private const int PageSize = 50;
 
     // ── List state ────────────────────────────────────────────────────────────
@@ -30,9 +44,17 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
     [ObservableProperty] private int _currentOffset;
     public bool HasNoMessages => !IsLoading && Messages.Count == 0;
 
-    // Filter
+    // Filter (Web-Pendant: mm_list.tpl Filterleiste)
     [ObservableProperty] private MmStatusOption _filterStatusOption = StatusFilterOptions[0];
     [ObservableProperty] private string? _filterStreet;
+    [ObservableProperty] private string _searchText = string.Empty;
+    [ObservableProperty] private MmFilterOption _filterDringlichkeitOption = DringlichkeitFilterOptions[0];
+    [ObservableProperty] private string _filterYear = string.Empty;
+    [ObservableProperty] private MmSortOption _sortOption = SortOptions[0];
+    public bool CanGoToPreviousPage => CurrentOffset > 0;
+    public bool CanGoToNextPage => CurrentOffset + PageSize < TotalMessages;
+    public int CurrentPageNumber => CurrentOffset / PageSize + 1;
+    public int TotalPages => TotalMessages <= 0 ? 1 : (int)Math.Ceiling(TotalMessages / (double)PageSize);
 
     // ── Form state ────────────────────────────────────────────────────────────
     [ObservableProperty] private bool _isFormVisible;
@@ -55,6 +77,7 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
 
     // Status / contractor quick-edit on detail panel
     [ObservableProperty] private MmStatusOption _detailStatusOption = StatusEditOptions[0];
+    [ObservableProperty] private string _detailStatusComment = string.Empty;
     [ObservableProperty] private string _detailNachunternehmer = string.Empty;
 
     // ── Dropdown data ─────────────────────────────────────────────────────────
@@ -92,19 +115,43 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
             new MmStatusOption(3, MmStatusHelper.StatusLabel(3)),
         };
 
+    // Entspricht dem DB-Enum mm_messages.dringlichkeit (Web-Pendant: mm.tpl-Formular).
     public static IReadOnlyList<string> DringlichkeitOptions { get; } =
-        new[] { "normal", "dringend", "notfall" };
+        new[] { "niedrig", "normal", "hoch", "kritisch" };
+
+    /// <summary>Dringlichkeits-Filteroptionen inkl. "Alle" (Web-Pendant: mm_list.tpl filter_dringlichkeit).</summary>
+    public static IReadOnlyList<MmFilterOption> DringlichkeitFilterOptions { get; } =
+        new[]
+        {
+            new MmFilterOption("", "— Alle —"),
+            new MmFilterOption("niedrig", "🔵 Niedrig"),
+            new MmFilterOption("normal", "⚪ Normal"),
+            new MmFilterOption("hoch", "🔴 Hoch"),
+            new MmFilterOption("kritisch", "🚨 Kritisch"),
+        };
+
+    public static IReadOnlyList<MmSortOption> SortOptions { get; } =
+        new[]
+        {
+            new MmSortOption("Neueste zuerst", "created_at", false),
+            new MmSortOption("Älteste zuerst", "created_at", true),
+            new MmSortOption("Betreff A–Z", "betreff", true),
+            new MmSortOption("Dringlichkeit", "dringlichkeit", false),
+            new MmSortOption("Status", "status", true),
+        };
 
     public MmViewModel(
         DkcApiFactory apiFactory,
         AuthService authService,
         IFilePickerService filePicker,
-        BackgroundRefreshService backgroundRefreshService)
+        BackgroundRefreshService backgroundRefreshService,
+        IDialogService dialogService)
     {
         _apiFactory = apiFactory;
         _authService = authService;
         _filePicker = filePicker;
         _backgroundRefreshService = backgroundRefreshService;
+        _dialogService = dialogService;
         Messages.CollectionChanged += OnMessagesCollectionChanged;
 
         // Der zentrale Hintergrund-Dienst aktualisiert CacheKeys.MmList bereits periodisch
@@ -118,6 +165,15 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
     /// Lädt die Liste sofort, statt auf einen manuellen Klick auf „Laden" zu warten.
     /// </summary>
     public Task OnNavigatedToAsync(object? parameter = null) => LoadMessagesAsync();
+
+    /// <summary>
+    /// MM-Lesezugriffe (Liste/Detail) laufen über Protobuf statt REST, weil die Server-REST-Route
+    /// (system\api\MmApiHandler) nur status/street kennt und die MM-Schreib-Actions (mm_create,
+    /// mm_update, mm_update_status, mm_assign_contractor, mm_delete) in api.php nicht registriert
+    /// sind — nur die Protobuf-Actions (system\protobuf\Actions\ActionRegistry) sind vollständig
+    /// implementiert. Siehe docs/reports/MM_LISTE_DESKTOP_CLIENT_LUECKENANALYSE.md.
+    /// </summary>
+    private DkcProtobufApi ProtoApi => new(_apiFactory.CreateProtobuf(_authService.CurrentToken));
 
     partial void OnIsLoadingChanged(bool value) => OnPropertyChanged(nameof(HasNoMessages));
 
@@ -178,13 +234,32 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
     // ── Commands ──────────────────────────────────────────────────────────────
 
     [RelayCommand]
-    public Task LoadMessagesAsync() => LoadMessagesInternalAsync(silent: false);
+    public Task LoadMessagesAsync()
+    {
+        CurrentOffset = 0;
+        return LoadMessagesInternalAsync(silent: false);
+    }
+
+    [RelayCommand(CanExecute = nameof(CanGoToNextPage))]
+    public Task NextPageAsync()
+    {
+        CurrentOffset += PageSize;
+        return LoadMessagesInternalAsync(silent: false);
+    }
+
+    [RelayCommand(CanExecute = nameof(CanGoToPreviousPage))]
+    public Task PreviousPageAsync()
+    {
+        CurrentOffset = Math.Max(0, CurrentOffset - PageSize);
+        return LoadMessagesInternalAsync(silent: false);
+    }
 
     /// <summary>
     /// Loads the (filtered) message list. When <paramref name="silent"/> is true (periodic
     /// background refresh via <see cref="OnBackgroundDataRefreshed"/>), a failure does not
     /// overwrite <see cref="ErrorMessage"/> and the current selection is restored by UID
-    /// afterwards, so an unattended refresh never disrupts what the user is looking at.
+    /// afterwards, so an unattended refresh never disrupts what the user is looking at. Silent
+    /// refreshes keep the current page (offset) instead of resetting to page 1.
     /// </summary>
     private async Task LoadMessagesInternalAsync(bool silent)
     {
@@ -192,38 +267,39 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
         IsLoading = true;
         if (!silent)
             ErrorMessage = null;
-        CurrentOffset = 0;
         var previouslySelectedUid = silent ? SelectedMessage?.Uid : null;
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
-            var result = await api.GetMmListAsync(
-                status: FilterStatusOption.Value,
-                street: FilterStreet,
-                limit: PageSize,
-                offset: 0,
-                ct: ct);
-            if (result.Success)
+            var request = new ProtoMmListRequest
             {
-                Messages.Clear();
-                TotalMessages = result.Total ?? 0;
-                if (result.Messages != null)
-                {
-                    foreach (var m in result.Messages)
-                        Messages.Add(m);
-                    RefreshDropdownSuggestions(result.Messages);
-                }
-                ErrorMessage = null;
-                if (previouslySelectedUid != null)
-                    SelectedMessage = Messages.FirstOrDefault(m => m.Uid == previouslySelectedUid);
+                Status = FilterStatusOption.Value ?? -1,
+                Street = FilterStreet ?? string.Empty,
+                Limit = PageSize,
+                Offset = CurrentOffset,
+                Search = SearchText.Trim(),
+                Dringlichkeit = FilterDringlichkeitOption.Value,
+                Year = int.TryParse(FilterYear, out var year) ? year : 0,
+                SortColumn = SortOption.Column,
+                SortAscending = SortOption.Ascending,
+            };
+            var result = await ProtoApi.GetMmListAsync(request, ct);
 
-                // Defer the next background refresh for this key — we just fetched fresh data.
-                _backgroundRefreshService.NotifyUserActivity(CacheKeys.MmList);
-            }
-            else if (!silent)
+            Messages.Clear();
+            TotalMessages = result.Page?.Total ?? 0;
+            foreach (var m in result.Messages)
             {
-                ErrorMessage = result.Error ?? "Laden der Mängelmeldungen fehlgeschlagen.";
+                Messages.Add(new MmMessage(
+                    m.Uid, m.Status, m.Betreff, m.Street, m.Whg, m.Melder, m.Datetime,
+                    m.Dringlichkeit, m.Nachunternehmer, m.Scanned, m.Zugeh,
+                    m.StreetName, m.NachunternehmerName, m.FollowupCount));
             }
+            RefreshDropdownSuggestions(Messages);
+            ErrorMessage = null;
+            if (previouslySelectedUid != null)
+                SelectedMessage = Messages.FirstOrDefault(m => m.Uid == previouslySelectedUid);
+
+            // Defer the next background refresh for this key — we just fetched fresh data.
+            _backgroundRefreshService.NotifyUserActivity(CacheKeys.MmList);
         }
         catch (OperationCanceledException)
         {
@@ -237,6 +313,12 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
         finally
         {
             IsLoading = false;
+            OnPropertyChanged(nameof(CanGoToPreviousPage));
+            OnPropertyChanged(nameof(CanGoToNextPage));
+            OnPropertyChanged(nameof(CurrentPageNumber));
+            OnPropertyChanged(nameof(TotalPages));
+            PreviousPageCommand.NotifyCanExecuteChanged();
+            NextPageCommand.NotifyCanExecuteChanged();
         }
 
         // Lazily populate the Melder dropdown the first time messages are loaded;
@@ -252,14 +334,21 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
         IsLoading = true;
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
-            var result = await api.GetMmDetailAsync(SelectedMessage.Uid);
-            if (result.Success && result.Message != null)
+            var result = await ProtoApi.GetMmDetailAsync(new ProtoMmDetailRequest { Uid = SelectedMessage.Uid });
+            var d = result.Message;
+            if (d != null)
             {
-                SelectedDetail = result.Message;
-                DetailStatusOption = StatusEditOptions.FirstOrDefault(o => o.Value == result.Message.Status)
+                SelectedDetail = new MmDetail(
+                    d.Uid, d.Status, d.Betreff, d.MeldungMassage, d.Street, d.Whg, d.Melder,
+                    d.Tel, d.Email, d.Datetime, d.Dringlichkeit, d.Nachunternehmer, d.Scanned,
+                    d.Zugeh, d.Zeit, d.Planon, d.StreetName, d.NachunternehmerName, d.Instructions.ToList());
+                DetailStatusOption = StatusEditOptions.FirstOrDefault(o => o.Value == d.Status)
                                      ?? StatusEditOptions[0];
-                DetailNachunternehmer = result.Message.Nachunternehmer?.ToString() ?? string.Empty;
+                DetailStatusComment = string.Empty;
+                // MmAssignContractorHandler erwartet zwingend eine numerische NU-ID als String
+                // (kein Freitext-Name) — der aufgelöste Name wird separat über
+                // SelectedDetail.NachunternehmerName angezeigt.
+                DetailNachunternehmer = d.Nachunternehmer > 0 ? d.Nachunternehmer.ToString() : string.Empty;
             }
         }
         catch (Exception ex)
@@ -378,39 +467,32 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
         FormError = null;
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
-            var req = new MmSaveRequest(
-                FormBetreff,
-                Nz(FormMeldung),
-                Nz(FormStreet),
-                Nz(FormWhg),
-                Nz(FormMelder),
-                Nz(FormTel),
-                Nz(FormEmail),
-                Nz(FormDringlichkeit),
-                Nz(FormNachunternehmer),
-                Nz(FormZugeh));
+            var req = new ProtoMmSaveRequest
+            {
+                Uid = IsEditingMessage && _editingUid != null ? _editingUid : string.Empty,
+                Betreff = FormBetreff,
+                MeldungMassage = FormMeldung,
+                Street = FormStreet,
+                Whg = FormWhg,
+                Melder = FormMelder,
+                Tel = FormTel,
+                Email = FormEmail,
+                Dringlichkeit = FormDringlichkeit,
+                Nachunternehmer = FormNachunternehmer,
+                Zugeh = FormZugeh,
+            };
 
-            ApiError result;
             if (IsEditingMessage && _editingUid != null)
             {
-                result = await api.UpdateMmAsync(_editingUid, req);
+                await ProtoApi.UpdateMmAsync(req);
             }
             else
             {
-                var cr = await api.CreateMmAsync(req);
-                result = new ApiError(cr.Success, cr.Error);
+                await ProtoApi.CreateMmAsync(req);
             }
 
-            if (result.Success)
-            {
-                IsFormVisible = false;
-                await LoadMessagesAsync();
-            }
-            else
-            {
-                FormError = result.Error ?? "Speichern fehlgeschlagen.";
-            }
+            IsFormVisible = false;
+            await LoadMessagesAsync();
         }
         catch (Exception ex)
         {
@@ -426,22 +508,19 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
     public async Task DeleteAsync()
     {
         if (SelectedMessage == null) return;
+        var confirmed = await _dialogService.ConfirmAsync(
+            "Mängelmeldung löschen",
+            $"Soll die Mängelmeldung „{SelectedMessage.Betreff}“ ({SelectedMessage.Uid}) wirklich unwiderruflich gelöscht werden?");
+        if (!confirmed) return;
+
         IsLoading    = true;
         ErrorMessage = null;
         try
         {
-            var api    = _apiFactory.Create(_authService.CurrentToken);
-            var result = await api.DeleteMmAsync(SelectedMessage.Uid);
-            if (result.Success)
-            {
-                Messages.Remove(SelectedMessage);
-                SelectedDetail = null;
-                TotalMessages  = Math.Max(0, TotalMessages - 1);
-            }
-            else
-            {
-                ErrorMessage = result.Error ?? "Löschen fehlgeschlagen.";
-            }
+            await ProtoApi.DeleteMmAsync(new ProtoMmDeleteRequest { Uid = SelectedMessage.Uid });
+            Messages.Remove(SelectedMessage);
+            SelectedDetail = null;
+            TotalMessages  = Math.Max(0, TotalMessages - 1);
         }
         catch (Exception ex)
         {
@@ -461,13 +540,13 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
         ErrorMessage = null;
         try
         {
-            var api    = _apiFactory.Create(_authService.CurrentToken);
-            var result = await api.UpdateMmStatusAsync(SelectedDetail.Uid,
-                new MmStatusUpdateRequest(DetailStatusOption.Value ?? 0, null));
-            if (result.Success)
-                await LoadDetailAsync();
-            else
-                ErrorMessage = result.Error ?? "Statusaktualisierung fehlgeschlagen.";
+            await ProtoApi.UpdateMmStatusAsync(new ProtoMmUpdateStatusRequest
+            {
+                Uid = SelectedDetail.Uid,
+                Status = DetailStatusOption.Value ?? 0,
+                Comment = DetailStatusComment,
+            });
+            await LoadDetailAsync();
         }
         catch (Exception ex)
         {
@@ -487,13 +566,12 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
         ErrorMessage = null;
         try
         {
-            var api    = _apiFactory.Create(_authService.CurrentToken);
-            var result = await api.AssignMmContractorAsync(SelectedDetail.Uid,
-                new MmAssignContractorRequest(DetailNachunternehmer));
-            if (result.Success)
-                await LoadDetailAsync();
-            else
-                ErrorMessage = result.Error ?? "Zuweisung fehlgeschlagen.";
+            await ProtoApi.AssignMmContractorAsync(new ProtoMmAssignContractorRequest
+            {
+                Uid = SelectedDetail.Uid,
+                Nachunternehmer = DetailNachunternehmer,
+            });
+            await LoadDetailAsync();
         }
         catch (Exception ex)
         {
@@ -553,9 +631,6 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
     private bool CanSave()           => !IsSaving;
     private bool HasSelectedMessage() => SelectedMessage != null;
     private bool HasSelectedDetail()  => SelectedDetail  != null;
-
-    private static string? Nz(string s) =>
-        string.IsNullOrWhiteSpace(s) ? null : s;
 
     /// <summary>
     /// Refreshes the street and contractor suggestion lists from the currently

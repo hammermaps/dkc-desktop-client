@@ -184,22 +184,30 @@ public record MmMessage(
     [property: JsonPropertyName("dringlichkeit")] string? Dringlichkeit,
     [property: JsonPropertyName("nachunternehmer")] int? Nachunternehmer,
     [property: JsonPropertyName("scanned")] bool Scanned,
-    [property: JsonPropertyName("zugeh")] string? Zugeh)
+    [property: JsonPropertyName("zugeh")] string? Zugeh,
+    /// <summary>Aufgelöster Objekt-/Hausname (Web-Pendant: MmCoreTrait::getMmData()). Leer, solange nur REST-Daten vorliegen.</summary>
+    string StreetName = "",
+    string NachunternehmerName = "",
+    int FollowupCount = 0)
 {
     public string StatusText => MmStatusHelper.StatusLabel(Status);
 
+    // Web-Pendant: mm_list.tpl getPriorityBadge() / lang "mm_list.prio_*". Die vier
+    // Werte entsprechen dem DB-Enum mm_messages.dringlichkeit (niedrig|normal|hoch|kritisch).
     public string DringlichkeitText => Dringlichkeit switch
     {
-        "dringend" => "⚠ Dringend",
-        "notfall"  => "🔴 Notfall",
-        _          => "Normal"
+        "niedrig"  => "🔵 Niedrig",
+        "hoch"     => "🔴 Hoch",
+        "kritisch" => "🚨 Kritisch",
+        _          => "⚪ Normal"
     };
 
     /// <summary>Hex color for the urgency badge (safe for XAML string binding).</summary>
     public string DringlichkeitColorHex => Dringlichkeit switch
     {
-        "dringend" => "#D97706",
-        "notfall"  => "#DC2626",
+        "niedrig"  => "#0EA5E9",
+        "hoch"     => "#D97706",
+        "kritisch" => "#DC2626",
         _          => "#718096"
     };
 
@@ -238,7 +246,10 @@ public record MmDetail(
     [property: JsonPropertyName("scanned")] bool Scanned,
     [property: JsonPropertyName("zugeh")] string? Zugeh,
     [property: JsonPropertyName("zeit")] string? Zeit,
-    [property: JsonPropertyName("planon")] string? Planon)
+    [property: JsonPropertyName("planon")] string? Planon,
+    string StreetName = "",
+    string NachunternehmerName = "",
+    IReadOnlyList<string>? Instructions = null)
 {
     public string StatusText => MmStatusHelper.StatusLabel(Status);
 }

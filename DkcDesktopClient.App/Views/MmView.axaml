@@ -6,7 +6,7 @@
              x:Class="DkcDesktopClient.App.Views.MmView"
              x:DataType="vm:MmViewModel">
 
-  <Grid RowDefinitions="Auto, Auto, Auto, Auto, *, 6, Auto" Margin="16" RowSpacing="8">
+  <Grid RowDefinitions="Auto, Auto, Auto, Auto, *, Auto, 6, Auto" Margin="16" RowSpacing="8">
 
     <!-- ═══════════════════════════════════  Toolbar  ═══════════════════════════════════ -->
     <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
@@ -44,7 +44,7 @@
           <TextBlock Text="Status:" VerticalAlignment="Center" FontWeight="SemiBold"/>
           <ComboBox ItemsSource="{x:Static vm:MmViewModel.StatusFilterOptions}"
                     SelectedItem="{Binding FilterStatusOption}"
-                    MinWidth="150">
+                    MinWidth="140">
             <ComboBox.ItemTemplate>
               <DataTemplate x:DataType="vm:MmStatusOption">
                 <TextBlock Text="{Binding Label}"/>
@@ -52,10 +52,40 @@
             </ComboBox.ItemTemplate>
           </ComboBox>
 
-          <TextBlock Text="Straße:" VerticalAlignment="Center" FontWeight="SemiBold"/>
-          <TextBox Text="{Binding FilterStreet}" PlaceholderText="Straße filtern…" Width="180"/>
+          <TextBlock Text="Dringlichkeit:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+          <ComboBox ItemsSource="{x:Static vm:MmViewModel.DringlichkeitFilterOptions}"
+                    SelectedItem="{Binding FilterDringlichkeitOption}"
+                    MinWidth="130">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:MmFilterOption">
+                <TextBlock Text="{Binding Label}"/>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
 
-          <Button Content="Suchen" Command="{Binding LoadMessagesCommand}"/>
+          <TextBlock Text="Straße:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+          <TextBox Text="{Binding FilterStreet}" PlaceholderText="Straße filtern…" Width="110"/>
+
+          <TextBlock Text="Jahr:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+          <TextBox Text="{Binding FilterYear}" PlaceholderText="z. B. 2026" Width="80"/>
+
+          <TextBlock Text="Sortierung:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+          <ComboBox ItemsSource="{x:Static vm:MmViewModel.SortOptions}"
+                    SelectedItem="{Binding SortOption}"
+                    MinWidth="140">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:MmSortOption">
+                <TextBlock Text="{Binding Label}"/>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+
+        <!-- Search row -->
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <TextBlock Text="Suche:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+          <TextBox Text="{Binding SearchText}" PlaceholderText="Betreff, DKC-ID, Melder, Wohnung…" Width="260"/>
+          <Button Content="Suchen" Command="{Binding LoadMessagesCommand}" Classes="primary"/>
           <TextBlock Text="{Binding TotalMessages, StringFormat='Gesamt: {0}'}"
                      VerticalAlignment="Center" Foreground="#4A5568"/>
         </StackPanel>
@@ -165,9 +195,11 @@
         <DataGrid.Columns>
           <DataGridTextColumn Header="UID"       Binding="{Binding Uid}"      Width="130"/>
           <DataGridTextColumn Header="Betreff"   Binding="{Binding Betreff}"  Width="*"/>
-          <DataGridTextColumn Header="Straße"    Binding="{Binding Street}"   Width="160"/>
+          <DataGridTextColumn Header="Objekt"    Binding="{Binding StreetName}" Width="150"/>
           <DataGridTextColumn Header="Whg"       Binding="{Binding Whg}"      Width="60"/>
           <DataGridTextColumn Header="Melder"    Binding="{Binding Melder}"   Width="130"/>
+          <DataGridTextColumn Header="Nachunternehmer" Binding="{Binding NachunternehmerName}" Width="150"/>
+          <DataGridTextColumn Header="Folge" Binding="{Binding FollowupCount}" Width="55"/>
           <DataGridTextColumn Header="Datum"     Binding="{Binding Datetime}" Width="140"/>
           <DataGridTemplateColumn Header="Status" Width="120">
             <DataGridTemplateColumn.CellTemplate>
@@ -197,16 +229,30 @@
                                IsVisible="{Binding HasNoMessages}"/>
     </Grid>
 
-    <GridSplitter Grid.Row="5" Height="4" HorizontalAlignment="Stretch"/>
+    <!-- ═══════════════════════════════════  Pagination  ════════════════════════════════ -->
+    <StackPanel Grid.Row="5" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+      <Button Content="◀ Vorherige Seite" Command="{Binding PreviousPageCommand}"/>
+      <TextBlock VerticalAlignment="Center" Foreground="#4A5568">
+        <TextBlock.Text>
+          <MultiBinding StringFormat="Seite {0} von {1}">
+            <Binding Path="CurrentPageNumber"/>
+            <Binding Path="TotalPages"/>
+          </MultiBinding>
+        </TextBlock.Text>
+      </TextBlock>
+      <Button Content="Nächste Seite ▶" Command="{Binding NextPageCommand}"/>
+    </StackPanel>
+
+    <GridSplitter Grid.Row="6" Height="4" HorizontalAlignment="Stretch"/>
 
     <!-- ═══════════════════════════════  Detail-Panel  ══════════════════════════════════ -->
-    <ScrollViewer Grid.Row="6" MaxHeight="240">
+    <ScrollViewer Grid.Row="7" MaxHeight="240">
       <StackPanel Margin="4" Spacing="10"
                   IsVisible="{Binding SelectedDetail, Converter={x:Static ObjectConverters.IsNotNull}}">
 
         <TextBlock Text="Detail" FontSize="15" FontWeight="SemiBold"/>
 
-        <Grid ColumnDefinitions="160,16,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="5">
+        <Grid ColumnDefinitions="160,16,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="5">
 
           <!-- UID + Datum -->
           <TextBlock Grid.Row="0" Grid.Column="0" Text="UID:" FontWeight="SemiBold"/>
@@ -215,23 +261,46 @@
           <TextBlock Grid.Row="1" Grid.Column="0" Text="Erfasst am:" FontWeight="SemiBold"/>
           <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding SelectedDetail.Datetime}"/>
 
-          <!-- Betreff + Meldungstext -->
-          <TextBlock Grid.Row="2" Grid.Column="0" Text="Betreff:" FontWeight="SemiBold"/>
-          <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding SelectedDetail.Betreff}" TextWrapping="Wrap"/>
+          <!-- Objekt / Wohnung -->
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="Objekt / Wohnung:" FontWeight="SemiBold"/>
+          <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" Spacing="6">
+            <TextBlock Text="{Binding SelectedDetail.StreetName}"/>
+            <TextBlock Text="{Binding SelectedDetail.Whg, StringFormat=', Whg. {0}'}"/>
+          </StackPanel>
 
-          <TextBlock Grid.Row="3" Grid.Column="0" Text="Meldungstext:" FontWeight="SemiBold" VerticalAlignment="Top"/>
-          <controls:HtmlDisplayControl Grid.Row="3" Grid.Column="2" HtmlContent="{Binding SelectedDetail.MeldungMassage}" MaxHeight="120"/>
+          <!-- Betreff + Meldungstext -->
+          <TextBlock Grid.Row="3" Grid.Column="0" Text="Betreff:" FontWeight="SemiBold"/>
+          <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding SelectedDetail.Betreff}" TextWrapping="Wrap"/>
+
+          <TextBlock Grid.Row="4" Grid.Column="0" Text="Meldungstext:" FontWeight="SemiBold" VerticalAlignment="Top"/>
+          <controls:HtmlDisplayControl Grid.Row="4" Grid.Column="2" HtmlContent="{Binding SelectedDetail.MeldungMassage}" MaxHeight="120"/>
 
           <!-- Kontakt -->
-          <TextBlock Grid.Row="4" Grid.Column="0" Text="Telefon / E-Mail:" FontWeight="SemiBold"/>
-          <StackPanel Grid.Row="4" Grid.Column="2" Orientation="Horizontal" Spacing="12">
+          <TextBlock Grid.Row="5" Grid.Column="0" Text="Telefon / E-Mail:" FontWeight="SemiBold"/>
+          <StackPanel Grid.Row="5" Grid.Column="2" Orientation="Horizontal" Spacing="12">
             <TextBlock Text="{Binding SelectedDetail.Tel}"/>
             <TextBlock Text="{Binding SelectedDetail.Email}" Foreground="#2B6CB0"/>
           </StackPanel>
 
+          <!-- Zeit / Planon-Gruppe / Zusatzanweisungen (Web-Pendant: mm_view.tpl Prüfungs-/Freigabe-Daten) -->
+          <TextBlock Grid.Row="6" Grid.Column="0" Text="Zeit / Planon-Gruppe:" FontWeight="SemiBold"/>
+          <StackPanel Grid.Row="6" Grid.Column="2" Orientation="Horizontal" Spacing="12"
+                      IsVisible="{Binding SelectedDetail.Zeit, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+            <TextBlock Text="{Binding SelectedDetail.Zeit, StringFormat='{}{0} Min.'}"/>
+            <TextBlock Text="{Binding SelectedDetail.Planon}" Foreground="#4A5568"/>
+          </StackPanel>
+          <ItemsControl Grid.Row="7" Grid.Column="2" ItemsSource="{Binding SelectedDetail.Instructions}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="x:String">
+                <TextBlock Text="{Binding}" TextWrapping="Wrap"/>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <TextBlock Grid.Row="7" Grid.Column="0" Text="Zusatzanweisungen:" FontWeight="SemiBold" VerticalAlignment="Top"/>
+
           <!-- Status-Schnellbearbeitung -->
-          <TextBlock Grid.Row="5" Grid.Column="0" Text="Status ändern:" FontWeight="SemiBold" VerticalAlignment="Center"/>
-          <StackPanel Grid.Row="5" Grid.Column="2" Orientation="Horizontal" Spacing="8">
+          <TextBlock Grid.Row="8" Grid.Column="0" Text="Status ändern:" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          <StackPanel Grid.Row="8" Grid.Column="2" Orientation="Horizontal" Spacing="8">
             <ComboBox ItemsSource="{x:Static vm:MmViewModel.StatusEditOptions}"
                       SelectedItem="{Binding DetailStatusOption}"
                       MinWidth="160">
@@ -241,20 +310,18 @@
                 </DataTemplate>
               </ComboBox.ItemTemplate>
             </ComboBox>
+            <TextBox Text="{Binding DetailStatusComment}" PlaceholderText="Kommentar zum Statuswechsel (optional)…" Width="220"/>
             <Button Content="Status speichern" Command="{Binding UpdateStatusCommand}"/>
           </StackPanel>
 
           <!-- Nachunternehmer-Schnellzuweisung -->
-          <TextBlock Grid.Row="6" Grid.Column="0" Text="Nachunternehmer:" FontWeight="SemiBold" VerticalAlignment="Center"/>
-          <StackPanel Grid.Row="6" Grid.Column="2" Orientation="Horizontal" Spacing="8">
-            <TextBox Text="{Binding DetailNachunternehmer}" PlaceholderText="Name des Nachunternehmers…" Width="220"/>
+          <TextBlock Grid.Row="9" Grid.Column="0" Text="Nachunternehmer:" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          <StackPanel Grid.Row="9" Grid.Column="2" Orientation="Horizontal" Spacing="8">
+            <TextBox Text="{Binding DetailNachunternehmer}" PlaceholderText="Nachunternehmer-ID…" Width="120"
+                     ToolTip.Tip="Numerische Nachunternehmer-ID (siehe Vorschlagsliste im Formular)"/>
             <Button Content="Zuweisen" Command="{Binding AssignContractorCommand}"/>
-            <TextBlock Text="{Binding SelectedDetail.Nachunternehmer}" Foreground="#2D3748" VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding SelectedDetail.NachunternehmerName}" Foreground="#2D3748" VerticalAlignment="Center"/>
           </StackPanel>
-
-          <!-- Aktueller Status (Anzeige) -->
-          <TextBlock Grid.Row="7" Grid.Column="0" Text="Aktueller Status:" FontWeight="SemiBold"/>
-          <TextBlock Grid.Row="7" Grid.Column="2" Text="{Binding SelectedDetail.StatusText}" FontWeight="SemiBold"/>
 
         </Grid>
       </StackPanel>

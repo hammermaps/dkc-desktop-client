@@ -14,6 +14,15 @@ message MmListRequest {
     string street = 2;
     int32  limit  = 3;
     int32  offset = 4;
+
+    // Web-Pendant: MmCoreTrait::getMmData() Filter/Sortierung.
+    string search          = 5; // Volltext über betreff/uid/melder/whg; "" = kein Filter
+    string dringlichkeit   = 6; // niedrig|normal|hoch|kritisch; "" = alle
+    int32  nachunternehmer = 7; // 0 = alle
+    int32  year            = 8; // Filtert auf created_at im Jahr; 0 = alle
+    // betreff|street|whg|melder|uid|dringlichkeit|status|created_at; "" = created_at (Default)
+    string sort_column     = 9;
+    bool   sort_ascending  = 10;
 }
 
 message MmMessage {
@@ -28,6 +37,11 @@ message MmMessage {
     int32  nachunternehmer = 9;
     bool   scanned         = 10;
     string zugeh           = 11;
+
+    // Web-Pendant: MmCoreTrait::getMmData() aufgelöste Anzeigewerte.
+    string street_name          = 12;
+    string nachunternehmer_name = 13;
+    int32  followup_count       = 14;
 }
 
 message MmListResponse {
@@ -56,6 +70,9 @@ message MmDetail {
     string zeit             = 15;
     string planon           = 16;
     repeated string instructions = 17;
+
+    string street_name          = 18;
+    string nachunternehmer_name = 19;
 }
 
 message MmDetailResponse { MmDetail message = 1; }
