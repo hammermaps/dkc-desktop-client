@@ -79,6 +79,40 @@ jobs:
           name: release-${{ matrix.rid }}
           path: ./publish/${{ matrix.rid }}/${{ matrix.asset_name }}
 
+      # Bei jedem Push auf main wird zusätzlich zum GitHub-Release-Pfad (nur bei
+      # Tags) der aktuelle Stand für Linux/Windows direkt im DKC veröffentlicht -
+      # analog zum TWS-App-Android-Auto-Deploy (siehe
+      # external-apps/TWS-App/.github/workflows/deploy-android.yml). Download für
+      # Nutzer: https://dkc.dk-automation.de/?page=admin&action=desktop_app.
+      # Benötigtes Repository-Secret: DESKTOP_APP_DEPLOY_TOKEN (muss mit dem Wert
+      # von DESKTOP_APP_DEPLOY_TOKEN in der .env des ProxyServer übereinstimmen).
+      - name: Deploy continuous build to DKC (Linux/Windows)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && (matrix.rid == 'linux-x64' || matrix.rid == 'win-x64')
+        shell: bash
+        env:
+          DEPLOY_TOKEN: ${{ secrets.DESKTOP_APP_DEPLOY_TOKEN }}
+        run: |
+          platform="linux"
+          if [ "${{ matrix.rid }}" = "win-x64" ]; then platform="windows"; fi
+
+          deploy_version="$(date -u +%Y.%m.%d).${{ github.run_number }}"
+          commit_sha="${{ github.sha }}"
+          notes="${{ github.event.head_commit.message }}"
+
+          status=$(curl -sS -o response.txt -w "%{http_code}" -X POST "https://dkc.dk-automation.de/api.php?action=desktop_app_deploy" \
+            -H "Authorization: Bearer ${DEPLOY_TOKEN}" \
+            -F "binary=@./publish/${{ matrix.rid }}/${{ matrix.asset_name }}" \
+            -F "platform=${platform}" \
+            -F "version=${deploy_version}" \
+            -F "commit_sha=${commit_sha}" \
+            -F "notes=${notes}")
+          echo "HTTP-Status: ${status}"
+          cat response.txt
+          echo
+          if [ "$status" -lt 200 ] || [ "$status" -ge 300 ]; then
+            exit 1
+          fi
+
   release:
     needs: build
     runs-on: ubuntu-latest

@@ -7,6 +7,13 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
 
 ## [Unreleased]
 
+### CI/CD
+- Kontinuierlicher Auto-Build für Linux/Windows: `.github/workflows/build.yml` lädt bei
+  jedem Push auf `main` die frisch gebauten `linux-x64`/`win-x64`-Binaries zusätzlich zum
+  bestehenden Tag-basierten GitHub-Release-Pfad direkt zur DKC-Website hoch (analog zum
+  TWS-App-Android-Auto-Deploy). Download für Staff: `?page=admin&action=desktop_app` im DKC.
+  Benötigt das Repository-Secret `DESKTOP_APP_DEPLOY_TOKEN` (siehe Server-CHANGES.textile).
+
 ### Fix
 - **Kritisch:** Schreibende Aktionen für Gebäudebegehungen (anlegen/bearbeiten/abschließen/
   Prüfpunkte), Schlüsselverwaltung (anlegen/bearbeiten/löschen/ausgeben/zurückgeben), Klima-
