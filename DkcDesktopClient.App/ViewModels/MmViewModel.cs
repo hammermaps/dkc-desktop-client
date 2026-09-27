@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DkcDesktopClient.App.Services;
@@ -11,11 +12,12 @@ namespace DkcDesktopClient.App.ViewModels;
 /// <summary>Represents a selectable status option in the MM status dropdowns.</summary>
 public record MmStatusOption(int? Value, string Label);
 
-public partial class MmViewModel : ViewModelBase
+public partial class MmViewModel : ViewModelBase, INavigationTarget
 {
     private readonly DkcApiFactory _apiFactory;
     private readonly AuthService _authService;
     private readonly IFilePickerService _filePicker;
+    private readonly BackgroundRefreshService _backgroundRefreshService;
     private const int PageSize = 50;
 
     // ── List state ────────────────────────────────────────────────────────────
@@ -93,15 +95,37 @@ public partial class MmViewModel : ViewModelBase
     public static IReadOnlyList<string> DringlichkeitOptions { get; } =
         new[] { "normal", "dringend", "notfall" };
 
-    public MmViewModel(DkcApiFactory apiFactory, AuthService authService, IFilePickerService filePicker)
+    public MmViewModel(
+        DkcApiFactory apiFactory,
+        AuthService authService,
+        IFilePickerService filePicker,
+        BackgroundRefreshService backgroundRefreshService)
     {
         _apiFactory = apiFactory;
         _authService = authService;
         _filePicker = filePicker;
+        _backgroundRefreshService = backgroundRefreshService;
         Messages.CollectionChanged += OnMessagesCollectionChanged;
+
+        // Der zentrale Hintergrund-Dienst aktualisiert CacheKeys.MmList bereits periodisch
+        // (siehe BackgroundRefreshService) — hier nur darauf reagieren und die aktuell
+        // sichtbare (ggf. gefilterte) Liste im Hintergrund nachziehen.
+        _backgroundRefreshService.DataRefreshed += OnBackgroundDataRefreshed;
     }
 
+    /// <summary>
+    /// Wird von <see cref="Services.INavigationService"/> aufgerufen, sobald diese Ansicht aktiv wird.
+    /// Lädt die Liste sofort, statt auf einen manuellen Klick auf „Laden" zu warten.
+    /// </summary>
+    public Task OnNavigatedToAsync(object? parameter = null) => LoadMessagesAsync();
+
     partial void OnIsLoadingChanged(bool value) => OnPropertyChanged(nameof(HasNoMessages));
+
+    private void OnBackgroundDataRefreshed(object? sender, string key)
+    {
+        if (key != CacheKeys.MmList) return;
+        _ = Dispatcher.UIThread.InvokeAsync(() => LoadMessagesInternalAsync(silent: true));
+    }
 
     // ── CSV Export ────────────────────────────────────────────────────────────
 
@@ -154,12 +178,22 @@ public partial class MmViewModel : ViewModelBase
     // ── Commands ──────────────────────────────────────────────────────────────
 
     [RelayCommand]
-    public async Task LoadMessagesAsync()
+    public Task LoadMessagesAsync() => LoadMessagesInternalAsync(silent: false);
+
+    /// <summary>
+    /// Loads the (filtered) message list. When <paramref name="silent"/> is true (periodic
+    /// background refresh via <see cref="OnBackgroundDataRefreshed"/>), a failure does not
+    /// overwrite <see cref="ErrorMessage"/> and the current selection is restored by UID
+    /// afterwards, so an unattended refresh never disrupts what the user is looking at.
+    /// </summary>
+    private async Task LoadMessagesInternalAsync(bool silent)
     {
         var ct = StartLoad();
         IsLoading = true;
-        ErrorMessage = null;
+        if (!silent)
+            ErrorMessage = null;
         CurrentOffset = 0;
+        var previouslySelectedUid = silent ? SelectedMessage?.Uid : null;
         try
         {
             var api = _apiFactory.Create(_authService.CurrentToken);
@@ -179,8 +213,14 @@ public partial class MmViewModel : ViewModelBase
                         Messages.Add(m);
                     RefreshDropdownSuggestions(result.Messages);
                 }
+                ErrorMessage = null;
+                if (previouslySelectedUid != null)
+                    SelectedMessage = Messages.FirstOrDefault(m => m.Uid == previouslySelectedUid);
+
+                // Defer the next background refresh for this key — we just fetched fresh data.
+                _backgroundRefreshService.NotifyUserActivity(CacheKeys.MmList);
             }
-            else
+            else if (!silent)
             {
                 ErrorMessage = result.Error ?? "Laden der Mängelmeldungen fehlgeschlagen.";
             }
@@ -191,7 +231,8 @@ public partial class MmViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Fehler beim Laden der Mängelmeldungen: {ex.Message}";
+            if (!silent)
+                ErrorMessage = $"Fehler beim Laden der Mängelmeldungen: {ex.Message}";
         }
         finally
         {
