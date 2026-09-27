@@ -25,6 +25,24 @@ public record MmFilterOption(string Value, string Label);
 /// <summary>A selectable server-side sort order for the MM list (Web-Pendant: sortierbare Spalten in mm_list.tpl).</summary>
 public record MmSortOption(string Label, string Column, bool Ascending);
 
+/// <summary>
+/// One checkbox in the Freigabe-/Prüfungs-Workflow "Zusatzanweisungen" list
+/// (Web-Pendant: ContMm::$additional_instructions / mm.tpl checkbox group).
+/// </summary>
+public partial class MmInstructionCheckboxItem : ObservableObject
+{
+    public string Id { get; }
+    public string Text { get; }
+    [ObservableProperty] private bool _isSelected;
+
+    public MmInstructionCheckboxItem(string id, string text, bool isSelected)
+    {
+        Id = id;
+        Text = text;
+        _isSelected = isSelected;
+    }
+}
+
 public partial class MmViewModel : ViewModelBase, INavigationTarget
 {
     private readonly DkcApiFactory _apiFactory;
@@ -79,6 +97,19 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
     [ObservableProperty] private MmStatusOption _detailStatusOption = StatusEditOptions[0];
     [ObservableProperty] private string _detailStatusComment = string.Empty;
     [ObservableProperty] private string _detailNachunternehmer = string.Empty;
+
+    // ── Freigabe-/Prüfungs-Workflow (Web-Pendant: Status-/Prüfungs-Modal in mm_list.tpl) ──
+    // Nur bei DetailStatusOption.Value 0 (Freigabe) / 1 (Freigegeben) an den Server gesendet.
+    [ObservableProperty] private string _detailEkpreis = string.Empty;
+    [ObservableProperty] private string _detailPlanonGruppe = string.Empty;
+    [ObservableProperty] private string _detailFolge = string.Empty;
+    [ObservableProperty] private ObservableCollection<MmInstructionCheckboxItem> _detailInstructionOptions = new();
+    // Nur bei DetailStatusOption.Value 3 (Erledigt) relevant.
+    [ObservableProperty] private string _detailAuftragsnummer = string.Empty;
+    // Bei jedem Status auswertbar (setzt Freigabe-Akt-Nr./-Datum).
+    [ObservableProperty] private string _detailAktNr = string.Empty;
+    public bool IsFreigabeWorkflowVisible => DetailStatusOption.Value is 0 or 1;
+    public bool IsErledigtWorkflowVisible => DetailStatusOption.Value == 3;
 
     // ── Dropdown data ─────────────────────────────────────────────────────────
     /// <summary>Streets accumulated from loaded messages — used as suggestions in the form.</summary>
@@ -349,6 +380,16 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
                 // (kein Freitext-Name) — der aufgelöste Name wird separat über
                 // SelectedDetail.NachunternehmerName angezeigt.
                 DetailNachunternehmer = d.Nachunternehmer > 0 ? d.Nachunternehmer.ToString() : string.Empty;
+
+                DetailEkpreis = d.Ekpreis;
+                DetailPlanonGruppe = d.Planon;
+                DetailFolge = d.Folge;
+                DetailAuftragsnummer = d.Auftragsnummer;
+                DetailAktNr = d.AktNr;
+                var selectedInstructionIds = new HashSet<string>(d.Instructions);
+                DetailInstructionOptions = new ObservableCollection<MmInstructionCheckboxItem>(
+                    result.AvailableInstructions.Select(o =>
+                        new MmInstructionCheckboxItem(o.Id, o.Text, selectedInstructionIds.Contains(o.Id))));
             }
         }
         catch (Exception ex)
@@ -540,12 +581,22 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
         ErrorMessage = null;
         try
         {
-            await ProtoApi.UpdateMmStatusAsync(new ProtoMmUpdateStatusRequest
+            var request = new ProtoMmUpdateStatusRequest
             {
                 Uid = SelectedDetail.Uid,
                 Status = DetailStatusOption.Value ?? 0,
                 Comment = DetailStatusComment,
-            });
+                Ekpreis = DetailEkpreis,
+                PlanonGruppe = DetailPlanonGruppe,
+                Folge = DetailFolge,
+                Auftragsnummer = DetailAuftragsnummer,
+                AktNr = DetailAktNr,
+            };
+            if (int.TryParse(DetailNachunternehmer, out var nuId) && nuId > 0)
+                request.Nachunternehmer = nuId;
+            request.Instructions.AddRange(DetailInstructionOptions.Where(o => o.IsSelected).Select(o => o.Id));
+
+            await ProtoApi.UpdateMmStatusAsync(request);
             await LoadDetailAsync();
         }
         catch (Exception ex)
@@ -689,4 +740,10 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
     }
 
     partial void OnIsSavingChanged(bool value) => SaveCommand.NotifyCanExecuteChanged();
+
+    partial void OnDetailStatusOptionChanged(MmStatusOption value)
+    {
+        OnPropertyChanged(nameof(IsFreigabeWorkflowVisible));
+        OnPropertyChanged(nameof(IsErledigtWorkflowVisible));
+    }
 }

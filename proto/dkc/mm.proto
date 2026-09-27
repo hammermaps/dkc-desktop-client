@@ -73,9 +73,26 @@ message MmDetail {
 
     string street_name          = 18;
     string nachunternehmer_name = 19;
+
+    // Freigabe-/Prüfungs-Workflow-Felder (Web-Pendant: mm_view.tpl / MmUpdateStatusRequest oben).
+    string ekpreis          = 20;
+    string folge             = 21;
+    string auftragsnummer    = 22;
+    string akt_nr             = 23;
 }
 
-message MmDetailResponse { MmDetail message = 1; }
+// Web-Pendant: ContMm::$additional_instructions (system\helper\MmInstructionOptions).
+// Feste, projektunabhängige Liste — wird bei jeder MM_DETAIL-Antwort mitgeliefert, damit
+// der Client die in MmDetail.instructions gespeicherten IDs mit Klartext anzeigen kann.
+message MmInstructionOption {
+    string id   = 1;
+    string text = 2;
+}
+
+message MmDetailResponse {
+    MmDetail                     message               = 1;
+    repeated MmInstructionOption available_instructions = 2;
+}
 
 // MM_CREATE / MM_UPDATE ───────────────────────────────────────────────────────
 message MmSaveRequest {
@@ -96,10 +113,31 @@ message MmSaveRequest {
 message MmCreateResponse { string uid = 1; }
 
 // MM_UPDATE_STATUS ────────────────────────────────────────────────────────────
+// Web-Pendant: MmCoreTrait::changeStatus() — enthält bewusst NICHT den E-Mail-Versand
+// an Verwaltung/Nachunternehmer/Mieter (siehe MmUpdateStatusHandler), nur die
+// Kernlogik + die Freigabe-/Prüfungs-Workflow-Felder aus dem Status-/Prüfungs-Modal.
 message MmUpdateStatusRequest {
     string uid     = 1;
     int32  status  = 2;
     string comment = 3;
+
+    // Nur bei status 0 (Freigabe) / 1 (Freigegeben) relevant; 0 = unverändert lassen.
+    int32  nachunternehmer  = 4;
+    // "" = unverändert lassen. Web validiert client- UND serverseitig als Dezimalzahl.
+    string ekpreis           = 5;
+    string planon_gruppe     = 6;
+    // IDs aus MmInstructionOption.id (MmDetailResponse.available_instructions).
+    // Nur bei status 0/1 ausgewertet; ersetzt die gespeicherte Auswahl vollständig
+    // (leere Liste = keine Zusatzanweisungen), der Client sendet daher immer den
+    // vollständigen aktuellen Checkbox-Zustand, nicht nur Änderungen.
+    repeated string instructions = 7;
+    // Pflicht-Folgemaßnahmen-Text (Web: bei Ablehnung aus der Prüfung Pflichtfeld).
+    string folge              = 8;
+    // Nur bei status 3 (Erledigt); Format wird serverseitig geprüft (P700+Ziffern
+    // oder 7–10-stellige Ziffernfolge), ungültige Werte werden ignoriert wie im Web.
+    string auftragsnummer     = 9;
+    // Freigabe-Akt-Nr.; wenn gesetzt, werden freigabe_datum/-user mit aktualisiert.
+    string akt_nr             = 10;
 }
 
 // MM_ASSIGN_CONTRACTOR ────────────────────────────────────────────────────────

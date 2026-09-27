@@ -32,6 +32,15 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
   "dringend"/"notfall" statt der tatsächlichen DB-Enum-Werte
   (`niedrig|normal|hoch|kritisch`) — Badges zeigten dadurch fast immer "Normal" an.
   Auf die echten Werte korrigiert (Web-Pendant: `mm_list.tpl` `getPriorityBadge()`).
+- Freigabe-/Prüfungs-Workflow im Status-Panel der Mängelmeldungen: EK-Preis,
+  Planon-Arbeitsauftragsgruppe, Freigabe-Akt-Nr. und Pflicht-Folgemaßnahmen-Text
+  (sichtbar bei Status "Freigabe"/"Freigegeben"), 12 Zusatzanweisungs-Checkboxen
+  (Labels jetzt vom Server geladen statt hartkodiert) sowie Auftragsnummer
+  (sichtbar bei Status "Erledigt", serverseitig formatgeprüft). **Bewusst nicht
+  enthalten:** E-Mail-Benachrichtigungen an Verwaltung/Nachunternehmer/Mieter und
+  der Arbeitsnachweis-PDF-Upload nach Nextcloud — ein Statuswechsel über den
+  Desktop-Client aktualisiert die Datenbank korrekt, löst aber keine E-Mails aus
+  (siehe `docs/reports/MM_LISTE_DESKTOP_CLIENT_LUECKENANALYSE.md` im Hauptrepo).
 
 ### Geändert
 - Mängelmeldungen (Liste, Detail, Anlegen, Bearbeiten, Statuswechsel, NU-Zuweisung,

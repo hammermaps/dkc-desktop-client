@@ -246,13 +246,13 @@
     <GridSplitter Grid.Row="6" Height="4" HorizontalAlignment="Stretch"/>
 
     <!-- ═══════════════════════════════  Detail-Panel  ══════════════════════════════════ -->
-    <ScrollViewer Grid.Row="7" MaxHeight="240">
+    <ScrollViewer Grid.Row="7" MaxHeight="420">
       <StackPanel Margin="4" Spacing="10"
                   IsVisible="{Binding SelectedDetail, Converter={x:Static ObjectConverters.IsNotNull}}">
 
         <TextBlock Text="Detail" FontSize="15" FontWeight="SemiBold"/>
 
-        <Grid ColumnDefinitions="160,16,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="5">
+        <Grid ColumnDefinitions="160,16,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="5">
 
           <!-- UID + Datum -->
           <TextBlock Grid.Row="0" Grid.Column="0" Text="UID:" FontWeight="SemiBold"/>
@@ -322,6 +322,43 @@
             <Button Content="Zuweisen" Command="{Binding AssignContractorCommand}"/>
             <TextBlock Text="{Binding SelectedDetail.NachunternehmerName}" Foreground="#2D3748" VerticalAlignment="Center"/>
           </StackPanel>
+
+          <!-- Freigabe-/Prüfungs-Workflow (Web-Pendant: Status-/Prüfungs-Modal mm_list.tpl) —
+               nur relevant, wenn oben Status "Freigabe" oder "Freigegeben" gewählt ist. -->
+          <TextBlock Grid.Row="10" Grid.Column="0" Text="Freigabe-Workflow:" FontWeight="SemiBold" VerticalAlignment="Top"
+                     IsVisible="{Binding IsFreigabeWorkflowVisible}"/>
+          <StackPanel Grid.Row="10" Grid.Column="2" Spacing="6" IsVisible="{Binding IsFreigabeWorkflowVisible}">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBox Text="{Binding DetailEkpreis}" PlaceholderText="EK-Preis" Width="100"/>
+              <TextBox Text="{Binding DetailPlanonGruppe}" PlaceholderText="Planon-Arbeitsauftragsgruppe" Width="220"/>
+              <TextBox Text="{Binding DetailAktNr}" PlaceholderText="Freigabe-Akt-Nr." Width="140"/>
+            </StackPanel>
+            <TextBox Text="{Binding DetailFolge}" PlaceholderText="Folgemaßnahmen" AcceptsReturn="True" Height="50" TextWrapping="Wrap"/>
+          </StackPanel>
+
+          <TextBlock Grid.Row="11" Grid.Column="0" Text="Zusatzanweisungen:" FontWeight="SemiBold" VerticalAlignment="Top"
+                     IsVisible="{Binding IsFreigabeWorkflowVisible}"/>
+          <ItemsControl Grid.Row="11" Grid.Column="2" ItemsSource="{Binding DetailInstructionOptions}"
+                        IsVisible="{Binding IsFreigabeWorkflowVisible}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel/>
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:MmInstructionCheckboxItem">
+                <CheckBox Content="{Binding Text}" IsChecked="{Binding IsSelected}" Margin="0,0,12,6" MaxWidth="260"/>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <!-- Erledigt-Workflow — nur relevant, wenn oben Status "Erledigt" gewählt ist. -->
+          <TextBlock Grid.Row="12" Grid.Column="0" Text="Auftragsnummer:" FontWeight="SemiBold" VerticalAlignment="Center"
+                     IsVisible="{Binding IsErledigtWorkflowVisible}"/>
+          <TextBox Grid.Row="12" Grid.Column="2" Text="{Binding DetailAuftragsnummer}" Width="180" HorizontalAlignment="Left"
+                   PlaceholderText="z. B. 1234567 oder P700123"
+                   IsVisible="{Binding IsErledigtWorkflowVisible}"
+                   ToolTip.Tip="P700+Ziffern oder 7–10-stellige Ziffernfolge; ungültige Werte werden beim Speichern ignoriert"/>
 
         </Grid>
       </StackPanel>
