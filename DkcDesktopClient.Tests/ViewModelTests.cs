@@ -378,7 +378,8 @@ public class ViewModelTests : IDisposable
     private KeysViewModel CreateKeys()
     {
         var filePicker = new Mock<IFilePickerService>().Object;
-        return new KeysViewModel(_factory, _authService, filePicker, CreateBrs());
+        var dialogService = new Mock<IDialogService>().Object;
+        return new KeysViewModel(_factory, _authService, filePicker, CreateBrs(), dialogService);
     }
 
     [Fact]

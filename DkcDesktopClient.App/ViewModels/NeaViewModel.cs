@@ -6,7 +6,14 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DkcDesktopClient.App.Services;
 using DkcDesktopClient.Core.Api;
+using DkcDesktopClient.Core.Protobuf;
 using DkcDesktopClient.Core.Services;
+using ProtoNeaSystemSaveRequest = DkcDesktopClient.Core.Protocol.NeaSystemSaveRequest;
+using ProtoNeaSystemDeleteRequest = DkcDesktopClient.Core.Protocol.NeaSystemDeleteRequest;
+using ProtoNeaInspectionSaveRequest = DkcDesktopClient.Core.Protocol.NeaInspectionSaveRequest;
+using ProtoNeaInspectionCompleteRequest = DkcDesktopClient.Core.Protocol.NeaInspectionCompleteRequest;
+using ProtoNeaChecklistUpdateRequest = DkcDesktopClient.Core.Protocol.NeaChecklistUpdateRequest;
+using ProtoNeaChecklistItem = DkcDesktopClient.Core.Protocol.NeaChecklistItem;
 
 namespace DkcDesktopClient.App.ViewModels;
 
@@ -29,6 +36,13 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
     private readonly AuthService _authService;
     private readonly IFilePickerService _filePicker;
     private readonly BackgroundRefreshService _backgroundRefreshService;
+
+    /// <summary>
+    /// nea_system_create/update/delete, nea_inspection_create/update/complete und
+    /// nea_checklist_update sind in api.php nie als REST-Route registriert worden — nur die
+    /// Protobuf-Actions funktionieren.
+    /// </summary>
+    private DkcProtobufApi ProtoApi => new(_apiFactory.CreateProtobuf(_authService.CurrentToken));
 
     // List state
     [ObservableProperty] private bool _isLoading;
@@ -296,40 +310,28 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
         SystemFormError = null;
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
-            var req = new NeaSystemSaveRequest(
-                FormSystemName,
-                Nz(FormSystemDescription),
-                Nz(FormSystemLocation),
-                Nz(FormSystemManufacturer),
-                Nz(FormSystemModel),
-                Nz(FormSystemSerialNumber),
-                Nz(FormSystemInstallationDate),
-                FormSystemEnabled,
-                null,
-                FormSystemRatedPower,
-                Nz(FormSystemFuelType));
+            var req = new ProtoNeaSystemSaveRequest
+            {
+                Id = IsEditingSystem && _editingSystemId.HasValue ? _editingSystemId.Value : 0,
+                Name = FormSystemName,
+                Description = FormSystemDescription,
+                Location = FormSystemLocation,
+                Manufacturer = FormSystemManufacturer,
+                Model = FormSystemModel,
+                SerialNumber = FormSystemSerialNumber,
+                InstallationDate = FormSystemInstallationDate,
+                Enabled = FormSystemEnabled,
+                RatedPower = FormSystemRatedPower ?? 0,
+                FuelType = FormSystemFuelType,
+            };
 
-            ApiError result;
             if (IsEditingSystem && _editingSystemId.HasValue)
-            {
-                result = await api.UpdateNeaSystemAsync(_editingSystemId.Value, req);
-            }
+                await ProtoApi.UpdateNeaSystemAsync(req);
             else
-            {
-                var cr = await api.CreateNeaSystemAsync(req);
-                result = new ApiError(cr.Success, cr.Error);
-            }
+                await ProtoApi.CreateNeaSystemAsync(req);
 
-            if (result.Success)
-            {
-                IsSystemFormVisible = false;
-                await LoadSystemsAsync();
-            }
-            else
-            {
-                SystemFormError = result.Error ?? "Save failed.";
-            }
+            IsSystemFormVisible = false;
+            await LoadSystemsAsync();
         }
         catch (Exception ex)
         {
@@ -349,17 +351,9 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
         ErrorMessage = null;
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
-            var result = await api.DeleteNeaSystemAsync(SelectedSystem.Id);
-            if (result.Success)
-            {
-                Systems.Remove(SelectedSystem);
-                Inspections.Clear();
-            }
-            else
-            {
-                ErrorMessage = result.Error ?? "Delete failed.";
-            }
+            await ProtoApi.DeleteNeaSystemAsync(new ProtoNeaSystemDeleteRequest { Id = SelectedSystem.Id });
+            Systems.Remove(SelectedSystem);
+            Inspections.Clear();
         }
         catch (Exception ex)
         {
@@ -428,38 +422,27 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
         InspectionFormError = null;
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
-            var req = new NeaInspectionSaveRequest(
-                SelectedSystem.Id,
-                FormInspectionType,
-                FormInspectionDate,
-                FormInspectionStatus,
-                FormInspectionResult,
-                FormRuntimeHours,
-                Nz(FormInspectionNotes),
-                Nz(FormDefectsFound),
-                Nz(FormCorrectiveActions));
+            var req = new ProtoNeaInspectionSaveRequest
+            {
+                Id = IsEditingInspection && _editingInspectionId.HasValue ? _editingInspectionId.Value : 0,
+                NeaSystemId = SelectedSystem.Id,
+                InspectionType = FormInspectionType,
+                InspectionDate = FormInspectionDate,
+                Status = FormInspectionStatus,
+                OverallResult = FormInspectionResult,
+                RuntimeHours = FormRuntimeHours ?? 0,
+                Notes = FormInspectionNotes,
+                DefectsFound = FormDefectsFound,
+                CorrectiveActions = FormCorrectiveActions,
+            };
 
-            ApiError result;
             if (IsEditingInspection && _editingInspectionId.HasValue)
-            {
-                result = await api.UpdateNeaInspectionAsync(_editingInspectionId.Value, req);
-            }
+                await ProtoApi.UpdateNeaInspectionAsync(req);
             else
-            {
-                var cr = await api.CreateNeaInspectionAsync(req);
-                result = new ApiError(cr.Success, cr.Error);
-            }
+                await ProtoApi.CreateNeaInspectionAsync(req);
 
-            if (result.Success)
-            {
-                IsInspectionFormVisible = false;
-                await LoadInspectionsAsync();
-            }
-            else
-            {
-                InspectionFormError = result.Error ?? "Save failed.";
-            }
+            IsInspectionFormVisible = false;
+            await LoadInspectionsAsync();
         }
         catch (Exception ex)
         {
@@ -479,13 +462,13 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
         ErrorMessage = null;
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
-            var result = await api.CompleteNeaInspectionAsync(SelectedInspection.Id,
-                new NeaInspectionCompleteRequest(FormInspectionResult, Nz(FormInspectionNotes)));
-            if (result.Success)
-                await LoadInspectionsAsync();
-            else
-                ErrorMessage = result.Error ?? "Complete failed.";
+            await ProtoApi.CompleteNeaInspectionAsync(new ProtoNeaInspectionCompleteRequest
+            {
+                Id = SelectedInspection.Id,
+                OverallResult = FormInspectionResult,
+                Notes = FormInspectionNotes,
+            });
+            await LoadInspectionsAsync();
         }
         catch (Exception ex)
         {
@@ -525,13 +508,15 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
         ChecklistError    = null;
         try
         {
-            var api   = _apiFactory.Create(_authService.CurrentToken);
-            var items = ChecklistItems
-                .Select(ci => new NeaChecklistUpdateItem(ci.CheckpointId, ci.Status, Nz(ci.Note), Nz(ci.Comment)))
-                .ToList();
-            var result = await api.UpdateNeaChecklistAsync(SelectedInspection.Id, new NeaChecklistUpdateRequest(items));
-            if (!result.Success)
-                ChecklistError = result.Error ?? "Checkliste speichern fehlgeschlagen.";
+            var req = new ProtoNeaChecklistUpdateRequest { InspectionId = SelectedInspection.Id };
+            req.Items.AddRange(ChecklistItems.Select(ci => new ProtoNeaChecklistItem
+            {
+                CheckpointId = ci.CheckpointId,
+                Status = ci.Status,
+                Note = ci.Note,
+                Comment = ci.Comment,
+            }));
+            await ProtoApi.UpdateNeaChecklistAsync(req);
         }
         catch (Exception ex)
         {

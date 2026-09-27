@@ -132,6 +132,10 @@ public sealed class DkcProtobufApi : IDkcProtobufApi
         => Send<Ack>(Protocol.Action.KeysReturn, request, ct);
     public Task<Ack> DeleteKeyAsync(KeyDeleteRequest request, CancellationToken ct = default)
         => Send<Ack>(Protocol.Action.KeysDelete, request, ct);
+    public Task<KeysTypesListResponse> GetKeysTypesListAsync(CancellationToken ct = default)
+        => Send<KeysTypesListResponse>(Protocol.Action.KeysTypesList, null, ct);
+    public Task<KeysCabinetsListResponse> GetKeysCabinetsListAsync(CancellationToken ct = default)
+        => Send<KeysCabinetsListResponse>(Protocol.Action.KeysCabinetsList, null, ct);
 
     // ── Dashboard & Projekte ────────────────────────────────────────────────
     public Task<DashboardDataResponse> GetDashboardDataAsync(CancellationToken ct = default)

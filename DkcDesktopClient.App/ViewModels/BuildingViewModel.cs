@@ -4,7 +4,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DkcDesktopClient.App.Services;
 using DkcDesktopClient.Core.Api;
+using DkcDesktopClient.Core.Protobuf;
 using DkcDesktopClient.Core.Services;
+using ProtoBuildingSaveRequest = DkcDesktopClient.Core.Protocol.BuildingSaveRequest;
+using ProtoBuildingInspectionSaveRequest = DkcDesktopClient.Core.Protocol.BuildingInspectionSaveRequest;
+using ProtoBuildingInspectionCompleteRequest = DkcDesktopClient.Core.Protocol.BuildingInspectionCompleteRequest;
+using ProtoBuildingCheckpointUpdateRequest = DkcDesktopClient.Core.Protocol.BuildingCheckpointUpdateRequest;
 
 namespace DkcDesktopClient.App.ViewModels;
 
@@ -33,6 +38,12 @@ public partial class BuildingViewModel : ViewModelBase, INavigationTarget
     private readonly DkcApiFactory _apiFactory;
     private readonly AuthService _authService;
     private readonly BackgroundRefreshService _backgroundRefreshService;
+
+    /// <summary>
+    /// building_create/update/inspection_create/update/complete/checkpoint_update sind in
+    /// api.php nie als REST-Route registriert worden — nur die Protobuf-Actions funktionieren.
+    /// </summary>
+    private DkcProtobufApi ProtoApi => new(_apiFactory.CreateProtobuf(_authService.CurrentToken));
     private const int PageSize = 50;
 
     // List state
@@ -280,34 +291,22 @@ public partial class BuildingViewModel : ViewModelBase, INavigationTarget
         BuildingFormError = null;
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
-            var req = new BuildingSaveRequest(
-                FormBuildingName,
-                Nz(FormBuildingAddress),
-                Nz(FormBuildingDescription),
-                FormBuildingEnabled,
-                null);
+            var req = new ProtoBuildingSaveRequest
+            {
+                Id = IsEditingBuilding && _editingBuildingId.HasValue ? _editingBuildingId.Value : 0,
+                Name = FormBuildingName,
+                Address = FormBuildingAddress,
+                Description = FormBuildingDescription,
+                Enabled = FormBuildingEnabled,
+            };
 
-            ApiError result;
             if (IsEditingBuilding && _editingBuildingId.HasValue)
-            {
-                result = await api.UpdateBuildingAsync(_editingBuildingId.Value, req);
-            }
+                await ProtoApi.UpdateBuildingAsync(req);
             else
-            {
-                var cr = await api.CreateBuildingAsync(req);
-                result = new ApiError(cr.Success, cr.Error);
-            }
+                await ProtoApi.CreateBuildingAsync(req);
 
-            if (result.Success)
-            {
-                IsBuildingFormVisible = false;
-                await LoadBuildingsAsync();
-            }
-            else
-            {
-                BuildingFormError = result.Error ?? "Save failed.";
-            }
+            IsBuildingFormVisible = false;
+            await LoadBuildingsAsync();
         }
         catch (Exception ex)
         {
@@ -367,36 +366,25 @@ public partial class BuildingViewModel : ViewModelBase, INavigationTarget
         InspectionFormError = null;
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
-            var req = new BuildingInspectionSaveRequest(
-                SelectedBuilding.Id,
-                Nz(FormInspectionTitle),
-                Nz(FormInspectionDate),
-                Nz(FormInspectionStatus),
-                Nz(FormInspectionWeather),
-                Nz(FormInspectionAttendees),
-                Nz(FormInspectionNotes));
+            var req = new ProtoBuildingInspectionSaveRequest
+            {
+                Id = IsEditingInspection && _editingInspectionId.HasValue ? _editingInspectionId.Value : 0,
+                BuildingId = SelectedBuilding.Id,
+                Title = FormInspectionTitle,
+                InspectionDate = FormInspectionDate,
+                Status = FormInspectionStatus,
+                Weather = FormInspectionWeather,
+                Attendees = FormInspectionAttendees,
+                GeneralNotes = FormInspectionNotes,
+            };
 
-            ApiError result;
             if (IsEditingInspection && _editingInspectionId.HasValue)
-            {
-                result = await api.UpdateBuildingInspectionAsync(_editingInspectionId.Value, req);
-            }
+                await ProtoApi.UpdateBuildingInspectionAsync(req);
             else
-            {
-                var cr = await api.CreateBuildingInspectionAsync(req);
-                result = new ApiError(cr.Success, cr.Error);
-            }
+                await ProtoApi.CreateBuildingInspectionAsync(req);
 
-            if (result.Success)
-            {
-                IsInspectionFormVisible = false;
-                await LoadInspectionsAsync();
-            }
-            else
-            {
-                InspectionFormError = result.Error ?? "Save failed.";
-            }
+            IsInspectionFormVisible = false;
+            await LoadInspectionsAsync();
         }
         catch (Exception ex)
         {
@@ -416,13 +404,13 @@ public partial class BuildingViewModel : ViewModelBase, INavigationTarget
         ErrorMessage = null;
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
-            var result = await api.CompleteBuildingInspectionAsync(SelectedInspection.Id,
-                new BuildingInspectionCompleteRequest(FormCompleteResult, Nz(FormCompleteNotes)));
-            if (result.Success)
-                await LoadInspectionsAsync();
-            else
-                ErrorMessage = result.Error ?? "Complete failed.";
+            await ProtoApi.CompleteBuildingInspectionAsync(new ProtoBuildingInspectionCompleteRequest
+            {
+                Id = SelectedInspection.Id,
+                OverallResult = FormCompleteResult,
+                GeneralNotes = FormCompleteNotes,
+            });
+            await LoadInspectionsAsync();
         }
         catch (Exception ex)
         {
@@ -444,20 +432,16 @@ public partial class BuildingViewModel : ViewModelBase, INavigationTarget
         CheckpointError     = null;
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
             foreach (var cp in dirty)
             {
-                var result = await api.UpdateBuildingCheckpointAsync(InspectionDetail.Id,
-                    new BuildingCheckpointUpdateRequest(
-                        cp.CheckpointId,
-                        cp.Status,
-                        Nz(cp.Note),
-                        Nz(cp.Comment)));
-                if (!result.Success)
+                await ProtoApi.UpdateBuildingCheckpointAsync(new ProtoBuildingCheckpointUpdateRequest
                 {
-                    CheckpointError = result.Error ?? "Prüfpunkt-Aktualisierung fehlgeschlagen.";
-                    break;
-                }
+                    InspectionId = InspectionDetail.Id,
+                    CheckpointId = cp.CheckpointId,
+                    Status = cp.Status,
+                    Note = cp.Note,
+                    Comment = cp.Comment,
+                });
                 cp.IsDirty = false;
             }
         }
@@ -479,15 +463,14 @@ public partial class BuildingViewModel : ViewModelBase, INavigationTarget
         ErrorMessage = null;
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
-            var result = await api.UpdateBuildingCheckpointAsync(InspectionDetail.Id,
-                new BuildingCheckpointUpdateRequest(
-                    checkpoint.CheckpointId,
-                    checkpoint.Status ?? "ok",
-                    checkpoint.Note,
-                    checkpoint.Comment));
-            if (!result.Success)
-                ErrorMessage = result.Error ?? "Checkpoint update failed.";
+            await ProtoApi.UpdateBuildingCheckpointAsync(new ProtoBuildingCheckpointUpdateRequest
+            {
+                InspectionId = InspectionDetail.Id,
+                CheckpointId = checkpoint.CheckpointId,
+                Status = checkpoint.Status ?? "ok",
+                Note = checkpoint.Note ?? string.Empty,
+                Comment = checkpoint.Comment ?? string.Empty,
+            });
         }
         catch (Exception ex)
         {

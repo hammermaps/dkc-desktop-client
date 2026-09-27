@@ -73,6 +73,8 @@ public interface IDkcProtobufApi
     Task<KeyIssueResponse> IssueKeyAsync(KeyIssueRequest request, CancellationToken ct = default);
     Task<Ack> ReturnKeyAsync(KeyReturnRequest request, CancellationToken ct = default);
     Task<Ack> DeleteKeyAsync(KeyDeleteRequest request, CancellationToken ct = default);
+    Task<KeysTypesListResponse> GetKeysTypesListAsync(CancellationToken ct = default);
+    Task<KeysCabinetsListResponse> GetKeysCabinetsListAsync(CancellationToken ct = default);
 
     // ── Dashboard & Projekte ────────────────────────────────────────────────
     Task<DashboardDataResponse> GetDashboardDataAsync(CancellationToken ct = default);

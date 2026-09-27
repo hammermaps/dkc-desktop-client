@@ -4,8 +4,10 @@ using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DkcDesktopClient.Core.Api;
+using DkcDesktopClient.Core.Protobuf;
 using DkcDesktopClient.Core.Services;
 using Refit;
+using ProtoProjectSaveRequest = DkcDesktopClient.Core.Protocol.ProjectSaveRequest;
 
 namespace DkcDesktopClient.App.ViewModels;
 
@@ -15,6 +17,13 @@ public partial class SettingsViewModel : ViewModelBase
     private readonly AuthService _authService;
     private readonly TokenStore _tokenStore;
     private readonly UpdateService _updateService;
+
+    /// <summary>
+    /// project_create/project_update sind in api.php nie als REST-Route registriert worden —
+    /// nur die Protobuf-Action funktioniert. (Admin-Benutzerverwaltung user_create/update/delete
+    /// hat aktuell weder eine REST- noch eine Protobuf-Implementierung — siehe CanSaveUser-Bereich.)
+    /// </summary>
+    private DkcProtobufApi ProtoApi => new(_apiFactory.CreateProtobuf(_authService.CurrentToken));
 
     [ObservableProperty] private bool _isLoading;
     [ObservableProperty] private string? _errorMessage;
@@ -296,32 +305,21 @@ public partial class SettingsViewModel : ViewModelBase
         ProjectFormError = null;
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
-            var req = new ProjectSaveRequest(
-                FormProjectName,
-                string.IsNullOrWhiteSpace(FormProjectDescription) ? null : FormProjectDescription);
+            var req = new ProtoProjectSaveRequest
+            {
+                Id = IsEditingProject && _editingProjectId.HasValue ? _editingProjectId.Value : 0,
+                Name = FormProjectName,
+                Description = FormProjectDescription,
+            };
 
-            ApiError result;
             if (IsEditingProject && _editingProjectId.HasValue)
-            {
-                result = await api.UpdateProjectAsync(_editingProjectId.Value, req);
-            }
+                await ProtoApi.UpdateProjectAsync(req);
             else
-            {
-                var cr = await api.CreateProjectAsync(req);
-                result = new ApiError(cr.Success, cr.Error);
-            }
+                await ProtoApi.CreateProjectAsync(req);
 
-            if (result.Success)
-            {
-                IsProjectFormVisible = false;
-                await LoadProjectsAsync();
-                StatusMessage = "Project saved.";
-            }
-            else
-            {
-                ProjectFormError = result.Error ?? "Save failed.";
-            }
+            IsProjectFormVisible = false;
+            await LoadProjectsAsync();
+            StatusMessage = "Project saved.";
         }
         catch (Exception ex)
         {

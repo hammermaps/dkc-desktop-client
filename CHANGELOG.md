@@ -7,6 +7,32 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
 
 ## [Unreleased]
 
+### Fix
+- **Kritisch:** Schreibende Aktionen für Gebäudebegehungen (anlegen/bearbeiten/abschließen/
+  Prüfpunkte), Schlüsselverwaltung (anlegen/bearbeiten/löschen/ausgeben/zurückgeben), Klima-
+  Steuerung (Einzelgerät/Gruppe/Alle-Ein/Alle-Aus/Letzten-Zustand-wiederherstellen), NEA
+  (Systeme anlegen/bearbeiten/löschen, Prüfungen anlegen/bearbeiten/abschließen, Checkliste)
+  und Projektverwaltung (anlegen/bearbeiten) waren in `api.php` nie als REST-Route
+  registriert — jeder Speichern-/Löschen-/Steuern-Klick schlug mit 404 fehl. Nur die
+  bereits vollständig implementierten Protobuf-Actions funktionierten. Alle betroffenen
+  ViewModels nutzen jetzt durchgängig Protobuf für diese Operationen (Lesezugriffe bleiben
+  dort REST, wo sie bereits funktionieren). Derselbe Root Cause wie beim vorherigen
+  Mängelmeldungs-Fix.
+- Schlüsselverwaltung: `KeysSaveHandler` verlangt zusätzlich `number` und `type_id`, die das
+  bisherige Formular gar nicht erhob — Formular um Pflichtfelder "Nummer" und "Typ" (Dropdown,
+  neu: `GetKeysTypesListAsync`/`GetKeysCabinetsListAsync`) sowie optional "Schrank" ergänzt;
+  die Inventarliste lädt jetzt ebenfalls über Protobuf, da die REST-Liste diese Felder nicht
+  liefert. Der frühere "Löschen"-Button auf dem Ausgabe-Tab rief `keys_delete` (löscht einen
+  Inventartyp) fälschlich mit der ID eines Ausgabe-Datensatzes auf — kein entsprechendes
+  Web-Feature existiert; Button entfernt und durch einen korrekten "Löschen"-Button für
+  Inventartypen (mit Bestätigungsdialog, Web-Pendant: `KeysInventoryTrait::deleteInventory()`)
+  auf dem Inventar-Tab ersetzt.
+
+### Bekannt, nicht behoben
+- Admin-Benutzerverwaltung (Benutzer anlegen/bearbeiten/löschen) hat weder eine REST- noch
+  eine Protobuf-Implementierung — betrifft `SettingsViewModel`. Sicherheitsrelevant
+  (Passwörter, Berechtigungen), daher bewusst nicht im Rahmen dieses Fixes mit umgesetzt.
+
 ### Hinzugefügt
 - Phase-5-Abschluss: vollständige Test-Coverage, Dokumentation, CI/CD-Erweiterung
 - Alle Listen-Ansichten (Mängelmeldungen, NEA-Systeme/-Prüfungen, Gebäude, Klimageräte,

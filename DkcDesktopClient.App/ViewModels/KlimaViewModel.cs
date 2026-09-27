@@ -3,7 +3,10 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DkcDesktopClient.App.Services;
 using DkcDesktopClient.Core.Api;
+using DkcDesktopClient.Core.Protobuf;
 using DkcDesktopClient.Core.Services;
+using ProtoKlimaDeviceControlRequest = DkcDesktopClient.Core.Protocol.KlimaDeviceControlRequest;
+using ProtoKlimaGroupControlRequest = DkcDesktopClient.Core.Protocol.KlimaGroupControlRequest;
 
 namespace DkcDesktopClient.App.ViewModels;
 
@@ -12,6 +15,26 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
     private readonly DkcApiFactory _apiFactory;
     private readonly AuthService _authService;
     private readonly BackgroundRefreshService _backgroundRefreshService;
+
+    /// <summary>
+    /// klima_device_control/klima_group_control sind in api.php nie als REST-Route registriert
+    /// worden — nur die Protobuf-Actions funktionieren.
+    /// </summary>
+    private DkcProtobufApi ProtoApi => new(_apiFactory.CreateProtobuf(_authService.CurrentToken));
+
+    private static ProtoKlimaDeviceControlRequest BuildDeviceControlRequest(
+        int address, bool? power, string? mode, double? setpoint, string? fanSpeed)
+    {
+        var req = new ProtoKlimaDeviceControlRequest
+        {
+            Address = address,
+            Mode = mode ?? string.Empty,
+            FanSpeed = fanSpeed ?? string.Empty,
+        };
+        if (power.HasValue) { req.PowerSet = true; req.Power = power.Value; }
+        if (setpoint.HasValue) { req.SetpointSet = true; req.Setpoint = setpoint.Value; }
+        return req;
+    }
     private bool _refreshingFromBackground;
 
     // Device list
@@ -265,22 +288,11 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
         ControlError = null;
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
-            var result = await api.ControlKlimaDeviceAsync(new KlimaDeviceControlRequest(
-                SelectedDeviceStatus.Address,
-                ControlPower,
-                ControlMode,
-                ControlSetpoint,
-                ControlFanSpeed));
-            if (result.Success)
-            {
-                IsControlPanelVisible = false;
-                await RefreshStatusAsync();
-            }
-            else
-            {
-                ControlError = result.Error ?? "Control command failed.";
-            }
+            var request = BuildDeviceControlRequest(
+                SelectedDeviceStatus.Address, ControlPower, ControlMode, ControlSetpoint, ControlFanSpeed);
+            await ProtoApi.ControlKlimaDeviceAsync(request);
+            IsControlPanelVisible = false;
+            await RefreshStatusAsync();
         }
         catch (Exception ex)
         {
@@ -300,17 +312,18 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
         ControlError = null;
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
-            var result = await api.ControlKlimaGroupAsync(new KlimaGroupControlRequest(
-                SelectedGroup.Id,
-                ControlPower,
-                ControlMode,
-                ControlSetpoint,
-                ControlFanSpeed));
-            if (result.Success)
-                await RefreshStatusAsync();
-            else
-                ControlError = result.Error ?? "Group control failed.";
+            var request = new ProtoKlimaGroupControlRequest
+            {
+                GroupId = SelectedGroup.Id,
+                Mode = ControlMode ?? string.Empty,
+                FanSpeed = ControlFanSpeed ?? string.Empty,
+                PowerSet = true,
+                Power = ControlPower,
+                SetpointSet = true,
+                Setpoint = ControlSetpoint,
+            };
+            await ProtoApi.ControlKlimaGroupAsync(request);
+            await RefreshStatusAsync();
         }
         catch (Exception ex)
         {
@@ -356,11 +369,10 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
         GlobalControlResult = null;
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
             foreach (var s in DeviceStatuses)
             {
-                await api.ControlKlimaDeviceAsync(new KlimaDeviceControlRequest(
-                    s.Address, true, ControlMode, ControlSetpoint, ControlFanSpeed));
+                await ProtoApi.ControlKlimaDeviceAsync(
+                    BuildDeviceControlRequest(s.Address, true, ControlMode, ControlSetpoint, ControlFanSpeed));
             }
             GlobalControlResult = $"Alle {DeviceStatuses.Count} Geräte eingeschaltet.";
             await RefreshStatusAsync();
@@ -382,11 +394,10 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
         GlobalControlResult = null;
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
             foreach (var s in DeviceStatuses)
             {
-                await api.ControlKlimaDeviceAsync(new KlimaDeviceControlRequest(
-                    s.Address, false, null, null, null));
+                await ProtoApi.ControlKlimaDeviceAsync(
+                    BuildDeviceControlRequest(s.Address, false, null, null, null));
             }
             GlobalControlResult = $"Alle {DeviceStatuses.Count} Geräte ausgeschaltet.";
             await RefreshStatusAsync();
@@ -420,11 +431,10 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
         GlobalControlResult = null;
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
             foreach (var s in _savedState)
             {
-                await api.ControlKlimaDeviceAsync(new KlimaDeviceControlRequest(
-                    s.Address, s.Power, s.Mode, s.Setpoint, s.FanSpeed));
+                await ProtoApi.ControlKlimaDeviceAsync(
+                    BuildDeviceControlRequest(s.Address, s.Power, s.Mode, s.Setpoint, s.FanSpeed));
             }
             GlobalControlResult = $"Letzter Status auf {_savedState.Count} Geräten wiederhergestellt.";
             await RefreshStatusAsync();

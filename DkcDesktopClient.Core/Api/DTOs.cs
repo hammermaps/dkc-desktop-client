@@ -350,7 +350,13 @@ public record KeyInventoryItem(
     [property: JsonPropertyName("name")] string? Name,
     [property: JsonPropertyName("description")] string? Description,
     [property: JsonPropertyName("total_count")] int? Total,
-    [property: JsonPropertyName("available")] int? Available);
+    [property: JsonPropertyName("available")] int? Available,
+    // Nicht Teil der REST-Antwort (keys_inventory) — nur befüllt, wenn per Protobuf geladen
+    // (KeysInventoryHandler), das die vollständigen Felder für KeysSaveHandler liefert.
+    string Number = "",
+    int TypeId = 0,
+    int CabinetId = 0,
+    bool Enabled = true);
 
 public record KeysInventoryResponse(
     [property: JsonPropertyName("success")] bool Success,

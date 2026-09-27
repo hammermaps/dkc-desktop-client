@@ -5,7 +5,15 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DkcDesktopClient.App.Services;
 using DkcDesktopClient.Core.Api;
+using DkcDesktopClient.Core.Protobuf;
 using DkcDesktopClient.Core.Services;
+using ProtoKeyInventorySaveRequest = DkcDesktopClient.Core.Protocol.KeyInventorySaveRequest;
+using ProtoKeyIssueRequest = DkcDesktopClient.Core.Protocol.KeyIssueRequest;
+using ProtoKeyReturnRequest = DkcDesktopClient.Core.Protocol.KeyReturnRequest;
+using ProtoKeyDeleteRequest = DkcDesktopClient.Core.Protocol.KeyDeleteRequest;
+using ProtoKeysInventoryRequest = DkcDesktopClient.Core.Protocol.KeysInventoryRequest;
+using KeyTypeOption = DkcDesktopClient.Core.Protocol.KeyTypeItem;
+using KeyCabinetOption = DkcDesktopClient.Core.Protocol.KeyCabinetItem;
 
 namespace DkcDesktopClient.App.ViewModels;
 
@@ -15,6 +23,14 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
     private readonly AuthService _authService;
     private readonly IFilePickerService _filePicker;
     private readonly BackgroundRefreshService _backgroundRefreshService;
+    private readonly IDialogService _dialogService;
+
+    /// <summary>
+    /// Schlüssel-Schreib-Actions (keys_create/update/issue/return/delete) sind in api.php nie
+    /// als REST-Route registriert worden — nur die vollständig implementierten Protobuf-Actions
+    /// funktionieren. Lesezugriffe (keys_inventory/keys_issued) bleiben REST (funktionieren dort).
+    /// </summary>
+    private DkcProtobufApi ProtoApi => new(_apiFactory.CreateProtobuf(_authService.CurrentToken));
 
     // List state
     [ObservableProperty] private bool _isLoading;
@@ -41,6 +57,11 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
     [ObservableProperty] private string _formKeyName = string.Empty;
     [ObservableProperty] private string _formKeyDescription = string.Empty;
     [ObservableProperty] private int _formKeyTotal = 1;
+    [ObservableProperty] private string _formKeyNumber = string.Empty;
+    [ObservableProperty] private KeyTypeOption? _formKeyType;
+    [ObservableProperty] private KeyCabinetOption? _formKeyCabinet;
+    [ObservableProperty] private ObservableCollection<KeyTypeOption> _keyTypeOptions = new();
+    [ObservableProperty] private ObservableCollection<KeyCabinetOption> _keyCabinetOptions = new();
 
     // Issue form
     [ObservableProperty] private bool _isIssueFormVisible;
@@ -62,12 +83,14 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
         DkcApiFactory apiFactory,
         AuthService authService,
         IFilePickerService filePicker,
-        BackgroundRefreshService backgroundRefreshService)
+        BackgroundRefreshService backgroundRefreshService,
+        IDialogService dialogService)
     {
         _apiFactory = apiFactory;
         _authService = authService;
         _filePicker = filePicker;
         _backgroundRefreshService = backgroundRefreshService;
+        _dialogService = dialogService;
         // Wire CollectionChanged so the CSV export button reflects loaded state
         Inventory.CollectionChanged += (_, _) =>
             ExportInventoryToCsvCommand.NotifyCanExecuteChanged();
@@ -98,14 +121,25 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
         try
         {
             var api = _apiFactory.Create(_authService.CurrentToken);
-            var inventoryTask = api.GetKeysInventoryAsync(ct);
+            // Inventar läuft über Protobuf: KeysSaveHandler verlangt number/type_id, die REST
+            // (keys_inventory) nicht liefert — die Liste braucht daher denselben Kanal wie das
+            // Speichern, sonst fehlen beim Bearbeiten die Pflichtfelder.
+            var inventoryTask = ProtoApi.GetKeysInventoryAsync(new ProtoKeysInventoryRequest(), ct);
             var issuedTask = api.GetKeysIssuedAsync(ct);
-            await Task.WhenAll(inventoryTask, issuedTask);
+            var typesTask = ProtoApi.GetKeysTypesListAsync(ct);
+            var cabinetsTask = ProtoApi.GetKeysCabinetsListAsync(ct);
+            await Task.WhenAll(inventoryTask, issuedTask, typesTask, cabinetsTask);
 
             Inventory.Clear();
-            if (inventoryTask.Result.Success && inventoryTask.Result.Keys != null)
-                foreach (var k in inventoryTask.Result.Keys)
-                    Inventory.Add(k);
+            foreach (var k in inventoryTask.Result.Keys)
+            {
+                Inventory.Add(new KeyInventoryItem(
+                    k.Id, k.Name, k.Description, k.TotalCount, k.Available,
+                    k.Number, k.TypeId, k.CabinetId, k.Enabled));
+            }
+
+            KeyTypeOptions = new ObservableCollection<KeyTypeOption>(typesTask.Result.Types_);
+            KeyCabinetOptions = new ObservableCollection<KeyCabinetOption>(cabinetsTask.Result.Cabinets);
 
             IssuedKeys.Clear();
             if (issuedTask.Result.Success)
@@ -160,6 +194,9 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
         FormKeyName = string.Empty;
         FormKeyDescription = string.Empty;
         FormKeyTotal = 1;
+        FormKeyNumber = string.Empty;
+        FormKeyType = KeyTypeOptions.FirstOrDefault();
+        FormKeyCabinet = null;
         KeyFormError = null;
         IsKeyFormVisible = true;
     }
@@ -179,6 +216,9 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
         FormKeyName = SelectedInventoryItem.Name ?? string.Empty;
         FormKeyDescription = SelectedInventoryItem.Description ?? string.Empty;
         FormKeyTotal = SelectedInventoryItem.Total ?? 1;
+        FormKeyNumber = SelectedInventoryItem.Number;
+        FormKeyType = KeyTypeOptions.FirstOrDefault(t => t.Id == SelectedInventoryItem.TypeId);
+        FormKeyCabinet = KeyCabinetOptions.FirstOrDefault(c => c.Id == SelectedInventoryItem.CabinetId);
         KeyFormError = null;
         IsKeyFormVisible = true;
     }
@@ -198,36 +238,43 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
             KeyFormError = "Name is required.";
             return;
         }
+        if (string.IsNullOrWhiteSpace(FormKeyNumber))
+        {
+            KeyFormError = "Nummer ist ein Pflichtfeld.";
+            return;
+        }
+        if (FormKeyType == null)
+        {
+            KeyFormError = "Typ ist ein Pflichtfeld.";
+            return;
+        }
         IsSavingKey = true;
         KeyFormError = null;
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
-            var req = new KeyInventorySaveRequest(
-                FormKeyName,
-                string.IsNullOrWhiteSpace(FormKeyDescription) ? null : FormKeyDescription,
-                FormKeyTotal);
+            var req = new ProtoKeyInventorySaveRequest
+            {
+                Id = IsEditingKey && _editingKeyId.HasValue ? _editingKeyId.Value : 0,
+                Number = FormKeyNumber,
+                Name = FormKeyName,
+                Description = FormKeyDescription,
+                TotalCount = FormKeyTotal,
+                TypeId = FormKeyType.Id,
+                CabinetId = FormKeyCabinet?.Id ?? 0,
+                Enabled = true,
+            };
 
-            ApiError result;
             if (IsEditingKey && _editingKeyId.HasValue)
             {
-                result = await api.UpdateKeyAsync(_editingKeyId.Value, req);
+                await ProtoApi.UpdateKeyAsync(req);
             }
             else
             {
-                var cr = await api.CreateKeyAsync(req);
-                result = new ApiError(cr.Success, cr.Error);
+                await ProtoApi.CreateKeyAsync(req);
             }
 
-            if (result.Success)
-            {
-                IsKeyFormVisible = false;
-                await LoadDataAsync();
-            }
-            else
-            {
-                KeyFormError = result.Error ?? "Save failed.";
-            }
+            IsKeyFormVisible = false;
+            await LoadDataAsync();
         }
         catch (Exception ex)
         {
@@ -280,22 +327,16 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
         IssueFormError = null;
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
-            var result = await api.IssueKeyAsync(new KeyIssueRequest(
-                SelectedInventoryItem.Id,
-                FormIssuedTo,
-                FormIssuedAt,
-                string.IsNullOrWhiteSpace(FormIssueNotes) ? null : FormIssueNotes));
-            if (result.Success)
+            await ProtoApi.IssueKeyAsync(new ProtoKeyIssueRequest
             {
-                IsIssueFormVisible = false;
-                await LoadDataAsync();
-                SelectedTabIndex = 1; // switch to Issued Keys tab
-            }
-            else
-            {
-                IssueFormError = result.Error ?? "Issue failed.";
-            }
+                KeyId = SelectedInventoryItem.Id,
+                IssuedTo = FormIssuedTo,
+                IssuedAt = FormIssuedAt,
+                Notes = FormIssueNotes,
+            });
+            IsIssueFormVisible = false;
+            await LoadDataAsync();
+            SelectedTabIndex = 1; // switch to Issued Keys tab
         }
         catch (Exception ex)
         {
@@ -346,25 +387,18 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
         ErrorMessage = null;
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
             var date = IsReturnFormVisible && !string.IsNullOrWhiteSpace(FormReturnDate)
                 ? FormReturnDate
                 : DateTime.Today.ToString("yyyy-MM-dd");
-            var notes = IsReturnFormVisible && !string.IsNullOrWhiteSpace(FormReturnNotes)
-                ? FormReturnNotes
-                : null;
-            var result = await api.ReturnKeyAsync(SelectedIssuedItem.Id,
-                new KeyReturnRequest(date, notes));
-            if (result.Success)
+            var notes = IsReturnFormVisible ? FormReturnNotes : string.Empty;
+            await ProtoApi.ReturnKeyAsync(new ProtoKeyReturnRequest
             {
-                IsReturnFormVisible = false;
-                await LoadDataAsync();
-            }
-            else
-            {
-                ReturnFormError = result.Error ?? "Rückgabe fehlgeschlagen.";
-                ErrorMessage    = ReturnFormError;
-            }
+                Id = SelectedIssuedItem.Id,
+                ReturnedAt = date,
+                Notes = notes,
+            });
+            IsReturnFormVisible = false;
+            await LoadDataAsync();
         }
         catch (Exception ex)
         {
@@ -377,25 +411,23 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
         }
     }
 
-    [RelayCommand(CanExecute = nameof(HasSelectedIssuedItem))]
-    public async Task DeleteIssuedAsync()
+    /// <summary>Löscht einen Schlüssel-Inventartyp. Web-Pendant: KeysInventoryTrait::deleteInventory().</summary>
+    [RelayCommand(CanExecute = nameof(HasSelectedInventoryItem))]
+    public async Task DeleteKeyAsync()
     {
-        if (SelectedIssuedItem == null) return;
+        if (SelectedInventoryItem == null) return;
+        var confirmed = await _dialogService.ConfirmAsync(
+            "Schlüsseltyp löschen",
+            $"Soll der Schlüsseltyp „{SelectedInventoryItem.Name}“ wirklich unwiderruflich gelöscht werden?");
+        if (!confirmed) return;
+
         IsLoading = true;
         ErrorMessage = null;
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
-            var result = await api.DeleteKeyIssuedAsync(SelectedIssuedItem.Id);
-            if (result.Success)
-            {
-                IssuedKeys.Remove(SelectedIssuedItem);
-                SelectedIssuedItem = null;
-            }
-            else
-            {
-                ErrorMessage = result.Error ?? "Delete failed.";
-            }
+            await ProtoApi.DeleteKeyAsync(new ProtoKeyDeleteRequest { Id = SelectedInventoryItem.Id });
+            Inventory.Remove(SelectedInventoryItem);
+            SelectedInventoryItem = null;
         }
         catch (Exception ex)
         {
@@ -417,13 +449,13 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
     {
         ShowEditKeyFormCommand.NotifyCanExecuteChanged();
         ShowIssueFormCommand.NotifyCanExecuteChanged();
+        DeleteKeyCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnSelectedIssuedItemChanged(KeyIssuedItem? value)
     {
         ReturnKeyCommand.NotifyCanExecuteChanged();
         ShowReturnFormCommand.NotifyCanExecuteChanged();
-        DeleteIssuedCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnIsSavingKeyChanged(bool value) => SaveKeyCommand.NotifyCanExecuteChanged();
