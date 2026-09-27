@@ -50,7 +50,11 @@ jobs:
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
             echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
           else
-            echo "value=1.0.0" >> "$GITHUB_OUTPUT"
+            # Muss mit der Version übereinstimmen, die der "Deploy continuous
+            # build"-Schritt unten an desktop_app_deploy meldet - sonst meldet
+            # sich jede frisch aktualisierte Binärdatei selbst als "1.0.0" und
+            # der Updater haelt sie faelschlich fuer veraltet.
+            echo "value=$(date -u +%Y.%m.%d).${{ github.run_number }}" >> "$GITHUB_OUTPUT"
           fi
         shell: bash
 
@@ -95,7 +99,10 @@ jobs:
           platform="linux"
           if [ "${{ matrix.rid }}" = "win-x64" ]; then platform="windows"; fi
 
-          deploy_version="$(date -u +%Y.%m.%d).${{ github.run_number }}"
+          # Dieselbe Version wie im Binary selbst (-p:Version= im Publish-Schritt),
+          # damit der Updater die hochgeladene Version korrekt mit der laufenden
+          # Binärdatei vergleichen kann.
+          deploy_version="${{ steps.version.outputs.value }}"
           commit_sha="${{ github.sha }}"
           notes="${{ github.event.head_commit.message }}"
 

@@ -10,6 +10,7 @@ public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly AuthService _authService;
     private readonly UpdateService _updateService;
+    private readonly TokenStore _tokenStore;
     private readonly INavigationService _navigationService;
     private readonly NotificationPollingService _notificationPollingService;
     private readonly ConnectivityService _connectivityService;
@@ -43,6 +44,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public MainWindowViewModel(
         AuthService authService,
         UpdateService updateService,
+        TokenStore tokenStore,
         INavigationService navigationService,
         NotificationPollingService notificationPollingService,
         ConnectivityService connectivityService,
@@ -59,6 +61,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _authService                = authService;
         _updateService              = updateService;
+        _tokenStore                 = tokenStore;
         _navigationService          = navigationService;
         _notificationPollingService = notificationPollingService;
         _connectivityService        = connectivityService;
@@ -218,7 +221,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         try
         {
-            AvailableUpdate = await _updateService.CheckForUpdateAsync();
+            AvailableUpdate = await _updateService.CheckForUpdateAsync(_tokenStore.LoadServerUrl(), _authService.CurrentToken);
         }
         catch
         {

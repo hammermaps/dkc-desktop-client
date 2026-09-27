@@ -498,7 +498,7 @@ public partial class SettingsViewModel : ViewModelBase
         StatusMessage = null;
         try
         {
-            var update = await _updateService.CheckForUpdateAsync();
+            var update = await _updateService.CheckForUpdateAsync(_tokenStore.LoadServerUrl(), _authService.CurrentToken);
             if (update != null)
             {
                 AvailableUpdate = update;
@@ -532,7 +532,7 @@ public partial class SettingsViewModel : ViewModelBase
         try
         {
             var progress = new Progress<double>(p => DownloadProgress = p * 100);
-            var success = await _updateService.DownloadAndInstallAsync(AvailableUpdate, progress);
+            var success = await _updateService.DownloadAndInstallAsync(AvailableUpdate, _authService.CurrentToken, progress);
             if (!success)
                 ErrorMessage = "Download failed. Please try again or update manually.";
         }

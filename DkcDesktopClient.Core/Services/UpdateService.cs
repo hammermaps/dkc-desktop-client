@@ -12,6 +12,12 @@ public class UpdateInfo
     public string TagName { get; init; } = string.Empty;
     public string DownloadUrl { get; init; } = string.Empty;
     public string ReleaseNotes { get; init; } = string.Empty;
+
+    /// <summary>
+    /// True for updates from the DKC-continuous channel (desktop_app_download_binary),
+    /// which requires an Authorization: Bearer header — false for public GitHub release assets.
+    /// </summary>
+    public bool RequiresAuth { get; init; }
 }
 
 public class UpdateService
@@ -73,7 +79,27 @@ public class UpdateService
         return client;
     }
 
-    public async Task<UpdateInfo?> CheckForUpdateAsync(CancellationToken ct = default)
+    /// <summary>
+    /// Checks both update channels (GitHub tag releases and, on Linux/Windows,
+    /// the DKC-continuous channel from every push to main) and returns the newer
+    /// of the two, or null if neither is newer than <see cref="CurrentVersion"/>.
+    /// </summary>
+    /// <param name="serverUrl">DKC-Basis-URL (z. B. aus TokenStore.LoadServerUrl()); ohne diese wird nur GitHub geprüft.</param>
+    /// <param name="authToken">Bearer-Token für die authentifizierte DKC-Prüfung (nicht für den Versionscheck selbst nötig, aber für spätere Downloads relevant).</param>
+    public async Task<UpdateInfo?> CheckForUpdateAsync(string? serverUrl = null, string? authToken = null, CancellationToken ct = default)
+    {
+        var gitHubUpdate = await CheckGitHubUpdateAsync(ct);
+
+        UpdateInfo? dkcUpdate = null;
+        if (!string.IsNullOrWhiteSpace(serverUrl) && GetDkcPlatform() != null)
+            dkcUpdate = await CheckDkcContinuousUpdateAsync(serverUrl!, ct);
+
+        if (gitHubUpdate == null) return dkcUpdate;
+        if (dkcUpdate == null) return gitHubUpdate;
+        return dkcUpdate.LatestVersion > gitHubUpdate.LatestVersion ? dkcUpdate : gitHubUpdate;
+    }
+
+    private async Task<UpdateInfo?> CheckGitHubUpdateAsync(CancellationToken ct)
     {
         try
         {
@@ -135,7 +161,59 @@ public class UpdateService
         }
     }
 
-    public async Task<bool> DownloadAndInstallAsync(UpdateInfo updateInfo, IProgress<double>? progress = null, CancellationToken ct = default)
+    /// <summary>Plattform-Schlüssel für den DKC-continuous-Kanal (desktop_app_version/-download_binary); null auf macOS, das ausschließlich den GitHub-Pfad nutzt.</summary>
+    private static string? GetDkcPlatform()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return "windows";
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) return "linux";
+        return null;
+    }
+
+    private async Task<UpdateInfo?> CheckDkcContinuousUpdateAsync(string serverUrl, CancellationToken ct)
+    {
+        var platform = GetDkcPlatform();
+        if (platform == null) return null;
+
+        try
+        {
+            var baseUrl = serverUrl.TrimEnd('/');
+            var currentVersion = Uri.EscapeDataString(CurrentVersion.ToString(3));
+            var client = CreateClient();
+            var json = await client.GetStringAsync(
+                $"{baseUrl}/api.php?action=desktop_app_version&platform={platform}&current_version={currentVersion}", ct);
+
+            using var doc = JsonDocument.Parse(json);
+            if (!doc.RootElement.TryGetProperty("success", out var successEl) || !successEl.GetBoolean())
+                return null;
+            if (!doc.RootElement.TryGetProperty("data", out var data))
+                return null;
+
+            var latestVersionString = data.TryGetProperty("latest_version", out var lv) ? lv.GetString() : null;
+            if (string.IsNullOrWhiteSpace(latestVersionString) || !Version.TryParse(latestVersionString, out var latestVersion))
+                return null;
+
+            if (latestVersion <= CurrentVersion)
+                return null;
+
+            var notes = data.TryGetProperty("notes", out var n) ? n.GetString() ?? string.Empty : string.Empty;
+
+            return new UpdateInfo
+            {
+                LatestVersion = latestVersion,
+                TagName = latestVersionString,
+                DownloadUrl = $"{baseUrl}/api.php?action=desktop_app_download_binary&platform={platform}",
+                ReleaseNotes = notes,
+                RequiresAuth = true
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to check DKC-continuous update channel");
+            return null;
+        }
+    }
+
+    public async Task<bool> DownloadAndInstallAsync(UpdateInfo updateInfo, string? authToken = null, IProgress<double>? progress = null, CancellationToken ct = default)
     {
         if (string.IsNullOrEmpty(updateInfo.DownloadUrl))
         {
@@ -148,7 +226,11 @@ public class UpdateService
             var tempPath = Path.Combine(Path.GetTempPath(), GetAssetName());
             var client = CreateClient();
 
-            using (var response = await client.GetAsync(updateInfo.DownloadUrl, HttpCompletionOption.ResponseHeadersRead, ct))
+            using var request = new HttpRequestMessage(HttpMethod.Get, updateInfo.DownloadUrl);
+            if (updateInfo.RequiresAuth && !string.IsNullOrEmpty(authToken))
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", authToken);
+
+            using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct))
             {
                 response.EnsureSuccessStatusCode();
                 var totalBytes = response.Content.Headers.ContentLength ?? -1L;

@@ -185,6 +185,86 @@ public class UpdateServiceTests
         version = (Version?)parameters[1] ?? new Version(0, 0, 0);
         return result;
     }
+
+    private static string BuildDkcVersionJson(string latestVersion, bool updateAvailable = true) => $@"{{
+        ""success"": true,
+        ""data"": {{
+            ""platform"": ""linux"",
+            ""current_version"": ""{UpdateService.CurrentVersion.ToString(3)}"",
+            ""latest_version"": ""{latestVersion}"",
+            ""update_available"": {(updateAvailable ? "true" : "false")},
+            ""sha256"": """",
+            ""notes"": ""Continuous build"",
+            ""uploaded_at"": ""2026-09-27T10:00:00+02:00""
+        }}
+    }}";
+
+    private static UpdateService CreateServiceWithRouting(string gitHubJson, string dkcJson)
+    {
+        var handler = new RoutingMockHttpMessageHandler(gitHubJson, dkcJson);
+        var client = new HttpClient(handler) { BaseAddress = null };
+        var mock = new Mock<IHttpClientFactory>();
+        mock.Setup(f => f.CreateClient(It.IsAny<string>())).Returns(client);
+        return new UpdateService(NullLogger<UpdateService>.Instance, mock.Object);
+    }
+
+    [Fact]
+    public async Task CheckForUpdateAsync_DkcVersionNewerThanCurrentVersion_ReturnsDkcUpdateWithRequiresAuth()
+    {
+        // GitHub has no update (v0.0.1 is never newer); DKC continuous channel reports a newer build.
+        var gitHubJson = BuildReleaseJson("v0.0.1");
+        var dkcJson = BuildDkcVersionJson("2999.01.01.1");
+
+        var svc = CreateServiceWithRouting(gitHubJson, dkcJson);
+        var result = await svc.CheckForUpdateAsync("https://dkc.example.test", "dkc_sometoken");
+
+        Assert.NotNull(result);
+        Assert.True(result.RequiresAuth);
+        Assert.Equal(new Version(2999, 1, 1, 1), result.LatestVersion);
+        Assert.Contains("desktop_app_download_binary", result.DownloadUrl);
+    }
+
+    [Fact]
+    public async Task CheckForUpdateAsync_DkcVersionNotNewer_ReturnsNull()
+    {
+        var gitHubJson = BuildReleaseJson("v0.0.1");
+        // latest_version equal to CurrentVersion -> not newer.
+        var dkcJson = BuildDkcVersionJson(UpdateService.CurrentVersion.ToString(3), updateAvailable: false);
+
+        var svc = CreateServiceWithRouting(gitHubJson, dkcJson);
+        var result = await svc.CheckForUpdateAsync("https://dkc.example.test", null);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task CheckForUpdateAsync_BothChannelsNewer_ReturnsTheNewerOne()
+    {
+        var gitHubJson = BuildReleaseJson("v999.0.0", UpdateService.GetAssetName(), "https://example.com/dl");
+        var dkcJson = BuildDkcVersionJson("2999.01.01.1");
+
+        var svc = CreateServiceWithRouting(gitHubJson, dkcJson);
+        var result = await svc.CheckForUpdateAsync("https://dkc.example.test", null);
+
+        Assert.NotNull(result);
+        Assert.Equal(new Version(2999, 1, 1, 1), result.LatestVersion);
+        Assert.True(result.RequiresAuth);
+    }
+
+    [Fact]
+    public async Task CheckForUpdateAsync_NoServerUrl_OnlyChecksGitHub()
+    {
+        var gitHubJson = BuildReleaseJson("v999.0.0", UpdateService.GetAssetName(), "https://example.com/dl");
+        // DKC response would report an update, but must never be requested without a serverUrl.
+        var dkcJson = BuildDkcVersionJson("2999.01.01.1");
+
+        var svc = CreateServiceWithRouting(gitHubJson, dkcJson);
+        var result = await svc.CheckForUpdateAsync();
+
+        Assert.NotNull(result);
+        Assert.False(result.RequiresAuth);
+        Assert.Equal(new Version(999, 0, 0), result.LatestVersion);
+    }
 }
 
 internal class MockHttpMessageHandler : HttpMessageHandler
@@ -203,6 +283,30 @@ internal class MockHttpMessageHandler : HttpMessageHandler
         var response = new HttpResponseMessage(_statusCode)
         {
             Content = new StringContent(_responseContent, System.Text.Encoding.UTF8, "application/json")
+        };
+        return Task.FromResult(response);
+    }
+}
+
+/// <summary>Routes responses by URL substring so a test can mock the GitHub API and the DKC desktop_app_version endpoint differently within one CheckForUpdateAsync() call.</summary>
+internal class RoutingMockHttpMessageHandler : HttpMessageHandler
+{
+    private readonly string _gitHubJson;
+    private readonly string _dkcJson;
+
+    public RoutingMockHttpMessageHandler(string gitHubJson, string dkcJson)
+    {
+        _gitHubJson = gitHubJson;
+        _dkcJson = dkcJson;
+    }
+
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var url = request.RequestUri?.ToString() ?? string.Empty;
+        var body = url.Contains("api.github.com") ? _gitHubJson : _dkcJson;
+        var response = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json")
         };
         return Task.FromResult(response);
     }

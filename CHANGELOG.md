@@ -7,12 +7,24 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
 
 ## [Unreleased]
 
+### Neu
+- Automatischer Updater erkennt jetzt zusätzlich zum bestehenden GitHub-Tag-Kanal den
+  kontinuierlichen DKC-Build-Kanal (jeder Push auf `main`, nur Linux/Windows — macOS bleibt
+  ausschließlich beim GitHub-Pfad). `UpdateService.CheckForUpdateAsync()` prüft beide Quellen
+  und übernimmt die jeweils neuere Version; der Download läuft für den DKC-Kanal über den neu
+  authentifizierten Server-Endpunkt `desktop_app_download_binary` (`Authorization: Bearer
+  <persönlicher Token>`), silent Self-Update wie beim bisherigen GitHub-Pfad.
+
 ### CI/CD
 - Kontinuierlicher Auto-Build für Linux/Windows: `.github/workflows/build.yml` lädt bei
   jedem Push auf `main` die frisch gebauten `linux-x64`/`win-x64`-Binaries zusätzlich zum
   bestehenden Tag-basierten GitHub-Release-Pfad direkt zur DKC-Website hoch (analog zum
   TWS-App-Android-Auto-Deploy). Download für Staff: `?page=admin&action=desktop_app` im DKC.
   Benötigt das Repository-Secret `DESKTOP_APP_DEPLOY_TOKEN` (siehe Server-CHANGES.textile).
+- Fix: der „Set version“-Schritt setzte für Nicht-Tag-Pushes hart `-p:Version=1.0.0`, während
+  der Deploy-Schritt dem Server eine fortlaufende Version (`YYYY.MM.DD.<run_number>`) meldete —
+  jede frisch aktualisierte Binärdatei hätte sich dadurch selbst immer als veraltet ausgegeben.
+  Beide Stellen berechnen die Version jetzt einmal pro Workflow-Lauf gemeinsam.
 
 ### Fix
 - **Kritisch:** Schreibende Aktionen für Gebäudebegehungen (anlegen/bearbeiten/abschließen/
