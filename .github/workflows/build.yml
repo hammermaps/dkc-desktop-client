@@ -10,6 +10,11 @@ on:
 jobs:
   build:
     strategy:
+      # Ein Testfehler auf einer Plattform (z. B. macOS) soll den produktiv
+      # relevanten Linux/Windows-Deploy-Schritt nicht per Default-Fail-Fast
+      # mitten im Lauf abbrechen - siehe Run #36348034425, wo genau das den
+      # noch laufenden desktop_app_deploy-Upload gekappt hat.
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
