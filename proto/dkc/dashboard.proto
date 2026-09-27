@@ -119,6 +119,26 @@ message WlsFlushItem {
     bool   never_flushed      = 7;
 }
 
+// Web-Pendant: ContDashboard::getSammelstoerung() (AC/SiBe/KinCony/RCO über
+// system\service\DashboardAlarmsService, gemeinsam mit dem Web-Controller).
+message SammelstoerungAlarmItem {
+    string source        = 1; // ac | sibe | kincony | rco
+    string source_label  = 2;
+    string device_name   = 3;
+    string alarm_text    = 4;
+    string timestamp     = 5;
+    string url           = 6;
+}
+
+// Ein Tag im 14-Tage-Temperaturverlauf. has_value=false bedeutet: keine
+// Messwerte für diesen Tag (Balken bleibt im Web-Chart leer), analog zum
+// PHP-seitigen `null` in ContDashboard::getTemperatureHistory().
+message TemperatureHistoryPoint {
+    string label     = 1;
+    bool   has_value = 2;
+    double value     = 3;
+}
+
 message DashboardWidgetsResponse {
     bool                            issued_keys_permission  = 1;
     int32                           issued_keys_count       = 2;
@@ -143,6 +163,17 @@ message DashboardWidgetsResponse {
     int32                           wls_count                 = 17;
     int32                           wls_overdue_count         = 18;
     repeated WlsFlushItem           wls_flushings             = 19;
+
+    bool                             sammelstoerung_permission = 20;
+    int32                            sammelstoerung_count      = 21;
+    repeated SammelstoerungAlarmItem sammelstoerung            = 22;
+
+    bool                             temperature_permission     = 23;
+    double                           temperature_average        = 24;
+    int32                            temperature_active_devices = 25;
+    int32                            temperature_total_devices  = 26;
+    int32                            temperature_online_devices = 27;
+    repeated TemperatureHistoryPoint temperature_history        = 28;
 }
 
 message Project {

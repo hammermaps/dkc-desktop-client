@@ -76,6 +76,7 @@ public interface IDkcProtobufApi
 
     // ── Dashboard & Projekte ────────────────────────────────────────────────
     Task<DashboardDataResponse> GetDashboardDataAsync(CancellationToken ct = default);
+    Task<DashboardWidgetsResponse> GetDashboardWidgetsAsync(CancellationToken ct = default);
     Task<ProjectsListResponse> GetProjectsListAsync(CancellationToken ct = default);
     Task<ProjectCreateResponse> CreateProjectAsync(ProjectSaveRequest request, CancellationToken ct = default);
     Task<Ack> UpdateProjectAsync(ProjectSaveRequest request, CancellationToken ct = default);

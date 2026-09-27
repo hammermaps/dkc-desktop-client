@@ -16,6 +16,12 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
   `BackgroundRefreshService` nach (neue Cache-Keys `NeaSystems`, `BuildingList`,
   `KlimaDevices`, `Notifications`, `WlsBuildings`), ohne die aktuelle Auswahl oder
   sichtbare Fehlermeldungen zu stören.
+- Dashboard an das aktuelle Web-Dashboard angeglichen: neue Karten für Sammelstörung
+  (Klima/SiBe/KinCony/RCO), ausgegebene Schlüssel, offene Freigaben, überfällige
+  Mängelmeldungen und WLS-Spülfälligkeiten, geladen über die erweiterte Protobuf-Aktion
+  `DASHBOARD_WIDGETS` (`GetDashboardWidgetsAsync`, erstmals genutzter Protobuf-Client).
+  Durchschnittstemperatur inkl. 14-Tage-Verlauf als Balkendiagramm über die neu
+  eingebundene Bibliothek `LiveChartsCore.SkiaSharpView.Avalonia`.
 
 ---
 

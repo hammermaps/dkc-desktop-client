@@ -136,6 +136,8 @@ public sealed class DkcProtobufApi : IDkcProtobufApi
     // ── Dashboard & Projekte ────────────────────────────────────────────────
     public Task<DashboardDataResponse> GetDashboardDataAsync(CancellationToken ct = default)
         => Send<DashboardDataResponse>(Protocol.Action.DashboardData, null, ct);
+    public Task<DashboardWidgetsResponse> GetDashboardWidgetsAsync(CancellationToken ct = default)
+        => Send<DashboardWidgetsResponse>(Protocol.Action.DashboardWidgets, null, ct);
     public Task<ProjectsListResponse> GetProjectsListAsync(CancellationToken ct = default)
         => Send<ProjectsListResponse>(Protocol.Action.ProjectsList, null, ct);
     public Task<ProjectCreateResponse> CreateProjectAsync(ProjectSaveRequest request, CancellationToken ct = default)

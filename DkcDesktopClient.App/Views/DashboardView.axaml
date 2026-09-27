@@ -3,6 +3,7 @@
              xmlns:vm="using:DkcDesktopClient.App.ViewModels"
              xmlns:api="using:DkcDesktopClient.Core.Api"
              xmlns:controls="using:DkcDesktopClient.App.Controls"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
              x:Class="DkcDesktopClient.App.Views.DashboardView"
              x:DataType="vm:DashboardViewModel">
   <ScrollViewer Background="{DynamicResource ContentBackgroundBrush}">
@@ -67,6 +68,100 @@
             <TextBlock Text="{Binding MmTotalText}" FontSize="28" FontWeight="Bold" HorizontalAlignment="Center"/>
           </StackPanel>
         </Grid>
+      </Border>
+
+      <!-- Web-Dashboard-Kacheln (dashboard_overview.tpl): Sammelstörung, Ausgegebene Schlüssel, Ø Temperatur -->
+      <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12" HorizontalAlignment="Stretch">
+        <controls:StatCard Grid.Column="0" Title="Sammelstörung" Value="{Binding SammelstoerungCountText}" Icon="🚨" BackgroundColor="#FEF2F2" TrendColor="#EF4444"
+                           IsVisible="{Binding SammelstoerungPermission}" ToolTip.Tip="Aktive Störungen über Klima/SiBe/KinCony/RCO"/>
+        <controls:StatCard Grid.Column="1" Title="Ausgegebene Schlüssel" Value="{Binding IssuedKeysCountText}" Icon="🔑" BackgroundColor="#ECFDF5"
+                           IsVisible="{Binding IssuedKeysPermission}" ToolTip.Tip="Aktuell ausgegebene Schlüssel/Bunde"/>
+        <controls:StatCard Grid.Column="2" Title="Ø Temperatur" Value="{Binding TemperatureAverageText}" Icon="🌡" BackgroundColor="#EFF6FF"
+                           IsVisible="{Binding TemperaturePermission}" ToolTip.Tip="Durchschnittstemperatur laufender Klimageräte"/>
+      </Grid>
+
+      <Border Classes="card" IsVisible="{Binding TemperaturePermission}">
+        <StackPanel Spacing="10">
+          <TextBlock Text="Temperaturverlauf (14 Tage)" FontSize="18" FontWeight="SemiBold"/>
+          <lvc:CartesianChart Series="{Binding TemperatureSeries}"
+                               XAxes="{Binding TemperatureXAxes}"
+                               YAxes="{Binding TemperatureYAxes}"
+                               Height="220"/>
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card" IsVisible="{Binding SammelstoerungPermission}">
+        <StackPanel Spacing="10">
+          <TextBlock Text="Sammelstörung" FontSize="18" FontWeight="SemiBold"/>
+          <TextBlock Text="Keine aktiven Störungen" IsVisible="{Binding !HasSammelstoerung}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+          <DataGrid ItemsSource="{Binding Sammelstoerung}" IsReadOnly="True" AutoGenerateColumns="False" Height="160" IsVisible="{Binding HasSammelstoerung}">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="Quelle" Binding="{Binding SourceLabel}" Width="100"/>
+              <DataGridTextColumn Header="Gerät" Binding="{Binding DeviceName}" Width="*"/>
+              <DataGridTextColumn Header="Meldung" Binding="{Binding AlarmText}" Width="2*"/>
+              <DataGridTextColumn Header="Zeit" Binding="{Binding Timestamp}" Width="140"/>
+            </DataGrid.Columns>
+          </DataGrid>
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card" IsVisible="{Binding IssuedKeysPermission}">
+        <StackPanel Spacing="10">
+          <TextBlock Text="Ausgegebene Schlüssel" FontSize="18" FontWeight="SemiBold"/>
+          <DataGrid ItemsSource="{Binding IssuedKeysList}" IsReadOnly="True" AutoGenerateColumns="False" Height="160">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="Name/Nr." Binding="{Binding Name}" Width="*"/>
+              <DataGridTextColumn Header="Empfänger" Binding="{Binding EmpfaengerName}" Width="*"/>
+              <DataGridTextColumn Header="Ausgegeben am" Binding="{Binding AusgegebenAm}" Width="150"/>
+              <DataGridTextColumn Header="Rückgabe geplant" Binding="{Binding RueckgabeGeplant}" Width="150"/>
+            </DataGrid.Columns>
+          </DataGrid>
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card" IsVisible="{Binding ApprovalsPermission}">
+        <StackPanel Spacing="10">
+          <TextBlock Text="Offene Freigaben" FontSize="18" FontWeight="SemiBold"/>
+          <DataGrid ItemsSource="{Binding Approvals}" IsReadOnly="True" AutoGenerateColumns="False" Height="160">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="Adresse" Binding="{Binding Address}" Width="*"/>
+              <DataGridTextColumn Header="Titel" Binding="{Binding Title}" Width="2*"/>
+              <DataGridTextColumn Header="Nachunternehmer" Binding="{Binding NachunternehmerName}" Width="160"/>
+              <DataGridTextColumn Header="Tage wartend" Binding="{Binding DaysWaiting}" Width="110"/>
+            </DataGrid.Columns>
+          </DataGrid>
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card" Background="#FFFBEB" BorderBrush="#F59E0B" IsVisible="{Binding OverdueComplaintsPermission}">
+        <StackPanel Spacing="10">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="⚠" FontSize="18"/>
+            <TextBlock Text="Überfällige Mängelmeldungen" FontSize="18" FontWeight="SemiBold"/>
+          </StackPanel>
+          <DataGrid ItemsSource="{Binding OverdueComplaints}" IsReadOnly="True" AutoGenerateColumns="False" Height="160">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="Adresse" Binding="{Binding Address}" Width="*"/>
+              <DataGridTextColumn Header="Titel" Binding="{Binding Title}" Width="2*"/>
+              <DataGridTextColumn Header="Status" Binding="{Binding StatusLabel}" Width="140"/>
+              <DataGridTextColumn Header="Tage offen" Binding="{Binding DaysOpen}" Width="100"/>
+            </DataGrid.Columns>
+          </DataGrid>
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card" IsVisible="{Binding WlsPermission}">
+        <StackPanel Spacing="10">
+          <TextBlock Text="WLS-Spülungen fällig" FontSize="18" FontWeight="SemiBold"/>
+          <DataGrid ItemsSource="{Binding WlsFlushings}" IsReadOnly="True" AutoGenerateColumns="False" Height="160">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="Wohnung" Binding="{Binding Label}" Width="*"/>
+              <DataGridTextColumn Header="Gebäude" Binding="{Binding BuildingName}" Width="*"/>
+              <DataGridTextColumn Header="Letzte Spülung" Binding="{Binding LastFlushDate}" Width="140"/>
+              <DataGridTextColumn Header="Tage überfällig" Binding="{Binding DaysOverdue}" Width="120"/>
+            </DataGrid.Columns>
+          </DataGrid>
+        </StackPanel>
       </Border>
 
       <Border Classes="card" Background="#FFFBEB" BorderBrush="#F59E0B" IsVisible="{Binding HasOverdueItems}">
