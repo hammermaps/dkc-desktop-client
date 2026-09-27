@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using DkcDesktopClient.Core.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -208,9 +209,20 @@ public class UpdateServiceTests
         return new UpdateService(NullLogger<UpdateService>.Instance, mock.Object);
     }
 
+    /// <summary>
+    /// UpdateService.GetDkcPlatform() (private) returns null on macOS by design - only
+    /// Linux/Windows have a DKC-continuous channel, macOS stays GitHub-only. Tests that
+    /// assert on the DKC-channel result must skip on macOS, where CheckForUpdateAsync()
+    /// never even requests it.
+    /// </summary>
+    private static bool IsDkcContinuousChannelSupported() =>
+        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+
     [Fact]
     public async Task CheckForUpdateAsync_DkcVersionNewerThanCurrentVersion_ReturnsDkcUpdateWithRequiresAuth()
     {
+        if (!IsDkcContinuousChannelSupported()) return; // macOS: DKC-continuous channel is never checked, see summary above.
+
         // GitHub has no update (v0.0.1 is never newer); DKC continuous channel reports a newer build.
         var gitHubJson = BuildReleaseJson("v0.0.1");
         var dkcJson = BuildDkcVersionJson("2999.01.01.1");
@@ -240,6 +252,8 @@ public class UpdateServiceTests
     [Fact]
     public async Task CheckForUpdateAsync_BothChannelsNewer_ReturnsTheNewerOne()
     {
+        if (!IsDkcContinuousChannelSupported()) return; // macOS: DKC-continuous channel is never checked, see summary above.
+
         var gitHubJson = BuildReleaseJson("v999.0.0", UpdateService.GetAssetName(), "https://example.com/dl");
         var dkcJson = BuildDkcVersionJson("2999.01.01.1");
 

@@ -8,6 +8,14 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
 ## [Unreleased]
 
 ### Fix
+- `fail-fast: false` in `build.yml`: ein Testfehler auf einer Matrix-Plattform (z. B. macOS)
+  brach zuvor auch die anderen, bereits laufenden Jobs ab — traf real den Linux-Job mitten im
+  `desktop_app_deploy`-Upload (Run #36348034425). Die vier Plattformen laufen jetzt unabhängig.
+- `UpdateServiceTests.CheckForUpdateAsync_DkcVersionNewerThanCurrentVersion_ReturnsDkcUpdateWithRequiresAuth`
+  und `...BothChannelsNewer_ReturnsTheNewerOne` schlugen auf macOS-Runnern fehl: `UpdateService`
+  prüft den DKC-continuous-Kanal by design nur auf Linux/Windows (macOS bleibt GitHub-only), die
+  Tests gingen aber davon aus, dass der Kanal immer abgefragt wird. Beide Tests überspringen sich
+  jetzt auf Plattformen ohne DKC-continuous-Unterstützung.
 - CI-Flake behoben: `TokenStoreTests`, `AuthServiceTests`, `BackgroundRefreshServiceTests`,
   `HttpPerformanceConfigTests` und `ViewModelTests` instanziierten jeweils einen echten
   `TokenStore` gegen denselben festen Dateipfad (`%ApplicationData%/DkcDesktopClient/dkc_token.dat`)
