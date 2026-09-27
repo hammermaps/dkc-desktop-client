@@ -65,7 +65,8 @@ public class BackgroundRefreshServiceTests : IDisposable
         services.AddDataProtection();
         _provider = services.BuildServiceProvider();
         var dp = _provider.GetRequiredService<IDataProtectionProvider>();
-        _tokenStore = new TokenStore(dp, NullLogger<TokenStore>.Instance);
+        _tokenStore = new TokenStore(dp, NullLogger<TokenStore>.Instance,
+            Path.Combine(Path.GetTempPath(), "DkcDesktopClientTests_" + Guid.NewGuid()));
         _tokenStore.DeleteToken();
     }
 

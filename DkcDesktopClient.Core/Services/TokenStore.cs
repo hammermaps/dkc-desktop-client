@@ -13,11 +13,17 @@ public class TokenStore
     private readonly ILogger<TokenStore> _logger;
     private readonly string _dataDir;
 
-    public TokenStore(IDataProtectionProvider dataProtection, ILogger<TokenStore> logger)
+    /// <param name="dataDir">
+    /// Überschreibt das Standardverzeichnis (%ApplicationData%/DkcDesktopClient). Nur für Tests
+    /// gedacht: mehrere TokenStore-Instanzen im selben Prozess (z. B. in verschiedenen, von xUnit
+    /// parallel ausgeführten Testklassen) teilen sich sonst dieselbe physische Datei und können
+    /// sich gegenseitig per DeleteToken()/SaveToken() überschreiben.
+    /// </param>
+    public TokenStore(IDataProtectionProvider dataProtection, ILogger<TokenStore> logger, string? dataDir = null)
     {
         _protector = dataProtection.CreateProtector(Purpose);
         _logger = logger;
-        _dataDir = Path.Combine(
+        _dataDir = dataDir ?? Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "DkcDesktopClient");
         Directory.CreateDirectory(_dataDir);

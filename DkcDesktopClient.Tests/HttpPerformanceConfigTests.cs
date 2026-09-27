@@ -117,7 +117,8 @@ public class DkcApiFactory_PerformanceTests
         var provider = services.BuildServiceProvider();
         var dp = provider.GetRequiredService<IDataProtectionProvider>();
         
-        var tokenStore = new TokenStore(dp, NullLogger<TokenStore>.Instance);
+        var tokenStore = new TokenStore(dp, NullLogger<TokenStore>.Instance,
+            Path.Combine(Path.GetTempPath(), "DkcDesktopClientTests_" + Guid.NewGuid()));
         var loggerFactory = new NullLoggerFactory();
         var httpConfig = Options.Create(new HttpPerformanceConfig());
         
