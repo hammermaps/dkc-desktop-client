@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DkcDesktopClient.App.Services;
 using DkcDesktopClient.Core.Api;
 using DkcDesktopClient.Core.Services;
 
@@ -26,10 +28,11 @@ public partial class CheckpointEditItem : ObservableObject
     partial void OnCommentChanged(string value) => IsDirty = true;
 }
 
-public partial class BuildingViewModel : ViewModelBase
+public partial class BuildingViewModel : ViewModelBase, INavigationTarget
 {
     private readonly DkcApiFactory _apiFactory;
     private readonly AuthService _authService;
+    private readonly BackgroundRefreshService _backgroundRefreshService;
     private const int PageSize = 50;
 
     // List state
@@ -92,30 +95,59 @@ public partial class BuildingViewModel : ViewModelBase
     public static IReadOnlyList<string> ResultOptions { get; } =
         new[] { "ok", "defects_found", "failed" };
 
-    public BuildingViewModel(DkcApiFactory apiFactory, AuthService authService)
+    public BuildingViewModel(
+        DkcApiFactory apiFactory,
+        AuthService authService,
+        BackgroundRefreshService backgroundRefreshService)
     {
         _apiFactory = apiFactory;
         _authService = authService;
+        _backgroundRefreshService = backgroundRefreshService;
+        _backgroundRefreshService.DataRefreshed += OnBackgroundDataRefreshed;
+    }
+
+    /// <summary>Called by <see cref="Services.INavigationService"/> when this view becomes active.</summary>
+    public Task OnNavigatedToAsync(object? parameter = null) => LoadBuildingsAsync();
+
+    private void OnBackgroundDataRefreshed(object? sender, string key)
+    {
+        if (key != CacheKeys.BuildingList) return;
+        _ = Dispatcher.UIThread.InvokeAsync(() => LoadBuildingsInternalAsync(silent: true));
     }
 
     [RelayCommand]
-    public async Task LoadBuildingsAsync()
+    public Task LoadBuildingsAsync() => LoadBuildingsInternalAsync(silent: false);
+
+    private async Task LoadBuildingsInternalAsync(bool silent)
     {
         IsLoading = true;
-        ErrorMessage = null;
+        if (!silent)
+            ErrorMessage = null;
+        var previouslySelectedId = silent ? SelectedBuilding?.Id : null;
         try
         {
             var api = _apiFactory.Create(_authService.CurrentToken);
             var result = await api.GetBuildingListAsync();
-            Buildings.Clear();
-            if (result.Success && result.Buildings != null)
-                foreach (var b in result.Buildings)
-                    Buildings.Add(b);
-            StatTotalBuildings = Buildings.Count;
+            if (result.Success)
+            {
+                Buildings.Clear();
+                if (result.Buildings != null)
+                    foreach (var b in result.Buildings)
+                        Buildings.Add(b);
+                StatTotalBuildings = Buildings.Count;
+                if (previouslySelectedId != null)
+                    SelectedBuilding = Buildings.FirstOrDefault(b => b.Id == previouslySelectedId);
+                _backgroundRefreshService.NotifyUserActivity(CacheKeys.BuildingList);
+            }
+            else if (!silent)
+            {
+                ErrorMessage = result.Error ?? "Error loading buildings.";
+            }
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error loading buildings: {ex.Message}";
+            if (!silent)
+                ErrorMessage = $"Error loading buildings: {ex.Message}";
         }
         finally
         {

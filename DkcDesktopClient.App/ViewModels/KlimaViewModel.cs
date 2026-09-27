@@ -1,12 +1,13 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DkcDesktopClient.App.Services;
 using DkcDesktopClient.Core.Api;
 using DkcDesktopClient.Core.Services;
 
 namespace DkcDesktopClient.App.ViewModels;
 
-public partial class KlimaViewModel : ViewModelBase
+public partial class KlimaViewModel : ViewModelBase, INavigationTarget
 {
     private readonly DkcApiFactory _apiFactory;
     private readonly AuthService _authService;
@@ -57,6 +58,17 @@ public partial class KlimaViewModel : ViewModelBase
         _authService = authService;
         _backgroundRefreshService = backgroundRefreshService;
         _backgroundRefreshService.DataRefreshed += OnDataRefreshed;
+    }
+
+    /// <summary>
+    /// Called by <see cref="Services.INavigationService"/> when this view becomes active.
+    /// Loads the device/group list and an initial realtime status snapshot immediately,
+    /// instead of requiring a manual "Laden"/"Start Polling" click first.
+    /// </summary>
+    public async Task OnNavigatedToAsync(object? parameter = null)
+    {
+        await LoadDataAsync();
+        await RefreshStatusAsync();
     }
 
     [RelayCommand]
@@ -126,6 +138,7 @@ public partial class KlimaViewModel : ViewModelBase
         }
 
         _backgroundRefreshService.NotifyUserActivity(CacheKeys.KlimaStatus);
+        _backgroundRefreshService.NotifyUserActivity(CacheKeys.KlimaDevices);
     }
 
     [RelayCommand]
@@ -153,10 +166,10 @@ public partial class KlimaViewModel : ViewModelBase
 
     private void OnDataRefreshed(object? sender, string key)
     {
-        if (key != CacheKeys.KlimaStatus || IsPolling)
-            return;
-
-        _ = Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(RefreshStatusFromBackgroundAsync);
+        if (key == CacheKeys.KlimaStatus && !IsPolling)
+            _ = Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(RefreshStatusFromBackgroundAsync);
+        else if (key == CacheKeys.KlimaDevices)
+            _ = Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(LoadDataAsync);
     }
 
     private async Task RefreshStatusFromBackgroundAsync()

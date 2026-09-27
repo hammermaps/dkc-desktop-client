@@ -180,6 +180,7 @@ public static class CacheKeys
     public const string UsersList        = "users_list";
     public const string Notifications     = "notifications";
     public const string NotificationCount = "notification_count";
+    public const string WlsBuildings      = "wls_buildings";
 }
 
 /// <summary>Default TTL values per data type (from the ROADMAP specification).</summary>
@@ -196,4 +197,5 @@ public static class CacheTtl
     public static readonly TimeSpan ProjectsList     = TimeSpan.FromMinutes(10);
     public static readonly TimeSpan UsersList        = TimeSpan.FromMinutes(5);
     public static readonly TimeSpan Notifications    = TimeSpan.FromSeconds(60);
+    public static readonly TimeSpan WlsBuildings     = TimeSpan.FromMinutes(5);
 }

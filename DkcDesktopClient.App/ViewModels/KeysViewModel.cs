@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DkcDesktopClient.App.Services;
@@ -8,11 +9,12 @@ using DkcDesktopClient.Core.Services;
 
 namespace DkcDesktopClient.App.ViewModels;
 
-public partial class KeysViewModel : ViewModelBase
+public partial class KeysViewModel : ViewModelBase, INavigationTarget
 {
     private readonly DkcApiFactory _apiFactory;
     private readonly AuthService _authService;
     private readonly IFilePickerService _filePicker;
+    private readonly BackgroundRefreshService _backgroundRefreshService;
 
     // List state
     [ObservableProperty] private bool _isLoading;
@@ -56,22 +58,43 @@ public partial class KeysViewModel : ViewModelBase
     [ObservableProperty] private string _formReturnDate = string.Empty;
     [ObservableProperty] private string _formReturnNotes = string.Empty;
 
-    public KeysViewModel(DkcApiFactory apiFactory, AuthService authService, IFilePickerService filePicker)
+    public KeysViewModel(
+        DkcApiFactory apiFactory,
+        AuthService authService,
+        IFilePickerService filePicker,
+        BackgroundRefreshService backgroundRefreshService)
     {
         _apiFactory = apiFactory;
         _authService = authService;
         _filePicker = filePicker;
+        _backgroundRefreshService = backgroundRefreshService;
         // Wire CollectionChanged so the CSV export button reflects loaded state
         Inventory.CollectionChanged += (_, _) =>
             ExportInventoryToCsvCommand.NotifyCanExecuteChanged();
+
+        _backgroundRefreshService.DataRefreshed += OnBackgroundDataRefreshed;
+    }
+
+    /// <summary>Called by <see cref="Services.INavigationService"/> when this view becomes active.</summary>
+    public Task OnNavigatedToAsync(object? parameter = null) => LoadDataAsync();
+
+    private void OnBackgroundDataRefreshed(object? sender, string key)
+    {
+        if (key != CacheKeys.KeysInventory) return;
+        _ = Dispatcher.UIThread.InvokeAsync(() => LoadDataInternalAsync(silent: true));
     }
 
     [RelayCommand]
-    public async Task LoadDataAsync()
+    public Task LoadDataAsync() => LoadDataInternalAsync(silent: false);
+
+    private async Task LoadDataInternalAsync(bool silent)
     {
         var ct = StartLoad();
         IsLoading = true;
-        ErrorMessage = null;
+        if (!silent)
+            ErrorMessage = null;
+        var previouslySelectedInventoryId = silent ? SelectedInventoryItem?.Id : null;
+        var previouslySelectedIssuedId = silent ? SelectedIssuedItem?.Id : null;
         try
         {
             var api = _apiFactory.Create(_authService.CurrentToken);
@@ -96,6 +119,13 @@ public partial class KeysViewModel : ViewModelBase
                     }
                 }
             }
+
+            if (previouslySelectedInventoryId != null)
+                SelectedInventoryItem = Inventory.FirstOrDefault(k => k.Id == previouslySelectedInventoryId);
+            if (previouslySelectedIssuedId != null)
+                SelectedIssuedItem = IssuedKeys.FirstOrDefault(k => k.Id == previouslySelectedIssuedId);
+
+            _backgroundRefreshService.NotifyUserActivity(CacheKeys.KeysInventory);
         }
         catch (OperationCanceledException)
         {
@@ -103,7 +133,8 @@ public partial class KeysViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error loading keys data: {ex.Message}";
+            if (!silent)
+                ErrorMessage = $"Error loading keys data: {ex.Message}";
         }
         finally
         {

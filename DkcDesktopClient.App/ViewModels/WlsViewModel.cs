@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DkcDesktopClient.App.Services;
@@ -8,11 +9,12 @@ using DkcDesktopClient.Core.Services;
 
 namespace DkcDesktopClient.App.ViewModels;
 
-public partial class WlsViewModel : ViewModelBase
+public partial class WlsViewModel : ViewModelBase, INavigationTarget
 {
     private readonly DkcApiFactory _apiFactory;
     private readonly AuthService _authService;
     private readonly IFilePickerService _filePicker;
+    private readonly BackgroundRefreshService _backgroundRefreshService;
 
     // ── Tab state ─────────────────────────────────────────────────────────────
     [ObservableProperty] private int _selectedTabIndex;
@@ -67,37 +69,66 @@ public partial class WlsViewModel : ViewModelBase
     [ObservableProperty] private string _filterStartDate = string.Empty;
     [ObservableProperty] private string _filterEndDate = string.Empty;
 
-    public WlsViewModel(DkcApiFactory apiFactory, AuthService authService, IFilePickerService filePicker)
+    public WlsViewModel(
+        DkcApiFactory apiFactory,
+        AuthService authService,
+        IFilePickerService filePicker,
+        BackgroundRefreshService backgroundRefreshService)
     {
         _apiFactory  = apiFactory;
         _authService = authService;
         _filePicker  = filePicker;
+        _backgroundRefreshService = backgroundRefreshService;
         // Wire CollectionChanged so the CSV export button reflects loaded state
         Records.CollectionChanged += (_, _) =>
             ExportRecordsToCsvCommand.NotifyCanExecuteChanged();
+
+        _backgroundRefreshService.DataRefreshed += OnBackgroundDataRefreshed;
+    }
+
+    /// <summary>Called by <see cref="Services.INavigationService"/> when this view becomes active.</summary>
+    public Task OnNavigatedToAsync(object? parameter = null) => LoadBuildingsAsync();
+
+    private void OnBackgroundDataRefreshed(object? sender, string key)
+    {
+        if (key != CacheKeys.WlsBuildings) return;
+        _ = Dispatcher.UIThread.InvokeAsync(() => LoadBuildingsInternalAsync(silent: true));
     }
 
     // ══════════════════════════════  Buildings  ════════════════════════════════
 
     [RelayCommand]
-    public async Task LoadBuildingsAsync()
+    public Task LoadBuildingsAsync() => LoadBuildingsInternalAsync(silent: false);
+
+    private async Task LoadBuildingsInternalAsync(bool silent)
     {
         IsLoading    = true;
-        ErrorMessage = null;
+        if (!silent)
+            ErrorMessage = null;
+        var previouslySelectedId = silent ? SelectedBuilding?.Id : null;
         try
         {
             var api    = _apiFactory.Create(_authService.CurrentToken);
             var result = await api.GetWlsBuildingsAsync();
-            Buildings.Clear();
-            if (result.Success && result.Data != null)
-                foreach (var b in result.Data)
-                    Buildings.Add(b);
-            else if (!result.Success)
+            if (result.Success)
+            {
+                Buildings.Clear();
+                if (result.Data != null)
+                    foreach (var b in result.Data)
+                        Buildings.Add(b);
+                if (previouslySelectedId != null)
+                    SelectedBuilding = Buildings.FirstOrDefault(b => b.Id == previouslySelectedId);
+                _backgroundRefreshService.NotifyUserActivity(CacheKeys.WlsBuildings);
+            }
+            else if (!silent)
+            {
                 ErrorMessage = result.Error ?? "Laden der Gebäude fehlgeschlagen.";
+            }
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Fehler: {ex.Message}";
+            if (!silent)
+                ErrorMessage = $"Fehler: {ex.Message}";
         }
         finally
         {

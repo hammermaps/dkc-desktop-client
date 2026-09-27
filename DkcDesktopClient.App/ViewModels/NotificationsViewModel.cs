@@ -1,12 +1,13 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DkcDesktopClient.App.Services;
 using DkcDesktopClient.Core.Api;
 using DkcDesktopClient.Core.Services;
 
 namespace DkcDesktopClient.App.ViewModels;
 
-public partial class NotificationsViewModel : ViewModelBase
+public partial class NotificationsViewModel : ViewModelBase, INavigationTarget
 {
     private readonly DkcApiFactory _apiFactory;
     private readonly AuthService _authService;
@@ -31,11 +32,21 @@ public partial class NotificationsViewModel : ViewModelBase
         _pollingService = pollingService;
 
         _pollingService.UnreadCountChanged += OnUnreadCountChanged;
+        _pollingService.NewNotificationsReceived += OnNewNotificationsReceived;
     }
+
+    /// <summary>Called by <see cref="Services.INavigationService"/> when this view becomes active.</summary>
+    public Task OnNavigatedToAsync(object? parameter = null) => LoadNotificationsAsync();
 
     private void OnUnreadCountChanged(object? sender, int count)
     {
         Avalonia.Threading.Dispatcher.UIThread.Post(() => TotalCount = count);
+    }
+
+    private void OnNewNotificationsReceived(object? sender, IReadOnlyList<NotificationItem> newItems)
+    {
+        // The 60s notification poll (system-wide) found new items — refresh the visible list too.
+        _ = Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(LoadNotificationsAsync);
     }
 
     partial void OnIsLoadingChanged(bool value) => OnPropertyChanged(nameof(HasNoNotifications));

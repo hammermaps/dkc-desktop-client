@@ -104,6 +104,13 @@ public class BackgroundRefreshService : BackgroundService
                     now,
                     ct => api.GetNotificationCountAsync(ct),
                     stoppingToken));
+
+                refreshTasks.Add(TryRefreshAsync(
+                    CacheKeys.Notifications,
+                    CacheTtl.Notifications,
+                    now,
+                    ct => api.GetNotificationsAsync(ct),
+                    stoppingToken));
             }
 
             refreshTasks.Add(TryRefreshAsync(
@@ -125,6 +132,34 @@ public class BackgroundRefreshService : BackgroundService
                 _config.NeaInspections,
                 now,
                 ct => api.GetNeaInspectionsAsync(ct: ct),
+                stoppingToken));
+
+            refreshTasks.Add(TryRefreshAsync(
+                CacheKeys.NeaSystems,
+                CacheTtl.NeaSystems,
+                now,
+                ct => api.GetNeaSystemsAsync(ct: ct),
+                stoppingToken));
+
+            refreshTasks.Add(TryRefreshAsync(
+                CacheKeys.BuildingList,
+                CacheTtl.BuildingList,
+                now,
+                ct => api.GetBuildingListAsync(ct: ct),
+                stoppingToken));
+
+            refreshTasks.Add(TryRefreshAsync(
+                CacheKeys.KlimaDevices,
+                CacheTtl.KlimaDevices,
+                now,
+                ct => api.GetKlimaDevicesAsync(ct),
+                stoppingToken));
+
+            refreshTasks.Add(TryRefreshAsync(
+                CacheKeys.WlsBuildings,
+                CacheTtl.WlsBuildings,
+                now,
+                ct => api.GetWlsBuildingsAsync(ct),
                 stoppingToken));
 
             // Warte bis alle parallelen Tasks abgeschlossen sind

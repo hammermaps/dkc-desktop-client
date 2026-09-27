@@ -9,6 +9,13 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
 
 ### Hinzugefügt
 - Phase-5-Abschluss: vollständige Test-Coverage, Dokumentation, CI/CD-Erweiterung
+- Alle Listen-Ansichten (Mängelmeldungen, NEA-Systeme/-Prüfungen, Gebäude, Klimageräte,
+  Schlüssel-Inventar, WLS-Gebäude, Benachrichtigungen) laden jetzt automatisch beim
+  Öffnen (`INavigationTarget.OnNavigatedToAsync`) statt nur per manuellem "Laden"-Klick,
+  und ziehen Änderungen periodisch im Hintergrund über den bestehenden
+  `BackgroundRefreshService` nach (neue Cache-Keys `NeaSystems`, `BuildingList`,
+  `KlimaDevices`, `Notifications`, `WlsBuildings`), ohne die aktuelle Auswahl oder
+  sichtbare Fehlermeldungen zu stören.
 
 ---
 

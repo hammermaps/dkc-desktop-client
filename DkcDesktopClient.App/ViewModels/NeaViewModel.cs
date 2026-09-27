@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Text.Json;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DkcDesktopClient.App.Services;
@@ -22,11 +23,12 @@ public partial class NeaChecklistEditItem : ObservableObject
         new[] { "ok", "nok", "n_a" };
 }
 
-public partial class NeaViewModel : ViewModelBase
+public partial class NeaViewModel : ViewModelBase, INavigationTarget
 {
     private readonly DkcApiFactory _apiFactory;
     private readonly AuthService _authService;
     private readonly IFilePickerService _filePicker;
+    private readonly BackgroundRefreshService _backgroundRefreshService;
 
     // List state
     [ObservableProperty] private bool _isLoading;
@@ -93,30 +95,62 @@ public partial class NeaViewModel : ViewModelBase
     public static IReadOnlyList<string> FuelTypeOptions { get; } =
         new[] { "Diesel", "Gas", "Hybrid", "Benzin", "Erdgas" };
 
-    public NeaViewModel(DkcApiFactory apiFactory, AuthService authService, IFilePickerService filePicker)
+    public NeaViewModel(
+        DkcApiFactory apiFactory,
+        AuthService authService,
+        IFilePickerService filePicker,
+        BackgroundRefreshService backgroundRefreshService)
     {
         _apiFactory = apiFactory;
         _authService = authService;
         _filePicker = filePicker;
+        _backgroundRefreshService = backgroundRefreshService;
         // Wire CollectionChanged on the initial collection instance;
         // OnInspectionsChanged handles re-subscription if the collection property is replaced.
         Inspections.CollectionChanged += OnInspectionsCollectionChanged;
+
+        _backgroundRefreshService.DataRefreshed += OnBackgroundDataRefreshed;
+    }
+
+    /// <summary>Called by <see cref="Services.INavigationService"/> when this view becomes active.</summary>
+    public async Task OnNavigatedToAsync(object? parameter = null)
+    {
+        await LoadSystemsAsync();
+        await LoadInspectionsAsync();
+    }
+
+    private void OnBackgroundDataRefreshed(object? sender, string key)
+    {
+        if (key == CacheKeys.NeaSystems)
+            _ = Dispatcher.UIThread.InvokeAsync(() => LoadSystemsInternalAsync(silent: true));
+        else if (key == CacheKeys.NeaInspections)
+            _ = Dispatcher.UIThread.InvokeAsync(() => LoadInspectionsInternalAsync(silent: true));
     }
 
     [RelayCommand]
-    public async Task LoadSystemsAsync()
+    public Task LoadSystemsAsync() => LoadSystemsInternalAsync(silent: false);
+
+    private async Task LoadSystemsInternalAsync(bool silent)
     {
         var ct = StartLoad();
         IsLoading = true;
-        ErrorMessage = null;
+        if (!silent)
+            ErrorMessage = null;
+        var previouslySelectedId = silent ? SelectedSystem?.Id : null;
         try
         {
             var api = _apiFactory.Create(_authService.CurrentToken);
             var result = await api.GetNeaSystemsAsync(ct: ct);
-            Systems.Clear();
-            if (result.Success && result.Systems != null)
-                foreach (var s in result.Systems)
-                    Systems.Add(s);
+            if (result.Success)
+            {
+                Systems.Clear();
+                if (result.Systems != null)
+                    foreach (var s in result.Systems)
+                        Systems.Add(s);
+                if (previouslySelectedId != null)
+                    SelectedSystem = Systems.FirstOrDefault(s => s.Id == previouslySelectedId);
+                _backgroundRefreshService.NotifyUserActivity(CacheKeys.NeaSystems);
+            }
         }
         catch (OperationCanceledException)
         {
@@ -124,7 +158,8 @@ public partial class NeaViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error loading NEA systems: {ex.Message}";
+            if (!silent)
+                ErrorMessage = $"Error loading NEA systems: {ex.Message}";
         }
         finally
         {
@@ -133,12 +168,16 @@ public partial class NeaViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public async Task LoadInspectionsAsync()
+    public Task LoadInspectionsAsync() => LoadInspectionsInternalAsync(silent: false);
+
+    private async Task LoadInspectionsInternalAsync(bool silent)
     {
         var ct = StartLoad();
         IsLoading = true;
-        ErrorMessage = null;
+        if (!silent)
+            ErrorMessage = null;
         CurrentOffset = 0;
+        var previouslySelectedId = silent ? SelectedInspection?.Id : null;
         try
         {
             var api = _apiFactory.Create(_authService.CurrentToken);
@@ -149,11 +188,17 @@ public partial class NeaViewModel : ViewModelBase
                 limit: PageSize,
                 offset: 0,
                 ct: ct);
-            Inspections.Clear();
-            TotalInspections = result.Total ?? 0;
-            if (result.Success && result.Inspections != null)
-                foreach (var i in result.Inspections)
-                    Inspections.Add(i);
+            if (result.Success)
+            {
+                Inspections.Clear();
+                TotalInspections = result.Total ?? 0;
+                if (result.Inspections != null)
+                    foreach (var i in result.Inspections)
+                        Inspections.Add(i);
+                if (previouslySelectedId != null)
+                    SelectedInspection = Inspections.FirstOrDefault(i => i.Id == previouslySelectedId);
+                _backgroundRefreshService.NotifyUserActivity(CacheKeys.NeaInspections);
+            }
         }
         catch (OperationCanceledException)
         {
@@ -161,7 +206,8 @@ public partial class NeaViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error loading inspections: {ex.Message}";
+            if (!silent)
+                ErrorMessage = $"Error loading inspections: {ex.Message}";
         }
         finally
         {
