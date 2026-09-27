@@ -7,6 +7,15 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
 
 ## [Unreleased]
 
+### Fix
+- CI-Flake behoben: `TokenStoreTests`, `AuthServiceTests`, `BackgroundRefreshServiceTests`,
+  `HttpPerformanceConfigTests` und `ViewModelTests` instanziierten jeweils einen echten
+  `TokenStore` gegen denselben festen Dateipfad (`%ApplicationData%/DkcDesktopClient/dkc_token.dat`)
+  — auf dem GitHub-Actions-Runner führte die dortige echte Parallelität von xUnit-Testklassen dazu,
+  dass `DeleteToken()` einer Klasse den gerade von einer anderen gespeicherten Token wieder entfernte
+  (`SaveAndLoad_Token_RoundTrips` schlug mit `Actual: null` fehl). `TokenStore` bekommt einen
+  optionalen `dataDir`-Parameter, jede Testklasse isoliert sich jetzt in ein eigenes Temp-Verzeichnis.
+
 ### Neu
 - Automatischer Updater erkennt jetzt zusätzlich zum bestehenden GitHub-Tag-Kanal den
   kontinuierlichen DKC-Build-Kanal (jeder Push auf `main`, nur Linux/Windows — macOS bleibt
