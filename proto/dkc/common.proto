@@ -50,6 +50,9 @@ enum Action {
     MM_UPDATE_STATUS                = 24;
     MM_ASSIGN_CONTRACTOR            = 25;
     MM_DELETE                       = 26;
+    MM_WHG_LIST                     = 27;
+    MM_TENANT_LOOKUP                = 28;
+    MM_FORM_OPTIONS                 = 29;
 
     // NEA – Netzersatzanlagen
     NEA_SYSTEMS                     = 40;

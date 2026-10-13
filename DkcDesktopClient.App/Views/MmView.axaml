@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:DkcDesktopClient.App.ViewModels"
+             xmlns:proto="using:DkcDesktopClient.Core.Protocol"
              xmlns:api="using:DkcDesktopClient.Core.Api"
              xmlns:controls="using:DkcDesktopClient.App.Controls"
              x:Class="DkcDesktopClient.App.Views.MmView"
@@ -128,13 +129,27 @@
         <Grid ColumnDefinitions="130,8,*,16,130,8,*">
           <TextBlock Grid.Column="0" Text="Straße" VerticalAlignment="Center"/>
           <ComboBox  Grid.Column="2"
-                     ItemsSource="{Binding StreetOptions}"
-                     Text="{Binding FormStreet}"
-                     IsEditable="True"
-                     HorizontalAlignment="Stretch"/>
+                     ItemsSource="{Binding StreetChoices}"
+                     SelectedItem="{Binding FormStreetChoice}"
+                     HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="proto:MmFormOption"><TextBlock Text="{Binding Name}"/></DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
           <TextBlock Grid.Column="4" Text="Wohnung" VerticalAlignment="Center"/>
-          <TextBox   Grid.Column="6" Text="{Binding FormWhg}" PlaceholderText="z. B. 3 OG links"/>
+          <ComboBox  Grid.Column="6"
+                     ItemsSource="{Binding WhgChoices}"
+                     SelectedItem="{Binding FormWhgChoice}"
+                     HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="proto:MmWhgItem">
+                <TextBlock Text="{Binding Name}"/>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
         </Grid>
+        <TextBlock Text="{Binding TenantHint}" Foreground="#4A5568" FontSize="12"
+                   IsVisible="{Binding TenantHint, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
         <!-- Zeile 3: Melder + Dringlichkeit -->
         <Grid ColumnDefinitions="130,8,*,16,130,8,*">
@@ -163,10 +178,13 @@
         <Grid ColumnDefinitions="130,8,*,16,130,8,*">
           <TextBlock Grid.Column="0" Text="Nachunternehmer" VerticalAlignment="Center"/>
           <ComboBox  Grid.Column="2"
-                     ItemsSource="{Binding ContractorOptions}"
-                     Text="{Binding FormNachunternehmer}"
-                     IsEditable="True"
-                     HorizontalAlignment="Stretch"/>
+                     ItemsSource="{Binding ContractorChoices}"
+                     SelectedItem="{Binding FormContractorChoice}"
+                     HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="proto:MmFormOption"><TextBlock Text="{Binding Name}"/></DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
           <TextBlock Grid.Column="4" Text="Zugehörigkeit" VerticalAlignment="Center"/>
           <TextBox   Grid.Column="6" Text="{Binding FormZugeh}" PlaceholderText="Zugehörigkeit"/>
         </Grid>
@@ -317,8 +335,12 @@
           <!-- Nachunternehmer-Schnellzuweisung -->
           <TextBlock Grid.Row="9" Grid.Column="0" Text="Nachunternehmer:" FontWeight="SemiBold" VerticalAlignment="Center"/>
           <StackPanel Grid.Row="9" Grid.Column="2" Orientation="Horizontal" Spacing="8">
-            <TextBox Text="{Binding DetailNachunternehmer}" PlaceholderText="Nachunternehmer-ID…" Width="120"
-                     ToolTip.Tip="Numerische Nachunternehmer-ID (siehe Vorschlagsliste im Formular)"/>
+            <ComboBox ItemsSource="{Binding ContractorChoices}" SelectedItem="{Binding DetailContractorChoice}"
+                      PlaceholderText="Nachunternehmer wählen…" MinWidth="220">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="proto:MmFormOption"><TextBlock Text="{Binding Name}"/></DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
             <Button Content="Zuweisen" Command="{Binding AssignContractorCommand}"/>
             <TextBlock Text="{Binding SelectedDetail.NachunternehmerName}" Foreground="#2D3748" VerticalAlignment="Center"/>
           </StackPanel>

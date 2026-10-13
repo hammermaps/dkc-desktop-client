@@ -27,6 +27,9 @@ public interface IDkcProtobufApi
     Task<MmDetailResponse> GetMmDetailAsync(MmDetailRequest request, CancellationToken ct = default);
     Task<MmCreateResponse> CreateMmAsync(MmSaveRequest request, CancellationToken ct = default);
     Task<Ack> UpdateMmAsync(MmSaveRequest request, CancellationToken ct = default);
+    Task<MmFormOptionsResponse> GetMmFormOptionsAsync(CancellationToken ct = default);
+    Task<MmWhgListResponse> GetMmWhgListAsync(MmWhgListRequest request, CancellationToken ct = default);
+    Task<MmTenantLookupResponse> LookupMmTenantAsync(MmTenantLookupRequest request, CancellationToken ct = default);
     Task<Ack> UpdateMmStatusAsync(MmUpdateStatusRequest request, CancellationToken ct = default);
     Task<Ack> AssignMmContractorAsync(MmAssignContractorRequest request, CancellationToken ct = default);
     Task<Ack> DeleteMmAsync(MmDeleteRequest request, CancellationToken ct = default);

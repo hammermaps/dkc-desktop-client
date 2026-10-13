@@ -8,6 +8,11 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
 ## [Unreleased]
 
 ### Neu
+- Mängelmeldung wie im Web: Straße und Nachunternehmer als Auswahl (`MM_FORM_OPTIONS`) statt
+  numerischer Freitext-IDs (das Formular konnte so keine gültige Straße senden), Wohnung aus der
+  nach Geschoss geordneten Liste (`MM_WHG_LIST`), bekannte Mieterdaten (Name, Rufnummern, E-Mail)
+  werden bei der Wohnungswahl übernommen (`MM_TENANT_LOOKUP`), Sonderwohnungen ohne Melder-/
+  Rufnummernpflicht. Nachunternehmer-Zuweisung im Detail ebenfalls als Auswahl.
 - Change Feed: `ChangeFeedService` bezieht das SSE-Ticket über Protobuf `ChangeFeedTicket`, hält den
   Stream offen (Reconnect mit Backoff, Ticket-Erneuerung) und lädt bei Ereignissen der Domänen `mm`,
   `nea`, `klima` und `notifications` nur die betroffenen Ansichten nach. Solange der Stream bestätigt

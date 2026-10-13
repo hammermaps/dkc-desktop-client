@@ -148,3 +148,45 @@ message MmAssignContractorRequest {
 
 // MM_DELETE ───────────────────────────────────────────────────────────────────
 message MmDeleteRequest { string uid = 1; }
+
+// MM_WHG_LIST ─────────────────────────────────────────────────────────────────
+// Web-Pendant: MmHelperTrait::getWHGDrobdown() (Aktion whg_dropdown) — Wohnungen/Einheiten
+// eines Hauses, nach Geschoss gruppiert (group_label) und wie im Web sortiert.
+message MmWhgListRequest { int32 street = 1; }
+
+message MmWhgItem {
+    string value       = 1; // Wert für MmSaveRequest.whg, z. B. "24.E07"
+    string name        = 2;
+    string label       = 3;
+    string number      = 4;
+    string group_label = 5;
+    bool   sonder      = 6; // Technik/Flur o. Ä.: keine Telefonnummer erforderlich
+    bool   empty       = 7;
+}
+
+message MmWhgListResponse { repeated MmWhgItem items = 1; }
+
+// MM_TENANT_LOOKUP ────────────────────────────────────────────────────────────
+// Web-Pendant: MmHelperTrait::getTenant() (Aktion get_tenant) — bekannter Mieter einer Einheit.
+message MmTenantLookupRequest { string whg = 1; }
+
+message MmTenantLookupResponse {
+    string          name   = 1;
+    repeated string tel    = 2;
+    string          email  = 3;
+    bool            trade  = 4;
+    bool            sonder = 5;
+}
+
+// MM_FORM_OPTIONS ─────────────────────────────────────────────────────────────
+// Web-Pendant: ContBase::getHausOptionen() (Straße/Haus) und getNuList() (aktive Nachunternehmer)
+// des aktiven Projekts — die IDs gehören in MmSaveRequest.street bzw. .nachunternehmer.
+message MmFormOption {
+    int32  id   = 1;
+    string name = 2;
+}
+
+message MmFormOptionsResponse {
+    repeated MmFormOption streets     = 1;
+    repeated MmFormOption contractors = 2;
+}

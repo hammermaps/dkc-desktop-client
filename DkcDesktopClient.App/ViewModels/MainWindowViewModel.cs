@@ -81,7 +81,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _navigationService.BreadcrumbsChanged  += (_, _) => Breadcrumbs = _navigationService.Breadcrumbs;
         DashboardViewModel.CreateMmRequested += (_, _) =>
         {
-            MmViewModel.ShowCreateForm();
+            _ = MmViewModel.ShowCreateFormAsync();
             SelectNavItem(MmViewModel, "Maengelmeldungen");
         };
         DashboardViewModel.StartNeaInspectionRequested += (_, _) => SelectNavItem(NeaViewModel, "NEA");

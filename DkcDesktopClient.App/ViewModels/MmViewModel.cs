@@ -12,6 +12,7 @@ using ProtoMmDetailRequest = DkcDesktopClient.Core.Protocol.MmDetailRequest;
 using ProtoMmSaveRequest = DkcDesktopClient.Core.Protocol.MmSaveRequest;
 using ProtoMmUpdateStatusRequest = DkcDesktopClient.Core.Protocol.MmUpdateStatusRequest;
 using ProtoMmAssignContractorRequest = DkcDesktopClient.Core.Protocol.MmAssignContractorRequest;
+using Proto = DkcDesktopClient.Core.Protocol;
 using ProtoMmDeleteRequest = DkcDesktopClient.Core.Protocol.MmDeleteRequest;
 
 namespace DkcDesktopClient.App.ViewModels;
@@ -120,6 +121,91 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
 
     /// <summary>User full-names loaded from users_list (admin only). Used for the Melder ComboBox.</summary>
     [ObservableProperty] private ObservableCollection<string> _melderOptions = new();
+
+    // ── Formularauswahl vom Server (Web-Pendant: Haus-/Nachunternehmer-Liste, whg_dropdown, get_tenant) ──
+    [ObservableProperty] private ObservableCollection<Proto.MmFormOption> _streetChoices = new();
+    [ObservableProperty] private ObservableCollection<Proto.MmFormOption> _contractorChoices = new();
+    [ObservableProperty] private ObservableCollection<Proto.MmWhgItem> _whgChoices = new();
+    [ObservableProperty] private Proto.MmFormOption? _formStreetChoice;
+    [ObservableProperty] private Proto.MmFormOption? _formContractorChoice;
+    [ObservableProperty] private Proto.MmWhgItem? _formWhgChoice;
+    [ObservableProperty] private Proto.MmFormOption? _detailContractorChoice;
+    /// <summary>Hinweis zur gewählten Einheit (Sonderwohnung, bekannter Mieter).</summary>
+    [ObservableProperty] private string? _tenantHint;
+    private bool _formOptionsLoaded;
+    private bool _suppressLookups;
+
+    partial void OnDetailContractorChoiceChanged(Proto.MmFormOption? value)
+        => DetailNachunternehmer = value != null && value.Id > 0 ? value.Id.ToString() : string.Empty;
+
+    partial void OnFormStreetChoiceChanged(Proto.MmFormOption? value)
+    {
+        if (_suppressLookups) return;
+        _ = LoadWhgChoicesAsync(value?.Id ?? 0, null);
+    }
+
+    partial void OnFormWhgChoiceChanged(Proto.MmWhgItem? value)
+    {
+        if (_suppressLookups || value == null) return;
+        FormWhg = value.Value;
+        _ = LookupTenantAsync(value);
+    }
+
+    private async Task EnsureFormOptionsAsync()
+    {
+        if (_formOptionsLoaded) return;
+        try
+        {
+            var options = await ProtoApi.GetMmFormOptionsAsync();
+            StreetChoices = new ObservableCollection<Proto.MmFormOption>(options.Streets);
+            ContractorChoices = new ObservableCollection<Proto.MmFormOption>(options.Contractors);
+            _formOptionsLoaded = true;
+        }
+        catch (Exception ex)
+        {
+            FormError = $"Auswahllisten konnten nicht geladen werden: {ex.Message}";
+        }
+    }
+
+    /// <summary>Lädt die Einheiten eines Hauses; <paramref name="selectValue"/> wählt eine Einheit vor.</summary>
+    private async Task LoadWhgChoicesAsync(int street, string? selectValue)
+    {
+        WhgChoices = new ObservableCollection<Proto.MmWhgItem>();
+        if (street <= 0) return;
+        try
+        {
+            var list = await ProtoApi.GetMmWhgListAsync(new Proto.MmWhgListRequest { Street = street });
+            WhgChoices = new ObservableCollection<Proto.MmWhgItem>(list.Items);
+            if (selectValue != null)
+            {
+                _suppressLookups = true;
+                try { FormWhgChoice = list.Items.FirstOrDefault(i => i.Value == selectValue); }
+                finally { _suppressLookups = false; }
+            }
+        }
+        catch (Exception ex)
+        {
+            FormError = $"Wohnungsliste konnte nicht geladen werden: {ex.Message}";
+        }
+    }
+
+    /// <summary>Übernimmt bekannte Mieterdaten (Name, Rufnummern, E-Mail) wie im Web-Formular.</summary>
+    private async Task LookupTenantAsync(Proto.MmWhgItem unit)
+    {
+        TenantHint = unit.Sonder ? "Sonderwohnung: Melder und Telefonnummer sind nicht erforderlich." : null;
+        try
+        {
+            var tenant = await ProtoApi.LookupMmTenantAsync(new Proto.MmTenantLookupRequest { Whg = unit.Value });
+            if (!string.IsNullOrWhiteSpace(tenant.Name)) FormMelder = tenant.Name;
+            if (tenant.Tel.Count > 0) FormTel = string.Join(", ", tenant.Tel);
+            if (!string.IsNullOrWhiteSpace(tenant.Email)) FormEmail = tenant.Email;
+            if (tenant.Trade && !unit.Sonder) TenantHint = "Gewerbe-Mieter.";
+        }
+        catch (Exception ex)
+        {
+            TenantHint = $"Mieterdaten konnten nicht geladen werden: {ex.Message}";
+        }
+    }
 
     // Guards against triggering LoadUserInfoAsync more than once concurrently
     private bool _userInfoLoading;
@@ -447,8 +533,16 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
     // ── Create / Edit form ────────────────────────────────────────────────────
 
     [RelayCommand]
-    public void ShowCreateForm()
+    public async Task ShowCreateFormAsync()
     {
+        await EnsureFormOptionsAsync();
+        _suppressLookups = true;
+        FormStreetChoice = null;
+        FormWhgChoice = null;
+        FormContractorChoice = null;
+        _suppressLookups = false;
+        WhgChoices = new ObservableCollection<Proto.MmWhgItem>();
+        TenantHint = null;
         IsEditingMessage = false;
         _editingUid = null;
         FormBetreff = string.Empty;
@@ -470,9 +564,16 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
     }
 
     [RelayCommand(CanExecute = nameof(HasSelectedDetail))]
-    public void ShowEditForm()
+    public async Task ShowEditFormAsync()
     {
         if (SelectedDetail == null) return;
+        await EnsureFormOptionsAsync();
+        TenantHint = null;
+        _suppressLookups = true;
+        FormStreetChoice = StreetChoices.FirstOrDefault(o => o.Id == SelectedDetail.Street);
+        FormContractorChoice = ContractorChoices.FirstOrDefault(o => o.Id == SelectedDetail.Nachunternehmer);
+        _suppressLookups = false;
+        await LoadWhgChoicesAsync(SelectedDetail.Street ?? 0, SelectedDetail.Whg);
         IsEditingMessage    = true;
         _editingUid         = SelectedDetail.Uid;
         FormBetreff         = SelectedDetail.Betreff         ?? string.Empty;
@@ -504,6 +605,16 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
             FormError = "Betreff ist ein Pflichtfeld.";
             return;
         }
+        if (FormStreetChoice == null || FormWhgChoice == null)
+        {
+            FormError = "Bitte Straße und Wohnung aus der Liste wählen.";
+            return;
+        }
+        if (!FormWhgChoice.Sonder && (string.IsNullOrWhiteSpace(FormMelder) || string.IsNullOrWhiteSpace(FormTel)))
+        {
+            FormError = "Melder und mindestens eine Telefonnummer sind erforderlich (außer bei Sonderwohnungen).";
+            return;
+        }
         IsSaving  = true;
         FormError = null;
         try
@@ -513,13 +624,13 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
                 Uid = IsEditingMessage && _editingUid != null ? _editingUid : string.Empty,
                 Betreff = FormBetreff,
                 MeldungMassage = FormMeldung,
-                Street = FormStreet,
-                Whg = FormWhg,
+                Street = FormStreetChoice != null ? FormStreetChoice.Id.ToString() : string.Empty,
+                Whg = FormWhgChoice?.Value ?? FormWhg,
                 Melder = FormMelder,
                 Tel = FormTel,
                 Email = FormEmail,
                 Dringlichkeit = FormDringlichkeit,
-                Nachunternehmer = FormNachunternehmer,
+                Nachunternehmer = FormContractorChoice != null && FormContractorChoice.Id > 0 ? FormContractorChoice.Id.ToString() : string.Empty,
                 Zugeh = FormZugeh,
             };
 

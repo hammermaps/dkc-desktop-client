@@ -48,6 +48,12 @@ public sealed class DkcProtobufApi : IDkcProtobufApi
         => Send<MmCreateResponse>(Protocol.Action.MmCreate, request, ct);
     public Task<Ack> UpdateMmAsync(MmSaveRequest request, CancellationToken ct = default)
         => Send<Ack>(Protocol.Action.MmUpdate, request, ct);
+    public Task<MmFormOptionsResponse> GetMmFormOptionsAsync(CancellationToken ct = default)
+        => Send<MmFormOptionsResponse>(Protocol.Action.MmFormOptions, null, ct);
+    public Task<MmWhgListResponse> GetMmWhgListAsync(MmWhgListRequest request, CancellationToken ct = default)
+        => Send<MmWhgListResponse>(Protocol.Action.MmWhgList, request, ct);
+    public Task<MmTenantLookupResponse> LookupMmTenantAsync(MmTenantLookupRequest request, CancellationToken ct = default)
+        => Send<MmTenantLookupResponse>(Protocol.Action.MmTenantLookup, request, ct);
     public Task<Ack> UpdateMmStatusAsync(MmUpdateStatusRequest request, CancellationToken ct = default)
         => Send<Ack>(Protocol.Action.MmUpdateStatus, request, ct);
     public Task<Ack> AssignMmContractorAsync(MmAssignContractorRequest request, CancellationToken ct = default)
