@@ -93,6 +93,7 @@ public interface IDkcProtobufApi
     // ── Benachrichtigungen ──────────────────────────────────────────────────
     Task<NotificationsResponse> GetNotificationsAsync(CancellationToken ct = default);
     Task<NotificationCountResponse> GetNotificationCountAsync(CancellationToken ct = default);
+    Task<Ack> MarkNotificationReadAsync(NotificationMarkReadRequest request, CancellationToken ct = default);
 
     // ── WLS ─────────────────────────────────────────────────────────────────
     Task<WlsBuildingsListResponse> GetWlsBuildingsAsync(CancellationToken ct = default);

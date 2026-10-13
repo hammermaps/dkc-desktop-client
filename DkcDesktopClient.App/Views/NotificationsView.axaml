@@ -11,6 +11,8 @@
     <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
       <TextBlock Text="🔔 Benachrichtigungen" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
       <Button Content="Aktualisieren" Command="{Binding LoadNotificationsCommand}"/>
+      <Button Content="Alle als gelesen" Command="{Binding MarkAllReadCommand}"
+              IsEnabled="{Binding HasUnreadNotifications}"/>
       <Border Background="#3B82F6" CornerRadius="12" Padding="8,3"
               IsVisible="{Binding HasUnreadNotifications}">
         <TextBlock Text="{Binding TotalCount, StringFormat='{}{0} ungelesen'}"
@@ -57,11 +59,14 @@
                 </StackPanel>
 
                 <!-- Read badge -->
-                <Border Grid.Column="2" CornerRadius="10" Padding="8,3"
-                        Background="#3B82F6"
-                        IsVisible="{Binding !Read}">
-                  <TextBlock Text="Neu" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
-                </Border>
+                <StackPanel Grid.Column="2" Spacing="4" IsVisible="{Binding !Read}">
+                  <Border CornerRadius="10" Padding="8,3" Background="#3B82F6" HorizontalAlignment="Right">
+                    <TextBlock Text="Neu" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                  </Border>
+                  <Button Content="Gelesen" FontSize="11" Padding="8,2"
+                          Command="{Binding $parent[ItemsControl].((vm:NotificationsViewModel)DataContext).MarkReadCommand}"
+                          CommandParameter="{Binding}"/>
+                </StackPanel>
               </Grid>
             </Border>
           </DataTemplate>

@@ -166,6 +166,8 @@ public sealed class DkcProtobufApi : IDkcProtobufApi
         => Send<NotificationsResponse>(Protocol.Action.Notifications, null, ct);
     public Task<NotificationCountResponse> GetNotificationCountAsync(CancellationToken ct = default)
         => Send<NotificationCountResponse>(Protocol.Action.NotificationCount, null, ct);
+    public Task<Ack> MarkNotificationReadAsync(NotificationMarkReadRequest request, CancellationToken ct = default)
+        => Send<Ack>(Protocol.Action.NotificationMarkRead, request, ct);
 
     // ── WLS ─────────────────────────────────────────────────────────────────
     public Task<WlsBuildingsListResponse> GetWlsBuildingsAsync(CancellationToken ct = default)

@@ -8,6 +8,8 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
 ## [Unreleased]
 
 ### Neu
+- Benachrichtigungen: „Gelesen" je Eintrag und „Alle als gelesen" über die Protobuf-Action
+  `NotificationMarkRead` (Server-Handler war bereits vorhanden).
 - Mehrere Climatic Controller: Klima-Ansicht lädt Geräte, Gruppen und Status aller Controller
   über Protobuf (`KlimaProtoMapper`), zeigt eine Controller-Spalte und sendet bei Einzel-,
   Gruppen- und Sammelsteuerung die `controller_id` mit. Auch der Hintergrund-Poller

@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DkcDesktopClient.App.Services;
 using DkcDesktopClient.Core.Api;
+using DkcDesktopClient.Core.Protobuf;
 using DkcDesktopClient.Core.Services;
 
 namespace DkcDesktopClient.App.ViewModels;
@@ -83,6 +84,30 @@ public partial class NotificationsViewModel : ViewModelBase, INavigationTarget
         finally
         {
             IsLoading = false;
+        }
+    }
+
+    /// <summary>Markiert eine Benachrichtigung als gelesen (Protobuf NotificationMarkRead).</summary>
+    [RelayCommand]
+    public Task MarkReadAsync(NotificationItem? item)
+        => item == null || item.Read ? Task.CompletedTask : MarkAsync(item.Id);
+
+    /// <summary>Markiert alle ungelesenen Benachrichtigungen als gelesen (id = 0).</summary>
+    [RelayCommand]
+    public Task MarkAllReadAsync() => MarkAsync(0);
+
+    private async Task MarkAsync(int id)
+    {
+        ErrorMessage = null;
+        try
+        {
+            var proto = new DkcProtobufApi(_apiFactory.CreateProtobuf(_authService.CurrentToken));
+            await proto.MarkNotificationReadAsync(new Core.Protocol.NotificationMarkReadRequest { Id = id });
+            await LoadNotificationsAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Als gelesen markieren fehlgeschlagen: {ex.Message}";
         }
     }
 
