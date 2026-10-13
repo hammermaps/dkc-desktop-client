@@ -66,10 +66,10 @@ public interface IDkcApi
     [Get("/api.php?action=building_inspection_detail")]
     Task<BuildingInspectionDetailResponse> GetBuildingInspectionDetailAsync([Query] int id, CancellationToken ct = default);
 
-    [Get("/api.php?action=klima_devices")]
+    [Get("/api.php?action=klima_devices&controller=all")]
     Task<KlimaDevicesResponse> GetKlimaDevicesAsync(CancellationToken ct = default);
 
-    [Get("/api.php?action=klima_status")]
+    [Get("/api.php?action=klima_status&controller=all")]
     Task<KlimaStatusResponse> GetKlimaStatusAsync(CancellationToken ct = default);
 
     [Get("/api.php?action=keys_inventory")]
@@ -145,7 +145,7 @@ public interface IDkcApi
     Task<BuildingCheckpointsResponse> GetBuildingCheckpointsAsync([Query("building_id")] int? buildingId = null, CancellationToken ct = default);
 
     // Klima write/control
-    [Get("/api.php?action=klima_status")]
+    [Get("/api.php?action=klima_status&controller=all")]
     Task<KlimaRealtimeStatusResponse> GetKlimaRealtimeStatusAsync(CancellationToken ct = default);
 
     [Post("/api.php?action=klima_device_control")]
@@ -154,7 +154,7 @@ public interface IDkcApi
     [Post("/api.php?action=klima_group_control")]
     Task<ApiError> ControlKlimaGroupAsync([Body] KlimaGroupControlRequest request, CancellationToken ct = default);
 
-    [Get("/api.php?action=klima_groups_list")]
+    [Get("/api.php?action=klima_groups_list&controller=all")]
     Task<KlimaGroupsResponse> GetKlimaGroupsAsync(CancellationToken ct = default);
 
     [Put("/api.php?action=klima_device_update")]

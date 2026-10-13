@@ -76,6 +76,7 @@
         <DataGrid ItemsSource="{Binding DeviceStatuses}" SelectedItem="{Binding SelectedDeviceStatus}"
                   IsReadOnly="True" AutoGenerateColumns="False">
           <DataGrid.Columns>
+            <DataGridTextColumn Header="Ctrl" Binding="{Binding ControllerId}" Width="45"/>
             <DataGridTextColumn Header="Addr" Binding="{Binding Address}" Width="50"/>
             <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
             <DataGridCheckBoxColumn Header="Online" Binding="{Binding Online}" Width="60"/>
@@ -93,6 +94,7 @@
         <DataGrid ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice}"
                   IsReadOnly="True" AutoGenerateColumns="False">
           <DataGrid.Columns>
+            <DataGridTextColumn Header="Ctrl" Binding="{Binding ControllerId}" Width="45"/>
             <DataGridTextColumn Header="Address" Binding="{Binding Address}" Width="70"/>
             <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
             <DataGridCheckBoxColumn Header="Enabled" Binding="{Binding Enabled}" Width="70"/>

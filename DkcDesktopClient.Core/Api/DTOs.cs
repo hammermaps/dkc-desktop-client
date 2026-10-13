@@ -332,7 +332,8 @@ public record KlimaDevice(
     [property: JsonPropertyName("name")] string Name,
     [property: JsonPropertyName("group_id")] int? GroupId,
     [property: JsonPropertyName("enabled")] bool Enabled,
-    [property: JsonPropertyName("sort")] int Sort);
+    [property: JsonPropertyName("sort")] int Sort,
+    [property: JsonPropertyName("controller_id")] int ControllerId = 1);
 
 public record KlimaDevicesResponse(
     [property: JsonPropertyName("success")] bool Success,
@@ -515,7 +516,8 @@ public record KlimaDeviceControlRequest(
     [property: JsonPropertyName("power")] bool? Power,
     [property: JsonPropertyName("mode")] string? Mode,
     [property: JsonPropertyName("setpoint")] double? Setpoint,
-    [property: JsonPropertyName("fan_speed")] string? FanSpeed);
+    [property: JsonPropertyName("fan_speed")] string? FanSpeed,
+    [property: JsonPropertyName("controller_id")] int ControllerId = 1);
 
 public record KlimaGroupControlRequest(
     [property: JsonPropertyName("group_id")] int GroupId,
@@ -539,7 +541,8 @@ public record KlimaDeviceStatus(
     [property: JsonPropertyName("setpoint")] double? Setpoint,
     [property: JsonPropertyName("current_temp")] double? CurrentTemp,
     [property: JsonPropertyName("fan_speed")] string? FanSpeed,
-    [property: JsonPropertyName("error_code")] string? ErrorCode);
+    [property: JsonPropertyName("error_code")] string? ErrorCode,
+    [property: JsonPropertyName("controller_id")] int ControllerId = 1);
 
 public record KlimaRealtimeStatusResponse(
     [property: JsonPropertyName("success")] bool Success,
@@ -550,7 +553,8 @@ public record KlimaRealtimeStatusResponse(
 public record KlimaGroup(
     [property: JsonPropertyName("id")] int Id,
     [property: JsonPropertyName("name")] string Name,
-    [property: JsonPropertyName("device_count")] int DeviceCount);
+    [property: JsonPropertyName("device_count")] int DeviceCount,
+    [property: JsonPropertyName("controller_id")] int ControllerId = 1);
 
 public record KlimaGroupsResponse(
     [property: JsonPropertyName("success")] bool Success,

@@ -23,11 +23,12 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
     private DkcProtobufApi ProtoApi => new(_apiFactory.CreateProtobuf(_authService.CurrentToken));
 
     private static ProtoKlimaDeviceControlRequest BuildDeviceControlRequest(
-        int address, bool? power, string? mode, double? setpoint, string? fanSpeed)
+        int address, bool? power, string? mode, double? setpoint, string? fanSpeed, int controllerId = 1)
     {
         var req = new ProtoKlimaDeviceControlRequest
         {
             Address = address,
+            ControllerId = controllerId,
             Mode = mode ?? string.Empty,
             FanSpeed = fanSpeed ?? string.Empty,
         };
@@ -127,11 +128,11 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
                 // Fallback: build groups from the already-loaded device list
                 var grouped = Devices
                     .Where(d => d.GroupId.HasValue)
-                    .GroupBy(d => d.GroupId!.Value)
-                    .OrderBy(g => g.Key);
+                    .GroupBy(d => (d.ControllerId, GroupId: d.GroupId!.Value))
+                    .OrderBy(g => g.Key.ControllerId).ThenBy(g => g.Key.GroupId);
                 Groups.Clear();
                 foreach (var g in grouped)
-                    Groups.Add(new KlimaGroup(g.Key, $"Gruppe {g.Key}", g.Count()));
+                    Groups.Add(new KlimaGroup(g.Key.GroupId, $"Gruppe {g.Key.GroupId}", g.Count(), g.Key.ControllerId));
             }
             else if (groupsResult.Groups != null && groupsResult.Groups.Count > 0)
             {
@@ -144,11 +145,11 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
                 // API returned success but empty groups — build from device group IDs
                 var grouped = Devices
                     .Where(d => d.GroupId.HasValue)
-                    .GroupBy(d => d.GroupId!.Value)
-                    .OrderBy(g => g.Key);
+                    .GroupBy(d => (d.ControllerId, GroupId: d.GroupId!.Value))
+                    .OrderBy(g => g.Key.ControllerId).ThenBy(g => g.Key.GroupId);
                 Groups.Clear();
                 foreach (var g in grouped)
-                    Groups.Add(new KlimaGroup(g.Key, $"Gruppe {g.Key}", g.Count()));
+                    Groups.Add(new KlimaGroup(g.Key.GroupId, $"Gruppe {g.Key.GroupId}", g.Count(), g.Key.ControllerId));
             }
         }
         catch (Exception ex)
@@ -289,7 +290,7 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
         try
         {
             var request = BuildDeviceControlRequest(
-                SelectedDeviceStatus.Address, ControlPower, ControlMode, ControlSetpoint, ControlFanSpeed);
+                SelectedDeviceStatus.Address, ControlPower, ControlMode, ControlSetpoint, ControlFanSpeed, SelectedDeviceStatus.ControllerId);
             await ProtoApi.ControlKlimaDeviceAsync(request);
             IsControlPanelVisible = false;
             await RefreshStatusAsync();
@@ -315,6 +316,7 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
             var request = new ProtoKlimaGroupControlRequest
             {
                 GroupId = SelectedGroup.Id,
+                ControllerId = SelectedGroup.ControllerId,
                 Mode = ControlMode ?? string.Empty,
                 FanSpeed = ControlFanSpeed ?? string.Empty,
                 PowerSet = true,
@@ -372,7 +374,7 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
             foreach (var s in DeviceStatuses)
             {
                 await ProtoApi.ControlKlimaDeviceAsync(
-                    BuildDeviceControlRequest(s.Address, true, ControlMode, ControlSetpoint, ControlFanSpeed));
+                    BuildDeviceControlRequest(s.Address, true, ControlMode, ControlSetpoint, ControlFanSpeed, s.ControllerId));
             }
             GlobalControlResult = $"Alle {DeviceStatuses.Count} Geräte eingeschaltet.";
             await RefreshStatusAsync();
@@ -397,7 +399,7 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
             foreach (var s in DeviceStatuses)
             {
                 await ProtoApi.ControlKlimaDeviceAsync(
-                    BuildDeviceControlRequest(s.Address, false, null, null, null));
+                    BuildDeviceControlRequest(s.Address, false, null, null, null, s.ControllerId));
             }
             GlobalControlResult = $"Alle {DeviceStatuses.Count} Geräte ausgeschaltet.";
             await RefreshStatusAsync();
@@ -434,7 +436,7 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
             foreach (var s in _savedState)
             {
                 await ProtoApi.ControlKlimaDeviceAsync(
-                    BuildDeviceControlRequest(s.Address, s.Power, s.Mode, s.Setpoint, s.FanSpeed));
+                    BuildDeviceControlRequest(s.Address, s.Power, s.Mode, s.Setpoint, s.FanSpeed, s.ControllerId));
             }
             GlobalControlResult = $"Letzter Status auf {_savedState.Count} Geräten wiederhergestellt.";
             await RefreshStatusAsync();
