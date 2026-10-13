@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using DkcDesktopClient.Core.Api;
+using DkcDesktopClient.Core.Protobuf;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -52,6 +53,19 @@ public class BackgroundRefreshService : BackgroundService
     /// <summary>
     /// Call this after a manual data load to defer the next background refresh for <paramref name="cacheKey"/>.
     /// </summary>
+    /// <summary>
+    /// Klima-Status aller Controller. Standard: Protobuf (Klima-Daten laufen nicht mehr über REST);
+    /// in Tests überschreibbar, damit kein Netzwerkzugriff entsteht.
+    /// </summary>
+    protected virtual async Task<KlimaRealtimeStatusResponse> FetchKlimaStatusAsync(IDkcApi api, CancellationToken ct)
+        => KlimaProtoMapper.ToDto(await ProtoApi().GetKlimaRealtimeStatusAsync(ct));
+
+    /// <summary>Klima-Geräteliste aller Controller, siehe <see cref="FetchKlimaStatusAsync"/>.</summary>
+    protected virtual async Task<KlimaDevicesResponse> FetchKlimaDevicesAsync(IDkcApi api, CancellationToken ct)
+        => KlimaProtoMapper.ToDto(await ProtoApi().GetKlimaDevicesAsync(ct));
+
+    private DkcProtobufApi ProtoApi() => new(_apiFactory.CreateProtobuf(_authService.CurrentToken));
+
     public void NotifyUserActivity(string cacheKey)
     {
         _lastLoaded[cacheKey] = DateTime.UtcNow;
@@ -76,7 +90,7 @@ public class BackgroundRefreshService : BackgroundService
                 CacheKeys.KlimaStatus,
                 _config.KlimaStatus,
                 now,
-                ct => api.GetKlimaRealtimeStatusAsync(ct),
+                ct => FetchKlimaStatusAsync(api, ct),
                 stoppingToken);
 
             await TryRefreshAsync(
@@ -152,7 +166,7 @@ public class BackgroundRefreshService : BackgroundService
                 CacheKeys.KlimaDevices,
                 CacheTtl.KlimaDevices,
                 now,
-                ct => api.GetKlimaDevicesAsync(ct),
+                ct => FetchKlimaDevicesAsync(api, ct),
                 stoppingToken));
 
             refreshTasks.Add(TryRefreshAsync(

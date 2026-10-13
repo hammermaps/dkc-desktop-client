@@ -50,6 +50,13 @@ internal sealed class FastBackgroundRefreshService : BackgroundRefreshService
     }
 
     protected override TimeSpan TickInterval => _testInterval;
+
+    // Klima läuft produktiv über Protobuf; die Tests nutzen weiter den IDkcApi-Mock.
+    protected override Task<KlimaRealtimeStatusResponse> FetchKlimaStatusAsync(IDkcApi api, CancellationToken ct)
+        => api.GetKlimaRealtimeStatusAsync(ct);
+
+    protected override Task<KlimaDevicesResponse> FetchKlimaDevicesAsync(IDkcApi api, CancellationToken ct)
+        => api.GetKlimaDevicesAsync(ct);
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
