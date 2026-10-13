@@ -8,6 +8,11 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
 ## [Unreleased]
 
 ### Neu
+- Change Feed: `ChangeFeedService` bezieht das SSE-Ticket über Protobuf `ChangeFeedTicket`, hält den
+  Stream offen (Reconnect mit Backoff, Ticket-Erneuerung) und lädt bei Ereignissen der Domänen `mm`,
+  `nea`, `klima` und `notifications` nur die betroffenen Ansichten nach. Solange der Stream bestätigt
+  ist, entfällt das Polling dieser Daten (Sicherheits-Refresh alle 10 Minuten). Endpunkt: lokal
+  `:8098/events`, sonst `<Server>/change-feed/events`, überschreibbar mit `DKC_CHANGE_FEED_URL`.
 - Benachrichtigungen: „Gelesen" je Eintrag und „Alle als gelesen" über die Protobuf-Action
   `NotificationMarkRead` (Server-Handler war bereits vorhanden).
 - Mehrere Climatic Controller: Klima-Ansicht lädt Geräte, Gruppen und Status aller Controller

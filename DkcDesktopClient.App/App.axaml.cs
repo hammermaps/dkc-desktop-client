@@ -64,9 +64,11 @@ public partial class App : Application
         var bgRefresh    = _serviceProvider.GetRequiredService<BackgroundRefreshService>();
         var notifPoll    = _serviceProvider.GetRequiredService<NotificationPollingService>();
         var connectivity = _serviceProvider.GetRequiredService<ConnectivityService>();
+        var changeFeed   = _serviceProvider.GetRequiredService<ChangeFeedService>();
         _ = bgRefresh.StartAsync(CancellationToken.None);
         _ = notifPoll.StartAsync(CancellationToken.None);
         _ = connectivity.StartAsync(CancellationToken.None);
+        _ = changeFeed.StartAsync(CancellationToken.None);
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
@@ -91,6 +93,7 @@ public partial class App : Application
                 _ = bgRefresh.StopAsync(CancellationToken.None);
                 _ = notifPoll.StopAsync(CancellationToken.None);
                 _ = connectivity.StopAsync(CancellationToken.None);
+                _ = changeFeed.StopAsync(CancellationToken.None);
             };
         }
 
@@ -184,6 +187,7 @@ public partial class App : Application
         // ── Background / polling services ─────────────────────────────────────
         services.AddSingleton<BackgroundRefreshService>();
         services.AddSingleton<NotificationPollingService>();
+        services.AddSingleton<ChangeFeedService>();
 
         services.AddSingleton<ConnectivityService>();
 

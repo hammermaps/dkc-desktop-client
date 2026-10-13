@@ -90,6 +90,9 @@ public interface IDkcProtobufApi
     Task<Ack> UpdateUserAsync(UserSaveRequest request, CancellationToken ct = default);
     Task<Ack> DeleteUserAsync(UserDeleteRequest request, CancellationToken ct = default);
 
+    // ── Change Feed (SSE-Ticket) ────────────────────────────────────────────
+    Task<ChangeFeedTicketResponse> GetChangeFeedTicketAsync(CancellationToken ct = default);
+
     // ── Benachrichtigungen ──────────────────────────────────────────────────
     Task<NotificationsResponse> GetNotificationsAsync(CancellationToken ct = default);
     Task<NotificationCountResponse> GetNotificationCountAsync(CancellationToken ct = default);

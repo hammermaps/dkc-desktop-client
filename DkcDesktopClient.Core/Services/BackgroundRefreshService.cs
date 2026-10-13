@@ -66,6 +66,23 @@ public class BackgroundRefreshService : BackgroundService
 
     private DkcProtobufApi ProtoApi() => new(_apiFactory.CreateProtobuf(_authService.CurrentToken));
 
+    private volatile bool _pushConfirmed;
+    private static readonly TimeSpan PushSafetyRefresh = TimeSpan.FromMinutes(10);
+
+    /// <summary>
+    /// Wird vom Change Feed gesetzt: Solange der Push-Stream bestätigt ist, entfällt das Polling der
+    /// vom Feed abgedeckten Schlüssel (Sicherheits-Refresh alle 10 Minuten bleibt).
+    /// </summary>
+    public void SetPushConfirmed(bool confirmed) => _pushConfirmed = confirmed;
+
+    /// <summary>Server meldet eine Änderung: Cache verwerfen und Ansichten zum Nachladen auffordern.</summary>
+    public void NotifyChanged(string cacheKey)
+    {
+        _cache.Invalidate(cacheKey);
+        _lastLoaded[cacheKey] = DateTime.UtcNow;
+        DataRefreshed?.Invoke(this, cacheKey);
+    }
+
     public void NotifyUserActivity(string cacheKey)
     {
         _lastLoaded[cacheKey] = DateTime.UtcNow;
@@ -183,6 +200,9 @@ public class BackgroundRefreshService : BackgroundService
         _logger.LogInformation("BackgroundRefreshService stopped");
     }
 
+    private static bool IsPushCovered(string key)
+        => new[] { "mm", "nea", "klima", "notifications" }.Any(d => ChangeFeedService.KeysForDomain(d).Contains(key));
+
     private async Task TryRefreshAsync<T>(
         string key,
         TimeSpan interval,
@@ -192,6 +212,10 @@ public class BackgroundRefreshService : BackgroundService
     {
         // Skip if this key was loaded (manually or via background) within the interval
         if (_lastLoaded.TryGetValue(key, out var last) && now - last < interval)
+            return;
+
+        // Push bestätigt: vom Change Feed abgedeckte Schlüssel nur noch als Sicherheitsnetz laden
+        if (_pushConfirmed && IsPushCovered(key) && last != default && now - last < PushSafetyRefresh)
             return;
 
         // Only refresh when the in-memory cache is actually expired

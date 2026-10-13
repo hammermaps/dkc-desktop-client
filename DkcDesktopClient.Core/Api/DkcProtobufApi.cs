@@ -162,6 +162,8 @@ public sealed class DkcProtobufApi : IDkcProtobufApi
         => Send<Ack>(Protocol.Action.UserDelete, request, ct);
 
     // ── Benachrichtigungen ──────────────────────────────────────────────────
+    public Task<ChangeFeedTicketResponse> GetChangeFeedTicketAsync(CancellationToken ct = default)
+        => Send<ChangeFeedTicketResponse>(Protocol.Action.ChangeFeedTicket, null, ct);
     public Task<NotificationsResponse> GetNotificationsAsync(CancellationToken ct = default)
         => Send<NotificationsResponse>(Protocol.Action.Notifications, null, ct);
     public Task<NotificationCountResponse> GetNotificationCountAsync(CancellationToken ct = default)
