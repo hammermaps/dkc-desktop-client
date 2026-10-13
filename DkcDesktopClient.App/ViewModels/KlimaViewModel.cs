@@ -17,8 +17,9 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
     private readonly BackgroundRefreshService _backgroundRefreshService;
 
     /// <summary>
+    /// Klima-Lesen und -Steuern laufen ausschließlich über Protobuf (alle Controller);
     /// klima_device_control/klima_group_control sind in api.php nie als REST-Route registriert
-    /// worden — nur die Protobuf-Actions funktionieren.
+    /// worden.
     /// </summary>
     private DkcProtobufApi ProtoApi => new(_apiFactory.CreateProtobuf(_authService.CurrentToken));
 
@@ -102,13 +103,13 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
         ErrorMessage = null;
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
+            var api = ProtoApi;
             var devicesTask = api.GetKlimaDevicesAsync();
             var groupsTask = api.GetKlimaGroupsAsync();
             await Task.WhenAll(devicesTask, groupsTask);
 
-            var devicesResult = devicesTask.Result;
-            var groupsResult = groupsTask.Result;
+            var devicesResult = KlimaProtoMapper.ToDto(devicesTask.Result);
+            var groupsResult = KlimaProtoMapper.ToDto(groupsTask.Result);
 
             if (!devicesResult.Success)
             {
@@ -170,8 +171,7 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
     {
         try
         {
-            var api = _apiFactory.Create(_authService.CurrentToken);
-            var result = await api.GetKlimaRealtimeStatusAsync();
+            var result = KlimaProtoMapper.ToDto(await ProtoApi.GetKlimaRealtimeStatusAsync());
             if (result.Success && result.Devices != null)
             {
                 DeviceStatuses.Clear();

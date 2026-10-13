@@ -7,6 +7,12 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
 
 ## [Unreleased]
 
+### Neu
+- Mehrere Climatic Controller: Klima-Ansicht lädt Geräte, Gruppen und Status aller Controller
+  über Protobuf (`KlimaProtoMapper`), zeigt eine Controller-Spalte und sendet bei Einzel-,
+  Gruppen- und Sammelsteuerung die `controller_id` mit. Der Hintergrund-Poller liest weiter
+  per REST (`controller=all`).
+
 ### Fix
 - `fail-fast: false` in `build.yml`: ein Testfehler auf einer Matrix-Plattform (z. B. macOS)
   brach zuvor auch die anderen, bereits laufenden Jobs ab — traf real den Linux-Job mitten im
