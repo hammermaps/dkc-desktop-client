@@ -40,6 +40,25 @@ public class AvaloniaFilePickerService : IFilePickerService
         return result.TryGetLocalPath();
     }
 
+    public async Task<IReadOnlyList<string>> PickOpenFilesAsync(
+        IReadOnlyList<(string Name, string Pattern)>? fileTypeFilter = null)
+    {
+        var topLevel = GetTopLevel();
+        if (topLevel == null) return Array.Empty<string>();
+
+        var options = new FilePickerOpenOptions
+        {
+            Title          = "Dateien auswählen",
+            AllowMultiple  = true,
+            FileTypeFilter = fileTypeFilter?
+                .Select(f => new FilePickerFileType(f.Name) { Patterns = f.Pattern.Split(';') })
+                .ToList<FilePickerFileType>()
+        };
+
+        var files = await topLevel.StorageProvider.OpenFilePickerAsync(options);
+        return files.Select(f => f.TryGetLocalPath()).Where(p => p != null).Select(p => p!).ToList();
+    }
+
     // ── Private ───────────────────────────────────────────────────────────────
 
     private static TopLevel? GetTopLevel()

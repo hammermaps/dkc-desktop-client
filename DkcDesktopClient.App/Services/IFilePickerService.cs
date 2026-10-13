@@ -15,4 +15,9 @@ public interface IFilePickerService
     /// </param>
     Task<string?> PickSaveFileAsync(string suggestedFileName,
         IReadOnlyList<(string Name, string Pattern)>? fileTypeFilter = null);
+
+    /// <summary>
+    /// Shows an "Open Files" dialog (multi-select) and returns the chosen local paths; empty if cancelled.
+    /// </summary>
+    Task<IReadOnlyList<string>> PickOpenFilesAsync(IReadOnlyList<(string Name, string Pattern)>? fileTypeFilter = null);
 }

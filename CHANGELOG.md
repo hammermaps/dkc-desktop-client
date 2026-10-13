@@ -8,6 +8,9 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
 ## [Unreleased]
 
 ### Neu
+- Mängelmeldung anlegen: Fotos auswählen (bis zu 10, je 10 MB) und optional keine Eingangsbestätigung
+  an den Melder senden. Der Server legt die Fotos wie im Web ab und reiht Benachrichtigung und
+  Eingangsbestätigung in die E-Mail-Queue ein. Neuer `IFilePickerService.PickOpenFilesAsync`.
 - Mängelmeldung wie im Web: Straße und Nachunternehmer als Auswahl (`MM_FORM_OPTIONS`) statt
   numerischer Freitext-IDs (das Formular konnte so keine gültige Straße senden), Wohnung aus der
   nach Geschoss geordneten Liste (`MM_WHG_LIST`), bekannte Mieterdaten (Name, Rufnummern, E-Mail)

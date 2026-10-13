@@ -132,6 +132,32 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
     [ObservableProperty] private Proto.MmFormOption? _detailContractorChoice;
     /// <summary>Hinweis zur gewählten Einheit (Sonderwohnung, bekannter Mieter).</summary>
     [ObservableProperty] private string? _tenantHint;
+    // Fotos (nur beim Anlegen): lokale Dateipfade, Server prüft Typ/Größe erneut
+    public const int MaxPhotos = 10;
+    public const long MaxPhotoBytes = 10L * 1024 * 1024;
+    [ObservableProperty] private ObservableCollection<string> _formPhotos = new();
+    [ObservableProperty] private bool _formSuppressTenantEmail;
+
+    [RelayCommand]
+    public async Task AddPhotosAsync()
+    {
+        var picked = await _filePicker.PickOpenFilesAsync(new[]
+        {
+            ("Bilder", "*.jpg;*.jpeg;*.png;*.webp;*.gif;*.JPG;*.JPEG;*.PNG"),
+        });
+        foreach (var path in picked)
+        {
+            if (FormPhotos.Count >= MaxPhotos) { FormError = $"Maximal {MaxPhotos} Fotos."; break; }
+            if (!FormPhotos.Contains(path)) FormPhotos.Add(path);
+        }
+    }
+
+    [RelayCommand]
+    public void RemovePhoto(string? path)
+    {
+        if (path != null) FormPhotos.Remove(path);
+    }
+
     private bool _formOptionsLoaded;
     private bool _suppressLookups;
 
@@ -543,6 +569,8 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
         _suppressLookups = false;
         WhgChoices = new ObservableCollection<Proto.MmWhgItem>();
         TenantHint = null;
+        FormPhotos.Clear();
+        FormSuppressTenantEmail = false;
         IsEditingMessage = false;
         _editingUid = null;
         FormBetreff = string.Empty;
@@ -640,6 +668,21 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
             }
             else
             {
+                foreach (var path in FormPhotos)
+                {
+                    var info = new FileInfo(path);
+                    if (!info.Exists || info.Length == 0 || info.Length > MaxPhotoBytes)
+                    {
+                        FormError = $"Foto „{info.Name}“ ist leer, nicht lesbar oder größer als 10 MB.";
+                        return;
+                    }
+                    req.Photos.Add(new Proto.MmPhoto
+                    {
+                        Filename = info.Name,
+                        Data = Google.Protobuf.ByteString.CopyFrom(await File.ReadAllBytesAsync(path)),
+                    });
+                }
+                req.SuppressTenantEmail = FormSuppressTenantEmail;
                 await ProtoApi.CreateMmAsync(req);
             }
 

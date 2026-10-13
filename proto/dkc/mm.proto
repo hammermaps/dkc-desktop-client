@@ -108,6 +108,17 @@ message MmSaveRequest {
     string dringlichkeit    = 9;
     string nachunternehmer  = 10;
     string zugeh            = 11;
+
+    // Nur bei MM_CREATE ausgewertet (Web-Pendant: Foto-Upload + Benachrichtigung beim Anlegen).
+    repeated MmPhoto photos = 12;
+    // true = keine Eingangsbestätigung an die E-Mail-Adresse des Melders (Web: notify_email aus).
+    bool suppress_tenant_email = 13;
+}
+
+// Foto zu einer neuen Mängelmeldung; Server prüft Typ (JPEG/PNG/WebP/GIF), Größe und Anzahl.
+message MmPhoto {
+    string filename = 1;
+    bytes  data     = 2;
 }
 
 message MmCreateResponse { string uid = 1; }
