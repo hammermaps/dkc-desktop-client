@@ -7,17 +7,45 @@ option csharp_namespace = "DkcDesktopClient.Core.Protocol";
 
 // ── AUTH_LOGIN ───────────────────────────────────────────────────────────────
 message AuthLoginRequest {
-    string username   = 1;
-    string password   = 2;
-    string token_name = 3; // default "DKC Desktop"
-    int32  ttl_days   = 4; // 0 = no expiry
+    string username     = 1;
+    string password     = 2;
+    string token_name   = 3; // default "DKC Desktop"
+    int32  ttl_days     = 4; // 0 = no expiry
+    string device_token = 5; // from an earlier trust_device; skips the second factor
 }
 
+// With two-factor authentication active, AUTH_LOGIN returns no token but
+// requires_2fa = true, a pending ticket (valid 5 minutes) and the confirmed
+// methods; continue with AUTH_SEND_2FA_CODE (email/sms) and AUTH_VERIFY_2FA.
 message AuthLoginResponse {
-    string   token      = 1; // dkc_<64-hex>
-    string   token_type = 2; // "Bearer"
-    string   expires_at = 3; // ISO-8601 or empty
-    UserInfo user       = 4;
+    string          token              = 1; // dkc_<64-hex>, empty while requires_2fa
+    string          token_type         = 2; // "Bearer"
+    string          expires_at         = 3; // ISO-8601 or empty
+    UserInfo        user               = 4;
+    bool            requires_2fa       = 5;
+    string          pending_2fa_ticket = 6;
+    repeated string two_factor_methods = 7; // totp | email | sms | backup_codes
+    string          device_trust_token = 8; // only from AUTH_VERIFY_2FA with trust_device
+}
+
+// ── AUTH_VERIFY_2FA ──────────────────────────────────────────────────────────
+// Response: AuthLoginResponse with the issued token. Five wrong codes within
+// 15 minutes lock code entry for the account (RATE_LIMITED), from any IP.
+message AuthVerify2faRequest {
+    string pending_2fa_ticket = 1;
+    string method             = 2; // totp | email | sms | backup_codes
+    string code               = 3;
+    bool   trust_device       = 4; // remember this device for 30 days
+    string token_name         = 5;
+    int32  ttl_days           = 6;
+}
+
+// ── AUTH_SEND_2FA_CODE ───────────────────────────────────────────────────────
+// Response: Ack. Sends an email/SMS code (valid 10 minutes, at most one new
+// code per 15 minutes).
+message AuthSend2faCodeRequest {
+    string pending_2fa_ticket = 1;
+    string method             = 2; // email | sms
 }
 
 // ── AUTH_LOGOUT / AUTH_STATUS / USER_INFO ────────────────────────────────────

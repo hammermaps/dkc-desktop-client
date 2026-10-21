@@ -28,6 +28,10 @@ public sealed class DkcProtobufApi : IDkcProtobufApi
     // ── Auth & users ────────────────────────────────────────────────────────
     public Task<AuthLoginResponse> LoginAsync(AuthLoginRequest request, CancellationToken ct = default)
         => Send<AuthLoginResponse>(Protocol.Action.AuthLogin, request, ct);
+    public Task<AuthLoginResponse> VerifyTwoFactorAsync(AuthVerify2faRequest request, CancellationToken ct = default)
+        => Send<AuthLoginResponse>(Protocol.Action.AuthVerify2Fa, request, ct);
+    public Task<Ack> SendTwoFactorCodeAsync(AuthSend2faCodeRequest request, CancellationToken ct = default)
+        => Send<Ack>(Protocol.Action.AuthSend2FaCode, request, ct);
     public Task<Ack> LogoutAsync(CancellationToken ct = default)
         => Send<Ack>(Protocol.Action.AuthLogout, null, ct);
     public Task<AuthStatusResponse> GetAuthStatusAsync(CancellationToken ct = default)

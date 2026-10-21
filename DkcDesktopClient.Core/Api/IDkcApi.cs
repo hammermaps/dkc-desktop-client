@@ -7,6 +7,12 @@ public interface IDkcApi
     [Post("/api.php?action=auth_login")]
     Task<LoginResponse> LoginAsync([Body] LoginRequest request, CancellationToken ct = default);
 
+    [Post("/api.php?action=auth_verify_2fa")]
+    Task<LoginResponse> VerifyTwoFactorAsync([Body] VerifyTwoFactorRequest request, CancellationToken ct = default);
+
+    [Post("/api.php?action=auth_send_2fa_code")]
+    Task<SendTwoFactorCodeResponse> SendTwoFactorCodeAsync([Body] SendTwoFactorCodeRequest request, CancellationToken ct = default);
+
     [Post("/api.php?action=auth_logout")]
     Task<LogoutResponse> LogoutAsync(CancellationToken ct = default);
 

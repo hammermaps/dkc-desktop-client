@@ -174,8 +174,17 @@ internal class AuthorizationHandler : DelegatingHandler
         "dropdown_data"
     };
 
+    private static readonly HashSet<string> SignInActions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "auth_login",
+        "auth_verify_2fa",
+        "auth_send_2fa_code"
+    };
+
+    // Zugangsdaten im Debug-Log schwärzen, auch die des zweiten Anmeldeschritts
+    // (Code, Ticket, "Gerät merken"-Tokens).
     private static readonly Regex SensitiveJsonFieldsRegex = new(
-        "\\\"(password|token|apikey)\\\"\\s*:\\s*\\\".*?\\\"",
+        "\\\"(password|token|apikey|code|pending_2fa_ticket|device_token|device_trust_token)\\\"\\s*:\\s*\\\".*?\\\"",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private readonly string? _token;
@@ -257,6 +266,9 @@ internal class AuthorizationHandler : DelegatingHandler
             var action = TryGetActionName(request.RequestUri);
             var isSessionOnlyAction = !string.IsNullOrWhiteSpace(action) && SessionOnlyActions.Contains(action);
             var isLogoutAction = string.Equals(action, "auth_logout", StringComparison.OrdinalIgnoreCase);
+            // 401 bei der Anmeldung selbst (falsches Passwort, falscher Code) heißt
+            // nicht, dass eine bestehende Sitzung ungültig ist.
+            var isSignInAction = !string.IsNullOrWhiteSpace(action) && SignInActions.Contains(action);
 
             if (isSessionOnlyAction)
             {
@@ -267,6 +279,10 @@ internal class AuthorizationHandler : DelegatingHandler
             else if (isLogoutAction)
             {
                 _logger.LogDebug("Received 401 for auth_logout. Skipping recursive auto-logout.");
+            }
+            else if (isSignInAction)
+            {
+                _logger.LogDebug("Received 401 for sign-in action '{Action}'. Skipping auto-logout.", action);
             }
             else
             {

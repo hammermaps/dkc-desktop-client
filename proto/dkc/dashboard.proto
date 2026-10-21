@@ -122,7 +122,7 @@ message WlsFlushItem {
 // Web-Pendant: ContDashboard::getSammelstoerung() (AC/SiBe/KinCony/RCO über
 // system\service\DashboardAlarmsService, gemeinsam mit dem Web-Controller).
 message SammelstoerungAlarmItem {
-    string source        = 1; // ac | sibe | kincony | rco
+    string source        = 1; // ac | sibe | kincony | rco | unifi
     string source_label  = 2;
     string device_name   = 3;
     string alarm_text    = 4;

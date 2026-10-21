@@ -7,14 +7,41 @@ public record LoginRequest(
     [property: JsonPropertyName("username")] string Username,
     [property: JsonPropertyName("password")] string Password,
     [property: JsonPropertyName("token_name")] string TokenName = "DKC Desktop",
-    [property: JsonPropertyName("ttl_days")] int TtlDays = 30);
+    [property: JsonPropertyName("ttl_days")] int TtlDays = 30,
+    // Token aus einem früheren "Gerät merken"; überspringt den zweiten Faktor.
+    [property: JsonPropertyName("device_token")] string? DeviceToken = null);
 
+// Bei aktiver Zwei-Faktor-Anmeldung liefert auth_login kein Token, sondern
+// RequiresTwoFactor, ein Ticket (5 Minuten gültig) und die Methoden; weiter
+// mit auth_send_2fa_code bzw. auth_verify_2fa.
 public record LoginResponse(
     [property: JsonPropertyName("success")] bool Success,
     [property: JsonPropertyName("token")] string? Token,
     [property: JsonPropertyName("token_type")] string? TokenType,
     [property: JsonPropertyName("expires_at")] string? ExpiresAt,
     [property: JsonPropertyName("user")] UserInfo? User,
+    [property: JsonPropertyName("error")] string? Error,
+    [property: JsonPropertyName("requires_2fa")] bool RequiresTwoFactor = false,
+    [property: JsonPropertyName("pending_2fa_ticket")] string? PendingTwoFactorTicket = null,
+    [property: JsonPropertyName("two_factor_methods")] List<string>? TwoFactorMethods = null,
+    [property: JsonPropertyName("two_factor_setup_required")] bool TwoFactorSetupRequired = false,
+    [property: JsonPropertyName("device_trust_token")] string? DeviceTrustToken = null);
+
+public record VerifyTwoFactorRequest(
+    [property: JsonPropertyName("pending_2fa_ticket")] string PendingTwoFactorTicket,
+    [property: JsonPropertyName("method")] string Method,
+    [property: JsonPropertyName("code")] string Code,
+    [property: JsonPropertyName("trust_device")] bool TrustDevice,
+    [property: JsonPropertyName("token_name")] string TokenName = "DKC Desktop",
+    [property: JsonPropertyName("ttl_days")] int TtlDays = 30);
+
+public record SendTwoFactorCodeRequest(
+    [property: JsonPropertyName("pending_2fa_ticket")] string PendingTwoFactorTicket,
+    [property: JsonPropertyName("method")] string Method);
+
+public record SendTwoFactorCodeResponse(
+    [property: JsonPropertyName("success")] bool Success,
+    [property: JsonPropertyName("sent")] bool Sent,
     [property: JsonPropertyName("error")] string? Error);
 
 public record UserInfo(

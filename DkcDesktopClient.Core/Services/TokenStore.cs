@@ -9,6 +9,9 @@ public class TokenStore
     private const string TokenFileName = "dkc_token.dat";
     private const string ServerUrlFileName = "dkc_server.dat";
     private const string UsernameFileName = "dkc_user.dat";
+    // "Gerät merken" der Zwei-Faktor-Anmeldung; bleibt beim Abmelden erhalten,
+    // damit der zweite Faktor 30 Tage lang entfällt (wie im Web-Login).
+    private const string DeviceTokenFileName = "dkc_device.dat";
     private readonly IDataProtector _protector;
     private readonly ILogger<TokenStore> _logger;
     private readonly string _dataDir;
@@ -56,6 +59,36 @@ public class TokenStore
     public void DeleteToken()
     {
         var path = Path.Combine(_dataDir, TokenFileName);
+        if (File.Exists(path)) File.Delete(path);
+    }
+
+    public void SaveDeviceToken(string token)
+    {
+        var path = Path.Combine(_dataDir, DeviceTokenFileName);
+        File.WriteAllText(path, _protector.Protect(token));
+        if (!OperatingSystem.IsWindows())
+            File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+    }
+
+    public string? LoadDeviceToken()
+    {
+        var path = Path.Combine(_dataDir, DeviceTokenFileName);
+        if (!File.Exists(path)) return null;
+        try
+        {
+            return _protector.Unprotect(File.ReadAllText(path));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to unprotect device token");
+            DeleteDeviceToken();
+            return null;
+        }
+    }
+
+    public void DeleteDeviceToken()
+    {
+        var path = Path.Combine(_dataDir, DeviceTokenFileName);
         if (File.Exists(path)) File.Delete(path);
     }
 

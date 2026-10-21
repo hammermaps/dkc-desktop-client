@@ -1,5 +1,6 @@
 using DkcDesktopClient.Core.Api;
 using Microsoft.Extensions.Logging;
+using Refit;
 
 namespace DkcDesktopClient.Core.Services;
 
@@ -8,6 +9,7 @@ public class AuthService
     private readonly DkcApiFactory _apiFactory;
     private readonly TokenStore _tokenStore;
     private readonly ILogger<AuthService> _logger;
+    private string? _pendingUsername;
 
     public string? CurrentToken { get; private set; }
     public UserInfo? CurrentUser { get; private set; }
@@ -49,23 +51,96 @@ public class AuthService
         return false;
     }
 
+    private const string TokenName = "DKC Desktop Client";
+
     public async Task<LoginResponse> LoginAsync(string serverUrl, string username, string password, CancellationToken ct = default)
     {
-        const string tokenName = "DKC Desktop Client";
         _tokenStore.SaveServerUrl(serverUrl);
         var api = _apiFactory.Create(null, serverUrl);
-        var response = await api.LoginAsync(new LoginRequest(username, password, tokenName), ct);
+        var request = new LoginRequest(username, password, TokenName, DeviceToken: _tokenStore.LoadDeviceToken());
+        var response = await CallAsync(() => api.LoginAsync(request, ct));
+        if (response.Success && response.Token != null)
+            await CompleteLoginAsync(response, serverUrl, username, ct);
+        else if (response.RequiresTwoFactor)
+            _pendingUsername = username;
+        return response;
+    }
+
+    /// <summary>
+    /// Zweiter Anmeldeschritt: Ticket aus <see cref="LoginAsync"/> plus Code.
+    /// Mit <paramref name="trustDevice"/> merkt sich der Server das Gerät 30 Tage.
+    /// </summary>
+    public async Task<LoginResponse> VerifyTwoFactorAsync(string ticket, string method, string code, bool trustDevice, CancellationToken ct = default)
+    {
+        var serverUrl = _tokenStore.LoadServerUrl();
+        var api = _apiFactory.Create(null, serverUrl);
+        var response = await CallAsync(() => api.VerifyTwoFactorAsync(
+            new VerifyTwoFactorRequest(ticket, method, code.Trim(), trustDevice, TokenName), ct));
         if (response.Success && response.Token != null)
         {
-            CurrentToken = response.Token;
-            CurrentUser = response.User;
-            _tokenStore.SaveToken(response.Token);
-            _tokenStore.SaveUsername(username);
-            var authedApi = _apiFactory.Create(response.Token, serverUrl);
-            await LoadPermissionsAsync(authedApi, ct);
-            AuthStateChanged?.Invoke(this, EventArgs.Empty);
+            if (!string.IsNullOrEmpty(response.DeviceTrustToken))
+                _tokenStore.SaveDeviceToken(response.DeviceTrustToken);
+            await CompleteLoginAsync(response, serverUrl, _pendingUsername, ct);
         }
         return response;
+    }
+
+    /// <summary>Lässt einen Anmeldecode per E-Mail oder SMS senden.</summary>
+    public async Task<SendTwoFactorCodeResponse> SendTwoFactorCodeAsync(string ticket, string method, CancellationToken ct = default)
+    {
+        var api = _apiFactory.Create(null, _tokenStore.LoadServerUrl());
+        try
+        {
+            return await api.SendTwoFactorCodeAsync(new SendTwoFactorCodeRequest(ticket, method), ct);
+        }
+        catch (ApiException ex)
+        {
+            return await ReadErrorAsync<SendTwoFactorCodeResponse>(ex)
+                   ?? new SendTwoFactorCodeResponse(false, false, ex.Message);
+        }
+    }
+
+    private async Task CompleteLoginAsync(LoginResponse response, string? serverUrl, string? username, CancellationToken ct)
+    {
+        CurrentToken = response.Token;
+        CurrentUser = response.User;
+        _tokenStore.SaveToken(response.Token!);
+        if (!string.IsNullOrEmpty(username))
+            _tokenStore.SaveUsername(username);
+        _pendingUsername = null;
+        var authedApi = _apiFactory.Create(response.Token, serverUrl);
+        await LoadPermissionsAsync(authedApi, ct);
+        AuthStateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Refit wirft bei 4xx/5xx eine <see cref="ApiException"/>; der Server liefert
+    /// dabei eine JSON-Fehlermeldung (falsches Passwort, falscher Code, Sperre),
+    /// die hier als normale Antwort zurückgegeben wird.
+    /// </summary>
+    private static async Task<LoginResponse> CallAsync(Func<Task<LoginResponse>> call)
+    {
+        try
+        {
+            return await call();
+        }
+        catch (ApiException ex)
+        {
+            return await ReadErrorAsync<LoginResponse>(ex)
+                   ?? new LoginResponse(false, null, null, null, null, ex.Message);
+        }
+    }
+
+    private static async Task<T?> ReadErrorAsync<T>(ApiException ex) where T : class
+    {
+        try
+        {
+            return string.IsNullOrWhiteSpace(ex.Content) ? null : await ex.GetContentAsAsync<T>();
+        }
+        catch (Exception)
+        {
+            return null;
+        }
     }
 
     public async Task LogoutAsync(CancellationToken ct = default)

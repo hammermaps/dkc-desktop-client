@@ -7,28 +7,66 @@
     <StackPanel Spacing="16" Margin="32">
       <TextBlock Text="DK-Control Login" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,16"/>
 
-      <StackPanel Spacing="4">
-        <TextBlock Text="Server URL"/>
-        <TextBox Text="{Binding ServerUrl}" PlaceholderText="https://your-server.example.com"/>
+      <!-- Schritt 1: Server, Benutzer, Passwort -->
+      <StackPanel Spacing="16" IsVisible="{Binding !IsTwoFactorStep}">
+        <StackPanel Spacing="4">
+          <TextBlock Text="Server URL"/>
+          <TextBox Text="{Binding ServerUrl}" PlaceholderText="https://your-server.example.com"/>
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+          <TextBlock Text="Username"/>
+          <TextBox Text="{Binding Username}" PlaceholderText="Username"/>
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+          <TextBlock Text="Password"/>
+          <TextBox Text="{Binding Password}" PasswordChar="*" PlaceholderText="Password"/>
+        </StackPanel>
       </StackPanel>
 
-      <StackPanel Spacing="4">
-        <TextBlock Text="Username"/>
-        <TextBox Text="{Binding Username}" PlaceholderText="Username"/>
+      <!-- Schritt 2: Zwei-Faktor-Code -->
+      <StackPanel Spacing="16" IsVisible="{Binding IsTwoFactorStep}">
+        <TextBlock Text="Two-factor authentication is active for this account. Enter the code from your chosen method."
+                   TextWrapping="Wrap"/>
+
+        <StackPanel Spacing="4">
+          <TextBlock Text="Method"/>
+          <ComboBox ItemsSource="{Binding TwoFactorMethods}"
+                    SelectedItem="{Binding SelectedTwoFactorMethod}"
+                    HorizontalAlignment="Stretch"/>
+        </StackPanel>
+
+        <Button Content="Send code" Command="{Binding SendTwoFactorCodeCommand}"
+                IsVisible="{Binding SelectedTwoFactorMethod.CanSendCode, FallbackValue=False}"
+                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+
+        <StackPanel Spacing="4">
+          <TextBlock Text="Code"/>
+          <TextBox Text="{Binding TwoFactorCode}" PlaceholderText="123456"/>
+        </StackPanel>
+
+        <CheckBox Content="Remember this device for 30 days" IsChecked="{Binding TrustDevice}"/>
       </StackPanel>
 
-      <StackPanel Spacing="4">
-        <TextBlock Text="Password"/>
-        <TextBox Text="{Binding Password}" PasswordChar="*" PlaceholderText="Password"/>
-      </StackPanel>
-
+      <TextBlock Text="{Binding InfoMessage}"
+                 IsVisible="{Binding InfoMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                 TextWrapping="Wrap"/>
 
       <TextBlock Text="{Binding ErrorMessage}" Foreground="Red"
                  IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                  TextWrapping="Wrap"/>
 
       <Button Content="Login" Command="{Binding LoginCommand}"
+              IsVisible="{Binding !IsTwoFactorStep}"
               HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+
+      <Grid ColumnDefinitions="*,8,*" IsVisible="{Binding IsTwoFactorStep}">
+        <Button Grid.Column="0" Content="Back" Command="{Binding CancelTwoFactorCommand}"
+                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+        <Button Grid.Column="2" Content="Verify" Command="{Binding VerifyTwoFactorCommand}"
+                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+      </Grid>
 
       <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}" Height="4"/>
     </StackPanel>

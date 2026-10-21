@@ -41,6 +41,8 @@ enum Action {
     USER_TOKENS_LIST                = 5;
     USER_TOKEN_DELETE               = 6;
     USER_CHANGE_PASSWORD            = 7;
+    AUTH_VERIFY_2FA                 = 8;
+    AUTH_SEND_2FA_CODE              = 9;
 
     // Mängelmeldungen
     MM_LIST                         = 20;

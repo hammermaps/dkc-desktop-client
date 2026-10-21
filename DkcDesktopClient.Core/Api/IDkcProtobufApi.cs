@@ -16,6 +16,8 @@ public interface IDkcProtobufApi
 {
     // ── Auth & users ────────────────────────────────────────────────────────
     Task<AuthLoginResponse> LoginAsync(AuthLoginRequest request, CancellationToken ct = default);
+    Task<AuthLoginResponse> VerifyTwoFactorAsync(AuthVerify2faRequest request, CancellationToken ct = default);
+    Task<Ack> SendTwoFactorCodeAsync(AuthSend2faCodeRequest request, CancellationToken ct = default);
     Task<Ack> LogoutAsync(CancellationToken ct = default);
     Task<AuthStatusResponse> GetAuthStatusAsync(CancellationToken ct = default);
     Task<UserInfoResponse> GetUserInfoAsync(CancellationToken ct = default);

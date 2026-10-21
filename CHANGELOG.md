@@ -8,6 +8,12 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
 ## [Unreleased]
 
 ### Neu
+- Zwei-Faktor-Anmeldung: Meldet der Server `requires_2fa`, zeigt der Login einen zweiten Schritt
+  mit Methodenauswahl (Authenticator-App, E-Mail, SMS, Backup-Code), „Code senden“ für E-Mail/SMS
+  und „Gerät 30 Tage merken“. Neue REST-Aktionen `auth_verify_2fa`/`auth_send_2fa_code` in
+  `IDkcApi`, Protobuf `AuthVerify2fa`/`AuthSend2faCode` in `IDkcProtobufApi`; das Geräte-Token
+  liegt verschlüsselt in `TokenStore` (`dkc_device.dat`) und überspringt den zweiten Faktor.
+  Ohne diese Unterstützung konnten sich Konten mit aktiver 2FA nicht mehr anmelden.
 - Mängelmeldung anlegen: Fotos auswählen (bis zu 10, je 10 MB) und optional keine Eingangsbestätigung
   an den Melder senden. Der Server legt die Fotos wie im Web ab und reiht Benachrichtigung und
   Eingangsbestätigung in die E-Mail-Queue ein. Neuer `IFilePickerService.PickOpenFilesAsync`.
@@ -143,6 +149,16 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
   implementiert und sind jetzt der einzige Pfad für MM-Operationen.
 
 ---
+
+### Sicherheit
+- `System.Security.Cryptography.Xml` 8.0.4 → 8.0.5 in Core, App und Tests (NU1903: CVE-2026-96958,
+  CVE-2026-96959, CVE-2026-96960, CVE-2026-96222).
+- Debug-Log schwärzt zusätzlich `code`, `pending_2fa_ticket`, `device_token` und `device_trust_token`.
+
+### Behoben
+- Fehlerantworten von `auth_login`/`auth_verify_2fa` (falsches Passwort, falscher Code, Sperre)
+  erscheinen mit der Meldung des Servers statt als Verbindungsfehler; eine 401 bei der Anmeldung
+  löst kein automatisches Abmelden mehr aus.
 
 ## [1.0.0] – Phase 5 – Qualität & Abschluss
 
