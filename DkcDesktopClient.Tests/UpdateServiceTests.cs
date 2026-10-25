@@ -194,7 +194,7 @@ public class UpdateServiceTests
             ""current_version"": ""{UpdateService.CurrentVersion.ToString(3)}"",
             ""latest_version"": ""{latestVersion}"",
             ""update_available"": {(updateAvailable ? "true" : "false")},
-            ""sha256"": """",
+            ""sha256"": ""2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"",
             ""notes"": ""Continuous build"",
             ""uploaded_at"": ""2026-09-27T10:00:00+02:00""
         }}
@@ -278,6 +278,83 @@ public class UpdateServiceTests
         Assert.NotNull(result);
         Assert.False(result.RequiresAuth);
         Assert.Equal(new Version(999, 0, 0), result.LatestVersion);
+    }
+
+    private const string HelloSha256 = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
+
+    [Fact]
+    public async Task CheckForUpdateAsync_DkcUpdate_CarriesSha256FromServer()
+    {
+        if (!IsDkcContinuousChannelSupported()) return;
+
+        var svc = CreateServiceWithRouting(BuildReleaseJson("v0.0.1"), BuildDkcVersionJson("2999.01.01.1"));
+        var result = await svc.CheckForUpdateAsync("https://dkc.example.test", null);
+
+        Assert.NotNull(result);
+        Assert.Equal(HelloSha256, result.Sha256);
+    }
+
+    [Fact]
+    public async Task CheckForUpdateAsync_GitHubAssetDigest_IsParsed()
+    {
+        var json = $@"{{""tag_name"":""v999.0.0"",""body"":"""",""assets"":[{{""name"":""{UpdateService.GetAssetName()}"",""browser_download_url"":""https://example.com/dl"",""digest"":""sha256:{HelloSha256}""}}]}}";
+
+        var svc = CreateServiceWithRouting(json, BuildDkcVersionJson("0.0.1", updateAvailable: false));
+        var result = await svc.CheckForUpdateAsync();
+
+        Assert.NotNull(result);
+        Assert.Equal(HelloSha256, result.Sha256);
+    }
+
+    private static UpdateInfo UpdateWithHash(string sha256) => new()
+    {
+        LatestVersion = new Version(999, 0, 0),
+        DownloadUrl = "https://example.test/binary",
+        Sha256 = sha256
+    };
+
+    [Fact]
+    public async Task DownloadVerifiedAsync_MatchingHash_ReturnsFileInPrivateDirectory()
+    {
+        var svc = CreateServiceWithRouting("hello", "hello");
+        var path = await svc.DownloadVerifiedAsync(UpdateWithHash(HelloSha256), null, null, CancellationToken.None);
+
+        try
+        {
+            Assert.NotNull(path);
+            Assert.True(File.Exists(path));
+            Assert.Equal("hello", await File.ReadAllTextAsync(path!));
+            Assert.Contains("dkc_update_", Path.GetDirectoryName(path)!);
+        }
+        finally
+        {
+            if (path != null) Directory.Delete(Path.GetDirectoryName(path)!, true);
+        }
+    }
+
+    [Fact]
+    public async Task DownloadVerifiedAsync_HashMismatch_DeletesFileAndReturnsNull()
+    {
+        var before = Directory.GetDirectories(Path.GetTempPath(), "dkc_update_*").Length;
+        var svc = CreateServiceWithRouting("manipuliert", "manipuliert");
+
+        var path = await svc.DownloadVerifiedAsync(UpdateWithHash(HelloSha256), null, null, CancellationToken.None);
+
+        Assert.Null(path);
+        Assert.Equal(before, Directory.GetDirectories(Path.GetTempPath(), "dkc_update_*").Length);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("nicht-hex")]
+    [InlineData("2cf24dba")]
+    public async Task DownloadVerifiedAsync_MissingOrInvalidHash_RefusesWithoutDownloading(string hash)
+    {
+        var svc = CreateServiceWithRouting("hello", "hello");
+
+        var path = await svc.DownloadVerifiedAsync(UpdateWithHash(hash), null, null, CancellationToken.None);
+
+        Assert.Null(path);
     }
 }
 
