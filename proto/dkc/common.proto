@@ -189,7 +189,8 @@ message AuthContext {
     // api_key in normal client use.
     string bearer_token = 1;
 
-    // System-integration UUID-v4 API key. Only set by integrations.
+    // Reserviert. Der Server lehnt jede Anfrage mit gesetztem api_key ab
+    // (UNAUTHENTICATED); API-Schlüssel gelten nur für die REST-API.
     string api_key      = 2;
 
     // Optional opaque PHP session id (browser-bridge scenarios only).

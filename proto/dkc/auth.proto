@@ -10,7 +10,7 @@ message AuthLoginRequest {
     string username     = 1;
     string password     = 2;
     string token_name   = 3; // default "DKC Desktop"
-    int32  ttl_days     = 4; // 0 = no expiry
+    int32  ttl_days     = 4; // Tage: 0 oder über 365 ergeben 365, negative 1 (ApiTokenLifetime)
     string device_token = 5; // from an earlier trust_device; skips the second factor
 }
 
