@@ -2,4 +2,5 @@
   <Project Path="DkcDesktopClient.App/DkcDesktopClient.App.csproj" />
   <Project Path="DkcDesktopClient.Core/DkcDesktopClient.Core.csproj" />
   <Project Path="DkcDesktopClient.Tests/DkcDesktopClient.Tests.csproj" />
+  <Project Path="DkcDesktopClient.UiTests/DkcDesktopClient.UiTests.csproj" />
 </Solution>

@@ -86,6 +86,8 @@ message SprinklerInspectionDetail {
     string created_at         = 14;
     // Free-form JSON checklist payload (server stores JSON, flaches Objekt {step_id: wert}).
     string checklist_json     = 15;
+    // Prüfpunkte der Vorlage mit gespeicherten Werten; leer, wenn keine aktive Vorlage passt.
+    repeated PruefungChecklistStep checklist_steps = 16;
 }
 
 message SprinklerInspectionDetailResponse { SprinklerInspectionDetail inspection = 1; }
@@ -114,7 +116,7 @@ message SprinklerInspectionCompleteRequest {
 // checkpoint_id ist ein String-Slug (^[a-z0-9_-]+$), analog zu Aufzug/elevator_checklist_templates.
 message SprinklerChecklistItem {
     string checkpoint_id = 1;
-    string status        = 2; // ok|nok|n_a
+    string status        = 2; // Wert wie PruefungChecklistStep.value, z. B. "In Ordnung"
     string note          = 3;
 }
 

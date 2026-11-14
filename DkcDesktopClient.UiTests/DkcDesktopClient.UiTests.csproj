@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    GUI-Tests ohne Bildschirm (Avalonia.Headless). Eigenes Projekt, weil Avalonia.Headless.XUnit 12
+    xunit v3 verlangt, die übrigen Tests (DkcDesktopClient.Tests) aber auf xunit 2 laufen.
+    Ausführen: dotnet test DkcDesktopClient.UiTests
+    Screenshots: DKC_UI_SCREENSHOTS=<Ordner> setzen, dann legen die Tests PNGs dort ab.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Headless.XUnit" Version="12.0.0" />
+    <PackageReference Include="Avalonia.Skia" Version="12.0.0" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.0" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.0.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DkcDesktopClient.App\DkcDesktopClient.App.csproj" />
+    <ProjectReference Include="..\DkcDesktopClient.Core\DkcDesktopClient.Core.csproj" />
+  </ItemGroup>
+
+</Project>

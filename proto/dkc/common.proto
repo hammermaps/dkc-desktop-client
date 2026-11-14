@@ -245,6 +245,23 @@ message Ack {
     string message = 1;
 }
 
+// Prüfpunkt einer Aufzug-/Sprinkler-Prüfung: Schritt aus der aktiven Checklisten-Vorlage
+// (elevator_/sprinkler_checklist_templates.steps[], passend zu inspection_type) zusammengeführt
+// mit dem gespeicherten Wert und der Mängelnotiz – wie der Web-Wizard sie anzeigt.
+// Werte wie im Web: type "checkbox" speichert "In Ordnung" bzw. "Nicht in Ordnung",
+// "select" einen der options-Einträge, "text"/"number" den eingegebenen Text.
+message PruefungChecklistStep {
+    string          id          = 1; // Slug, ^[a-z0-9_-]+$ – checkpoint_id im ChecklistUpdateRequest
+    string          category    = 2;
+    string          title       = 3;
+    string          description = 4;
+    string          type        = 5; // checkbox|select|text|number
+    repeated string options     = 6; // nur bei type "select"
+    bool            required    = 7;
+    string          value       = 8; // leer = noch nicht erfasst
+    string          defect_note = 9;
+}
+
 // Common pagination block, reused by list responses.
 message PageInfo {
     int32 total  = 1;

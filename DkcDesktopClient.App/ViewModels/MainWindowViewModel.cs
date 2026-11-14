@@ -28,6 +28,8 @@ public partial class MainWindowViewModel : ViewModelBase
     public LoginViewModel LoginViewModel { get; }
     public DashboardViewModel DashboardViewModel { get; }
     public NeaViewModel NeaViewModel { get; }
+    public AufzugPruefungViewModel AufzugPruefungViewModel { get; }
+    public SprinklerPruefungViewModel SprinklerPruefungViewModel { get; }
     public MmViewModel MmViewModel { get; }
     public BuildingViewModel BuildingViewModel { get; }
     public KlimaViewModel KlimaViewModel { get; }
@@ -51,6 +53,8 @@ public partial class MainWindowViewModel : ViewModelBase
         LoginViewModel loginViewModel,
         DashboardViewModel dashboardViewModel,
         NeaViewModel neaViewModel,
+        AufzugPruefungViewModel aufzugPruefungViewModel,
+        SprinklerPruefungViewModel sprinklerPruefungViewModel,
         MmViewModel mmViewModel,
         BuildingViewModel buildingViewModel,
         KlimaViewModel klimaViewModel,
@@ -68,6 +72,8 @@ public partial class MainWindowViewModel : ViewModelBase
         LoginViewModel         = loginViewModel;
         DashboardViewModel     = dashboardViewModel;
         NeaViewModel           = neaViewModel;
+        AufzugPruefungViewModel    = aufzugPruefungViewModel;
+        SprinklerPruefungViewModel = sprinklerPruefungViewModel;
         MmViewModel            = mmViewModel;
         BuildingViewModel      = buildingViewModel;
         KlimaViewModel         = klimaViewModel;
@@ -124,6 +130,11 @@ public partial class MainWindowViewModel : ViewModelBase
         NavItems.Clear();
         NavItems.Add(new NavItem("📊", "Dashboard", DashboardViewModel));
         NavItems.Add(new NavItem("⚡", "NEA", NeaViewModel));
+        // Wie im Web nur mit Leserecht sichtbar (Admins sehen alles).
+        if (CanView(AufzugPruefungViewModel))
+            NavItems.Add(new NavItem("🛗", "Aufzugprüfung", AufzugPruefungViewModel));
+        if (CanView(SprinklerPruefungViewModel))
+            NavItems.Add(new NavItem("💧", "Sprinklerprüfung", SprinklerPruefungViewModel));
         NavItems.Add(new NavItem("🔧", "Maengelmeldungen", MmViewModel));
         NavItems.Add(new NavItem("🏢", "Buildings", BuildingViewModel));
         NavItems.Add(new NavItem("❄️", "Climate", KlimaViewModel));
@@ -132,6 +143,11 @@ public partial class MainWindowViewModel : ViewModelBase
         NavItems.Add(new NavItem("🔔", "Benachrichtigungen", NotificationsViewModel));
         NavItems.Add(new NavItem("⚙️", "Settings", SettingsViewModel));
     }
+
+    private bool CanView(PruefungViewModel vm)
+        => (_authService.CurrentUser?.IsAdmin ?? false)
+           || _authService.HasPermission(vm.Domain.ViewPermission)
+           || vm.CanEdit;
 
     private static string BuildInitials(string displayName)
     {
@@ -189,6 +205,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 _ = vm.LoadInspectionsCommand.ExecuteAsync(null);
                 break;
             case MmViewModel vm:            _ = vm.LoadMessagesCommand.ExecuteAsync(null);      break;
+            case PruefungViewModel vm:      _ = vm.LoadCommand.ExecuteAsync(null);              break;
             case BuildingViewModel vm:      _ = vm.LoadBuildingsCommand.ExecuteAsync(null);     break;
             case KlimaViewModel vm:         _ = vm.LoadDataCommand.ExecuteAsync(null);          break;
             case KeysViewModel vm:          _ = vm.LoadDataCommand.ExecuteAsync(null);          break;

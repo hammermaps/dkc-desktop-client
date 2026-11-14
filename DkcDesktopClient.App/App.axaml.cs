@@ -200,6 +200,8 @@ public partial class App : Application
         services.AddTransient<LoginViewModel>();
         services.AddTransient<DashboardViewModel>();
         services.AddTransient<NeaViewModel>();
+        services.AddTransient<AufzugPruefungViewModel>();
+        services.AddTransient<SprinklerPruefungViewModel>();
         services.AddTransient<MmViewModel>();
         services.AddTransient<BuildingViewModel>();
         services.AddTransient<KlimaViewModel>();

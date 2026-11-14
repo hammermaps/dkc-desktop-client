@@ -23,6 +23,7 @@ public interface IDkcProtobufApi
     Task<UserInfoResponse> GetUserInfoAsync(CancellationToken ct = default);
     Task<UserTokensListResponse> GetUserTokensAsync(CancellationToken ct = default);
     Task<Ack> DeleteUserTokenAsync(UserTokenDeleteRequest request, CancellationToken ct = default);
+    Task<Ack> ChangePasswordAsync(ChangePasswordRequest request, CancellationToken ct = default);
 
     // ── Mängelmeldungen ─────────────────────────────────────────────────────
     Task<MmListResponse> GetMmListAsync(MmListRequest request, CancellationToken ct = default);
@@ -48,6 +49,32 @@ public interface IDkcProtobufApi
     Task<Ack> CompleteNeaInspectionAsync(NeaInspectionCompleteRequest request, CancellationToken ct = default);
     Task<Ack> UpdateNeaChecklistAsync(NeaChecklistUpdateRequest request, CancellationToken ct = default);
     Task<NeaDashboardResponse> GetNeaDashboardAsync(CancellationToken ct = default);
+
+    // ── Aufzugprüfung ─────────────────────────────────────────────────────
+    Task<AufzugSystemsResponse> GetAufzugSystemsAsync(AufzugSystemsRequest request, CancellationToken ct = default);
+    Task<AufzugSystemCreateResponse> CreateAufzugSystemAsync(AufzugSystemSaveRequest request, CancellationToken ct = default);
+    Task<Ack> UpdateAufzugSystemAsync(AufzugSystemSaveRequest request, CancellationToken ct = default);
+    Task<Ack> DeleteAufzugSystemAsync(AufzugSystemDeleteRequest request, CancellationToken ct = default);
+    Task<AufzugInspectionsResponse> GetAufzugInspectionsAsync(AufzugInspectionsRequest request, CancellationToken ct = default);
+    Task<AufzugInspectionDetailResponse> GetAufzugInspectionDetailAsync(AufzugInspectionDetailRequest request, CancellationToken ct = default);
+    Task<AufzugInspectionCreateResponse> CreateAufzugInspectionAsync(AufzugInspectionSaveRequest request, CancellationToken ct = default);
+    Task<Ack> UpdateAufzugInspectionAsync(AufzugInspectionSaveRequest request, CancellationToken ct = default);
+    Task<Ack> CompleteAufzugInspectionAsync(AufzugInspectionCompleteRequest request, CancellationToken ct = default);
+    Task<Ack> UpdateAufzugChecklistAsync(AufzugChecklistUpdateRequest request, CancellationToken ct = default);
+    Task<AufzugDashboardResponse> GetAufzugDashboardAsync(CancellationToken ct = default);
+
+    // ── Sprinklerprüfung ──────────────────────────────────────────────────
+    Task<SprinklerSystemsResponse> GetSprinklerSystemsAsync(SprinklerSystemsRequest request, CancellationToken ct = default);
+    Task<SprinklerSystemCreateResponse> CreateSprinklerSystemAsync(SprinklerSystemSaveRequest request, CancellationToken ct = default);
+    Task<Ack> UpdateSprinklerSystemAsync(SprinklerSystemSaveRequest request, CancellationToken ct = default);
+    Task<Ack> DeleteSprinklerSystemAsync(SprinklerSystemDeleteRequest request, CancellationToken ct = default);
+    Task<SprinklerInspectionsResponse> GetSprinklerInspectionsAsync(SprinklerInspectionsRequest request, CancellationToken ct = default);
+    Task<SprinklerInspectionDetailResponse> GetSprinklerInspectionDetailAsync(SprinklerInspectionDetailRequest request, CancellationToken ct = default);
+    Task<SprinklerInspectionCreateResponse> CreateSprinklerInspectionAsync(SprinklerInspectionSaveRequest request, CancellationToken ct = default);
+    Task<Ack> UpdateSprinklerInspectionAsync(SprinklerInspectionSaveRequest request, CancellationToken ct = default);
+    Task<Ack> CompleteSprinklerInspectionAsync(SprinklerInspectionCompleteRequest request, CancellationToken ct = default);
+    Task<Ack> UpdateSprinklerChecklistAsync(SprinklerChecklistUpdateRequest request, CancellationToken ct = default);
+    Task<SprinklerDashboardResponse> GetSprinklerDashboardAsync(CancellationToken ct = default);
 
     // ── Gebäudebegehungen ───────────────────────────────────────────────────
     Task<BuildingListResponse> GetBuildingListAsync(BuildingListRequest request, CancellationToken ct = default);
@@ -80,6 +107,7 @@ public interface IDkcProtobufApi
     Task<Ack> DeleteKeyAsync(KeyDeleteRequest request, CancellationToken ct = default);
     Task<KeysTypesListResponse> GetKeysTypesListAsync(CancellationToken ct = default);
     Task<KeysCabinetsListResponse> GetKeysCabinetsListAsync(CancellationToken ct = default);
+    Task<KeysIssuedResponse> GetKeyIssueHistoryAsync(KeyIssueHistoryRequest request, CancellationToken ct = default);
 
     // ── Dashboard & Projekte ────────────────────────────────────────────────
     Task<DashboardDataResponse> GetDashboardDataAsync(CancellationToken ct = default);
@@ -95,8 +123,9 @@ public interface IDkcProtobufApi
     Task<Ack> UpdateUserAsync(UserSaveRequest request, CancellationToken ct = default);
     Task<Ack> DeleteUserAsync(UserDeleteRequest request, CancellationToken ct = default);
 
-    // ── Change Feed (SSE-Ticket) ────────────────────────────────────────────
+    // ── Change Feed (SSE-Ticket, Snapshot) ────────────────────────────────────────────
     Task<ChangeFeedTicketResponse> GetChangeFeedTicketAsync(CancellationToken ct = default);
+    Task<ChangeFeedSnapshotResponse> GetChangeFeedSnapshotAsync(CancellationToken ct = default);
 
     // ── Benachrichtigungen ──────────────────────────────────────────────────
     Task<NotificationsResponse> GetNotificationsAsync(CancellationToken ct = default);

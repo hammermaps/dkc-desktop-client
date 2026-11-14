@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DkcDesktopClient.Core", "Dk
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DkcDesktopClient.Tests", "DkcDesktopClient.Tests\DkcDesktopClient.Tests.csproj", "{C86DEE72-D704-451F-8BC8-E4BB52853358}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DkcDesktopClient.UiTests", "DkcDesktopClient.UiTests\DkcDesktopClient.UiTests.csproj", "{A24D254D-BCCC-406B-8ECE-A522F587F957}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,18 @@ Global
 		{C86DEE72-D704-451F-8BC8-E4BB52853358}.Release|x64.Build.0 = Release|Any CPU
 		{C86DEE72-D704-451F-8BC8-E4BB52853358}.Release|x86.ActiveCfg = Release|Any CPU
 		{C86DEE72-D704-451F-8BC8-E4BB52853358}.Release|x86.Build.0 = Release|Any CPU
+		{A24D254D-BCCC-406B-8ECE-A522F587F957}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A24D254D-BCCC-406B-8ECE-A522F587F957}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A24D254D-BCCC-406B-8ECE-A522F587F957}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A24D254D-BCCC-406B-8ECE-A522F587F957}.Debug|x64.Build.0 = Debug|Any CPU
+		{A24D254D-BCCC-406B-8ECE-A522F587F957}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A24D254D-BCCC-406B-8ECE-A522F587F957}.Debug|x86.Build.0 = Debug|Any CPU
+		{A24D254D-BCCC-406B-8ECE-A522F587F957}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A24D254D-BCCC-406B-8ECE-A522F587F957}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A24D254D-BCCC-406B-8ECE-A522F587F957}.Release|x64.ActiveCfg = Release|Any CPU
+		{A24D254D-BCCC-406B-8ECE-A522F587F957}.Release|x64.Build.0 = Release|Any CPU
+		{A24D254D-BCCC-406B-8ECE-A522F587F957}.Release|x86.ActiveCfg = Release|Any CPU
+		{A24D254D-BCCC-406B-8ECE-A522F587F957}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

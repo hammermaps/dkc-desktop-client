@@ -8,6 +8,15 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
 ## [Unreleased]
 
 ### Neu
+- Aufzug- und Sprinklerprüfung: neue Bereiche in der Navigation (nur mit Leserecht sichtbar).
+  Anlagen und Prüfungen mit Jahres-/Statusfilter, Prüfung beginnen, Checkliste wie im Web-Wizard
+  erfassen (Checkbox „In Ordnung“/„Nicht in Ordnung“, Auswahl, Freitext, Mängelbeschreibung) und
+  abschließen; offene Pflichtpunkte verhindern den Abschluss, das Ergebnis folgt den Mängeln, bis es
+  der Prüfer selbst wählt. Anlagen anlegen/ändern/löschen mit `*_pruefung_admin`. Eine gemeinsame
+  Ansicht für beide Domänen (`PruefungView`, Adapter `IPruefungApi`). Nutzt die neuen
+  `checklist_steps` des Servers; alle 22 `AUFZUG_*`/`SPRINKLER_*`-Actions in `IDkcProtobufApi`.
+- GUI-Tests ohne Bildschirm: neues Projekt `DkcDesktopClient.UiTests` (Avalonia.Headless, xunit 3)
+  bedient die Prüfungsansicht wie ein Benutzer; `DKC_UI_SCREENSHOTS=<Ordner>` speichert Screenshots.
 - Zwei-Faktor-Anmeldung: Meldet der Server `requires_2fa`, zeigt der Login einen zweiten Schritt
   mit Methodenauswahl (Authenticator-App, E-Mail, SMS, Backup-Code), „Code senden“ für E-Mail/SMS
   und „Gerät 30 Tage merken“. Neue REST-Aktionen `auth_verify_2fa`/`auth_send_2fa_code` in

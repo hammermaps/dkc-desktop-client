@@ -1,0 +1,156 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:DkcDesktopClient.App.ViewModels"
+             xmlns:core="using:DkcDesktopClient.Core.Pruefung"
+             x:Class="DkcDesktopClient.App.Views.PruefungView"
+             x:DataType="vm:PruefungViewModel">
+  <!-- Gemeinsame Ansicht für Aufzug- und Sprinklerprüfung (AufzugPruefungViewModel/SprinklerPruefungViewModel). -->
+  <Grid RowDefinitions="Auto, Auto, Auto, *" Margin="16" RowSpacing="8">
+
+    <!-- Kopf und Aktionen -->
+    <StackPanel Grid.Row="0" Spacing="4">
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <TextBlock Name="TitleText" Text="{Binding Title}" FontSize="24" FontWeight="Bold" VerticalAlignment="Center"/>
+        <Button Name="RefreshButton" Content="Aktualisieren" Command="{Binding LoadCommand}"/>
+        <Button Name="StartInspectionButton" Content="Neue Prüfung" Command="{Binding StartInspectionCommand}"
+                IsVisible="{Binding CanEdit}" ToolTip.Tip="Prüfung für die gewählte Anlage beginnen"/>
+        <Separator Width="1" Background="#CCCCCC" Margin="4,0" IsVisible="{Binding CanAdmin}"/>
+        <Button Name="NewSystemButton" Content="Anlage anlegen" Command="{Binding ShowCreateSystemFormCommand}" IsVisible="{Binding CanAdmin}"/>
+        <Button Content="Anlage bearbeiten" Command="{Binding ShowEditSystemFormCommand}" IsVisible="{Binding CanAdmin}"/>
+        <Button Content="Anlage löschen" Command="{Binding DeleteSystemCommand}" IsVisible="{Binding CanAdmin}" Foreground="#C53030"/>
+      </StackPanel>
+      <TextBlock Name="SummaryText" Text="{Binding Summary}" Opacity="0.75"/>
+    </StackPanel>
+
+    <!-- Meldungen -->
+    <StackPanel Grid.Row="1" Spacing="2">
+      <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}" Height="3"/>
+      <TextBlock Name="ErrorText" Text="{Binding ErrorMessage}" Foreground="#C53030" TextWrapping="Wrap"
+                 IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+      <TextBlock Name="StatusText" Text="{Binding StatusMessage}" Foreground="#2F855A"
+                 IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+    </StackPanel>
+
+    <!-- Anlagen-Formular -->
+    <Border Grid.Row="2" Name="SystemForm" IsVisible="{Binding IsSystemFormVisible}"
+            BorderThickness="1" BorderBrush="#CBD5E0" CornerRadius="4" Padding="12">
+      <StackPanel Spacing="8">
+        <TextBlock Text="Anlage" FontSize="15" FontWeight="SemiBold"/>
+        <TextBlock Text="{Binding SystemFormError}" Foreground="#C53030"
+                   IsVisible="{Binding SystemFormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+        <Grid ColumnDefinitions="120,8,*,16,120,8,*" RowDefinitions="Auto,8,Auto,8,Auto">
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="Bezeichnung *" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="0" Grid.Column="2" Name="FormNameBox" Text="{Binding FormName}"/>
+          <TextBlock Grid.Row="0" Grid.Column="4" Text="{Binding NummerLabel}" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="0" Grid.Column="6" Text="{Binding FormNummer}"/>
+
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="Haus *" VerticalAlignment="Center"/>
+          <ComboBox Grid.Row="2" Grid.Column="2" Name="FormHausBox" ItemsSource="{Binding Houses}" SelectedItem="{Binding FormHaus}"
+                    HorizontalAlignment="Stretch" PlaceholderText="Haus wählen"/>
+          <TextBlock Grid.Row="2" Grid.Column="4" Text="Zugehörigkeit" VerticalAlignment="Center"/>
+          <ComboBox Grid.Row="2" Grid.Column="6" ItemsSource="{Binding ZugehoerigkeitOptions}" SelectedItem="{Binding FormZugehoerigkeit}"
+                    HorizontalAlignment="Stretch"/>
+
+          <TextBlock Grid.Row="4" Grid.Column="0" Text="Aktiv" VerticalAlignment="Center"/>
+          <CheckBox Grid.Row="4" Grid.Column="2" IsChecked="{Binding FormActive}"/>
+        </Grid>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Button Name="SaveSystemButton" Content="Speichern" Command="{Binding SaveSystemCommand}"/>
+          <Button Content="Abbrechen" Command="{Binding CancelSystemFormCommand}"/>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- Anlagen | Prüfungen | Detail -->
+    <Grid Grid.Row="3" ColumnDefinitions="300, 4, 500, 4, *">
+      <DockPanel Grid.Column="0">
+        <TextBlock DockPanel.Dock="Top" Text="Anlagen" FontWeight="SemiBold" Margin="0,0,0,4"/>
+        <DataGrid Name="SystemsGrid" ItemsSource="{Binding Systems}" SelectedItem="{Binding SelectedSystem}"
+                  IsReadOnly="True" AutoGenerateColumns="False">
+          <DataGrid.Columns>
+            <DataGridTextColumn Header="Bezeichnung" Binding="{Binding Name}" Width="*"/>
+            <DataGridTextColumn Header="Nr." Binding="{Binding Nummer}" Width="60"/>
+            <DataGridTextColumn Header="Zuletzt" Binding="{Binding LastInspectionText}" Width="105"/>
+          </DataGrid.Columns>
+        </DataGrid>
+      </DockPanel>
+
+      <GridSplitter Grid.Column="1" Width="4"/>
+
+      <DockPanel Grid.Column="2">
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Margin="0,0,0,4">
+          <TextBlock Text="Prüfungen" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          <NumericUpDown Value="{Binding FilterYear}" Minimum="2000" Maximum="2099" FormatString="0" Width="140"
+                         PlaceholderText="Jahr" ToolTip.Tip="Jahr (leer = alle)"/>
+          <ComboBox ItemsSource="{x:Static vm:PruefungViewModel.StatusFilterOptions}" SelectedItem="{Binding FilterStatus}"
+                    Width="120" PlaceholderText="Status" ToolTip.Tip="Status (leer = alle)"/>
+          <Button Content="Filtern" Command="{Binding LoadInspectionsCommand}"/>
+        </StackPanel>
+        <DataGrid Name="InspectionsGrid" ItemsSource="{Binding Inspections}" SelectedItem="{Binding SelectedInspection}"
+                  IsReadOnly="True" AutoGenerateColumns="False">
+          <DataGrid.Columns>
+            <DataGridTextColumn Header="Datum" Binding="{Binding DateText}" Width="155"/>
+            <DataGridTextColumn Header="Anlage" Binding="{Binding SystemName}" Width="*"/>
+            <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="120"/>
+            <DataGridTextColumn Header="Ergebnis" Binding="{Binding ResultText}" Width="115"/>
+          </DataGrid.Columns>
+        </DataGrid>
+      </DockPanel>
+
+      <GridSplitter Grid.Column="3" Width="4"/>
+
+      <!-- Detail mit Checkliste -->
+      <ScrollViewer Grid.Column="4" Padding="8,0,0,0">
+        <StackPanel Spacing="8" IsVisible="{Binding HasDetail}">
+          <TextBlock Name="DetailTitle" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap">
+            <Run Text="{Binding Detail.SystemName}"/>
+            <Run Text=" – "/>
+            <Run Text="{Binding Detail.InspectionDate}"/>
+          </TextBlock>
+          <TextBlock Opacity="0.75" TextWrapping="Wrap">
+            <Run Text="Status: "/><Run Text="{Binding Detail.StatusText}"/>
+            <Run Text=" · Ergebnis: "/><Run Text="{Binding Detail.ResultText}"/>
+            <Run Text=" · Prüfer: "/><Run Text="{Binding Detail.InspectorName}"/>
+          </TextBlock>
+          <TextBlock Text="Für diesen Prüftyp ist keine Checklisten-Vorlage hinterlegt."
+                     IsVisible="{Binding !HasChecklist}" Opacity="0.75"/>
+
+          <ItemsControl Name="ChecklistList" ItemsSource="{Binding ChecklistItems}" IsEnabled="{Binding IsDetailEditable}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:PruefungChecklistEditItem">
+                <Border BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="0,6">
+                  <Grid ColumnDefinitions="*, 12, 220" RowDefinitions="Auto, Auto, Auto">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding Description}" Opacity="0.7" TextWrapping="Wrap"
+                               IsVisible="{Binding Description, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                    <ComboBox Grid.Row="0" Grid.RowSpan="2" Grid.Column="2" ItemsSource="{Binding Choices}"
+                              SelectedItem="{Binding Value}" IsVisible="{Binding IsChoice}"
+                              HorizontalAlignment="Stretch" PlaceholderText="Bitte wählen"/>
+                    <TextBox Grid.Row="0" Grid.RowSpan="2" Grid.Column="2" Text="{Binding Value}" IsVisible="{Binding IsFreeText}"/>
+                    <TextBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,4,0,0" Text="{Binding Note}"
+                             PlaceholderText="Mängelbeschreibung" IsVisible="{Binding IsDefect}" AcceptsReturn="True"/>
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <Border IsVisible="{Binding IsDetailEditable}" BorderBrush="#CBD5E0" BorderThickness="1" CornerRadius="4" Padding="8">
+            <StackPanel Spacing="6">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="Ergebnis" VerticalAlignment="Center"/>
+                <ComboBox Name="ResultBox" ItemsSource="{x:Static vm:PruefungViewModel.ResultOptions}"
+                          SelectedItem="{Binding CompleteResultChoice}" Width="160"/>
+              </StackPanel>
+              <TextBox Text="{Binding CompleteNotes}" PlaceholderText="Bemerkungen" AcceptsReturn="True" MinHeight="60"/>
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Name="SaveChecklistButton" Content="Checkliste speichern" Command="{Binding SaveChecklistCommand}"/>
+                <Button Name="CompleteButton" Content="Prüfung abschließen" Command="{Binding CompleteInspectionCommand}"/>
+              </StackPanel>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </ScrollViewer>
+    </Grid>
+  </Grid>
+</UserControl>

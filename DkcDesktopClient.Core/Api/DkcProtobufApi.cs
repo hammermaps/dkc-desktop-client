@@ -42,6 +42,8 @@ public sealed class DkcProtobufApi : IDkcProtobufApi
         => Send<UserTokensListResponse>(Protocol.Action.UserTokensList, null, ct);
     public Task<Ack> DeleteUserTokenAsync(UserTokenDeleteRequest request, CancellationToken ct = default)
         => Send<Ack>(Protocol.Action.UserTokenDelete, request, ct);
+    public Task<Ack> ChangePasswordAsync(ChangePasswordRequest request, CancellationToken ct = default)
+        => Send<Ack>(Protocol.Action.UserChangePassword, request, ct);
 
     // ── Mängelmeldungen ─────────────────────────────────────────────────────
     public Task<MmListResponse> GetMmListAsync(MmListRequest request, CancellationToken ct = default)
@@ -88,6 +90,54 @@ public sealed class DkcProtobufApi : IDkcProtobufApi
         => Send<Ack>(Protocol.Action.NeaChecklistUpdate, request, ct);
     public Task<NeaDashboardResponse> GetNeaDashboardAsync(CancellationToken ct = default)
         => Send<NeaDashboardResponse>(Protocol.Action.NeaDashboard, null, ct);
+
+    // ── Aufzugprüfung ─────────────────────────────────────────────────────
+    public Task<AufzugSystemsResponse> GetAufzugSystemsAsync(AufzugSystemsRequest request, CancellationToken ct = default)
+        => Send<AufzugSystemsResponse>(Protocol.Action.AufzugSystems, request, ct);
+    public Task<AufzugSystemCreateResponse> CreateAufzugSystemAsync(AufzugSystemSaveRequest request, CancellationToken ct = default)
+        => Send<AufzugSystemCreateResponse>(Protocol.Action.AufzugSystemCreate, request, ct);
+    public Task<Ack> UpdateAufzugSystemAsync(AufzugSystemSaveRequest request, CancellationToken ct = default)
+        => Send<Ack>(Protocol.Action.AufzugSystemUpdate, request, ct);
+    public Task<Ack> DeleteAufzugSystemAsync(AufzugSystemDeleteRequest request, CancellationToken ct = default)
+        => Send<Ack>(Protocol.Action.AufzugSystemDelete, request, ct);
+    public Task<AufzugInspectionsResponse> GetAufzugInspectionsAsync(AufzugInspectionsRequest request, CancellationToken ct = default)
+        => Send<AufzugInspectionsResponse>(Protocol.Action.AufzugInspections, request, ct);
+    public Task<AufzugInspectionDetailResponse> GetAufzugInspectionDetailAsync(AufzugInspectionDetailRequest request, CancellationToken ct = default)
+        => Send<AufzugInspectionDetailResponse>(Protocol.Action.AufzugInspectionDetail, request, ct);
+    public Task<AufzugInspectionCreateResponse> CreateAufzugInspectionAsync(AufzugInspectionSaveRequest request, CancellationToken ct = default)
+        => Send<AufzugInspectionCreateResponse>(Protocol.Action.AufzugInspectionCreate, request, ct);
+    public Task<Ack> UpdateAufzugInspectionAsync(AufzugInspectionSaveRequest request, CancellationToken ct = default)
+        => Send<Ack>(Protocol.Action.AufzugInspectionUpdate, request, ct);
+    public Task<Ack> CompleteAufzugInspectionAsync(AufzugInspectionCompleteRequest request, CancellationToken ct = default)
+        => Send<Ack>(Protocol.Action.AufzugInspectionComplete, request, ct);
+    public Task<Ack> UpdateAufzugChecklistAsync(AufzugChecklistUpdateRequest request, CancellationToken ct = default)
+        => Send<Ack>(Protocol.Action.AufzugChecklistUpdate, request, ct);
+    public Task<AufzugDashboardResponse> GetAufzugDashboardAsync(CancellationToken ct = default)
+        => Send<AufzugDashboardResponse>(Protocol.Action.AufzugDashboard, null, ct);
+
+    // ── Sprinklerprüfung ──────────────────────────────────────────────────
+    public Task<SprinklerSystemsResponse> GetSprinklerSystemsAsync(SprinklerSystemsRequest request, CancellationToken ct = default)
+        => Send<SprinklerSystemsResponse>(Protocol.Action.SprinklerSystems, request, ct);
+    public Task<SprinklerSystemCreateResponse> CreateSprinklerSystemAsync(SprinklerSystemSaveRequest request, CancellationToken ct = default)
+        => Send<SprinklerSystemCreateResponse>(Protocol.Action.SprinklerSystemCreate, request, ct);
+    public Task<Ack> UpdateSprinklerSystemAsync(SprinklerSystemSaveRequest request, CancellationToken ct = default)
+        => Send<Ack>(Protocol.Action.SprinklerSystemUpdate, request, ct);
+    public Task<Ack> DeleteSprinklerSystemAsync(SprinklerSystemDeleteRequest request, CancellationToken ct = default)
+        => Send<Ack>(Protocol.Action.SprinklerSystemDelete, request, ct);
+    public Task<SprinklerInspectionsResponse> GetSprinklerInspectionsAsync(SprinklerInspectionsRequest request, CancellationToken ct = default)
+        => Send<SprinklerInspectionsResponse>(Protocol.Action.SprinklerInspections, request, ct);
+    public Task<SprinklerInspectionDetailResponse> GetSprinklerInspectionDetailAsync(SprinklerInspectionDetailRequest request, CancellationToken ct = default)
+        => Send<SprinklerInspectionDetailResponse>(Protocol.Action.SprinklerInspectionDetail, request, ct);
+    public Task<SprinklerInspectionCreateResponse> CreateSprinklerInspectionAsync(SprinklerInspectionSaveRequest request, CancellationToken ct = default)
+        => Send<SprinklerInspectionCreateResponse>(Protocol.Action.SprinklerInspectionCreate, request, ct);
+    public Task<Ack> UpdateSprinklerInspectionAsync(SprinklerInspectionSaveRequest request, CancellationToken ct = default)
+        => Send<Ack>(Protocol.Action.SprinklerInspectionUpdate, request, ct);
+    public Task<Ack> CompleteSprinklerInspectionAsync(SprinklerInspectionCompleteRequest request, CancellationToken ct = default)
+        => Send<Ack>(Protocol.Action.SprinklerInspectionComplete, request, ct);
+    public Task<Ack> UpdateSprinklerChecklistAsync(SprinklerChecklistUpdateRequest request, CancellationToken ct = default)
+        => Send<Ack>(Protocol.Action.SprinklerChecklistUpdate, request, ct);
+    public Task<SprinklerDashboardResponse> GetSprinklerDashboardAsync(CancellationToken ct = default)
+        => Send<SprinklerDashboardResponse>(Protocol.Action.SprinklerDashboard, null, ct);
 
     // ── Gebäudebegehungen ───────────────────────────────────────────────────
     public Task<BuildingListResponse> GetBuildingListAsync(BuildingListRequest request, CancellationToken ct = default)
@@ -146,6 +196,8 @@ public sealed class DkcProtobufApi : IDkcProtobufApi
         => Send<KeysTypesListResponse>(Protocol.Action.KeysTypesList, null, ct);
     public Task<KeysCabinetsListResponse> GetKeysCabinetsListAsync(CancellationToken ct = default)
         => Send<KeysCabinetsListResponse>(Protocol.Action.KeysCabinetsList, null, ct);
+    public Task<KeysIssuedResponse> GetKeyIssueHistoryAsync(KeyIssueHistoryRequest request, CancellationToken ct = default)
+        => Send<KeysIssuedResponse>(Protocol.Action.KeysIssueHistory, request, ct);
 
     // ── Dashboard & Projekte ────────────────────────────────────────────────
     public Task<DashboardDataResponse> GetDashboardDataAsync(CancellationToken ct = default)
@@ -174,6 +226,8 @@ public sealed class DkcProtobufApi : IDkcProtobufApi
     // ── Benachrichtigungen ──────────────────────────────────────────────────
     public Task<ChangeFeedTicketResponse> GetChangeFeedTicketAsync(CancellationToken ct = default)
         => Send<ChangeFeedTicketResponse>(Protocol.Action.ChangeFeedTicket, null, ct);
+    public Task<ChangeFeedSnapshotResponse> GetChangeFeedSnapshotAsync(CancellationToken ct = default)
+        => Send<ChangeFeedSnapshotResponse>(Protocol.Action.ChangeFeedSnapshot, null, ct);
     public Task<NotificationsResponse> GetNotificationsAsync(CancellationToken ct = default)
         => Send<NotificationsResponse>(Protocol.Action.Notifications, null, ct);
     public Task<NotificationCountResponse> GetNotificationCountAsync(CancellationToken ct = default)
