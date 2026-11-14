@@ -90,6 +90,12 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
     [ObservableProperty] private string _formInspectionStatus = "open";
     [ObservableProperty] private string _formInspectionResult = "ok";
     [ObservableProperty] private int? _formRuntimeHours;
+    /// <summary>
+    /// Gerundeter Ausgangswert beim Bearbeiten. Der Server speichert Zehntelstunden (decimal),
+    /// der Protobuf-Vertrag nur int32 – unverändert wird deshalb 0 (= nicht ändern) gesendet,
+    /// sonst würde jedes Speichern z. B. 161,3 auf 161 abrunden.
+    /// </summary>
+    private int? _originalRuntimeHours;
     [ObservableProperty] private string _formInspectionNotes = string.Empty;
     [ObservableProperty] private string _formDefectsFound = string.Empty;
     [ObservableProperty] private string _formCorrectiveActions = string.Empty;
@@ -377,6 +383,7 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
         FormInspectionStatus = "open";
         FormInspectionResult = "ok";
         FormRuntimeHours = null;
+        _originalRuntimeHours = null;
         FormInspectionNotes = string.Empty;
         FormDefectsFound = string.Empty;
         FormCorrectiveActions = string.Empty;
@@ -394,7 +401,8 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
         FormInspectionDate = SelectedInspection.InspectionDate;
         FormInspectionStatus = SelectedInspection.Status;
         FormInspectionResult = SelectedInspection.OverallResult;
-        FormRuntimeHours = SelectedInspection.RuntimeHours;
+        FormRuntimeHours = SelectedInspection.RuntimeHours is { } rh ? (int)Math.Round(rh) : null;
+        _originalRuntimeHours = FormRuntimeHours;
         FormInspectionNotes = SelectedInspection.Notes ?? string.Empty;
         FormDefectsFound = string.Empty;
         FormCorrectiveActions = string.Empty;
@@ -430,7 +438,7 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
                 InspectionDate = FormInspectionDate,
                 Status = FormInspectionStatus,
                 OverallResult = FormInspectionResult,
-                RuntimeHours = FormRuntimeHours ?? 0,
+                RuntimeHours = IsEditingInspection && FormRuntimeHours == _originalRuntimeHours ? 0 : FormRuntimeHours ?? 0,
                 Notes = FormInspectionNotes,
                 DefectsFound = FormDefectsFound,
                 CorrectiveActions = FormCorrectiveActions,

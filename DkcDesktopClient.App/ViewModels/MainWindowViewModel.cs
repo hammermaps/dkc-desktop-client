@@ -14,6 +14,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly INavigationService _navigationService;
     private readonly NotificationPollingService _notificationPollingService;
     private readonly ConnectivityService _connectivityService;
+    private readonly MaintenanceMonitor? _maintenance;
 
     [ObservableProperty] private bool _isLoggedIn;
     [ObservableProperty] private string _userDisplayName = string.Empty;
@@ -24,6 +25,11 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] private int _unreadNotificationCount;
     [ObservableProperty] private IReadOnlyList<BreadcrumbItem> _breadcrumbs = Array.Empty<BreadcrumbItem>();
     [ObservableProperty] private bool _isOffline;
+
+    // Wartungsmodus des Servers (Header X-DKC-Maintenance, siehe MaintenanceMonitor)
+    [ObservableProperty] private bool _isMaintenanceAllowed;
+    [ObservableProperty] private bool _isMaintenanceBlocked;
+    [ObservableProperty] private string _maintenanceText = string.Empty;
 
     public LoginViewModel LoginViewModel { get; }
     public DashboardViewModel DashboardViewModel { get; }
@@ -61,8 +67,10 @@ public partial class MainWindowViewModel : ViewModelBase
         KeysViewModel keysViewModel,
         SettingsViewModel settingsViewModel,
         WlsViewModel wlsViewModel,
-        NotificationsViewModel notificationsViewModel)
+        NotificationsViewModel notificationsViewModel,
+        MaintenanceMonitor? maintenance = null)
     {
+        _maintenance = maintenance;
         _authService                = authService;
         _updateService              = updateService;
         _tokenStore                 = tokenStore;
@@ -99,10 +107,62 @@ public partial class MainWindowViewModel : ViewModelBase
         // Initialise from current connectivity state (may already be known)
         IsOffline = !_connectivityService.IsOnline;
 
+        if (_maintenance != null)
+        {
+            _maintenance.Changed += (_, _) => Avalonia.Threading.Dispatcher.UIThread.Post(ApplyMaintenanceState);
+            ApplyMaintenanceState();
+        }
+
         UpdateAuthState();
     }
 
-    private void OnAuthStateChanged(object? sender, EventArgs e) => UpdateAuthState();
+    private void OnAuthStateChanged(object? sender, EventArgs e)
+    {
+        if (!_authService.IsAuthenticated) _maintenance?.Reset();
+        UpdateAuthState();
+    }
+
+    private bool _wasMaintenanceBlocked;
+
+    /// <summary>
+    /// Zeigt den Wartungszustand an. Endet eine Sperre, fehlen dem Client die damals abgewiesenen
+    /// Rechte – sie werden neu geladen, die Navigation neu aufgebaut und die Ansicht aktualisiert.
+    /// </summary>
+    private void ApplyMaintenanceState()
+    {
+        if (_maintenance == null) return;
+        var state = _maintenance.State;
+        IsMaintenanceAllowed = state == MaintenanceState.Allowed;
+        IsMaintenanceBlocked = state == MaintenanceState.Blocked;
+        MaintenanceText = BuildMaintenanceText(state, _maintenance.Message, _maintenance.EstimatedEnd);
+
+        if (_wasMaintenanceBlocked && state != MaintenanceState.Blocked && IsLoggedIn)
+            _ = RecoverAfterMaintenanceAsync();
+        _wasMaintenanceBlocked = state == MaintenanceState.Blocked;
+    }
+
+    public static string BuildMaintenanceText(MaintenanceState state, string message, string? end)
+    {
+        if (state == MaintenanceState.Off) return string.Empty;
+        var text = state == MaintenanceState.Blocked
+            ? "Wartungsmodus – der Server ist vorübergehend nicht verfügbar."
+            : "Wartungsmodus aktiv – Ihr Konto hat weiterhin Zugriff.";
+        if (!string.IsNullOrWhiteSpace(message)) text += " " + message.Trim();
+        if (!string.IsNullOrWhiteSpace(end)) text += $" Voraussichtliches Ende: {end}.";
+        if (state == MaintenanceState.Blocked) text += " Der Client prüft automatisch weiter.";
+        return text;
+    }
+
+    private async Task RecoverAfterMaintenanceAsync()
+    {
+        await _authService.ReloadPermissionsAsync();
+        var current = SelectedNavItem?.ViewModel;
+        RebuildNavItems();
+        var restored = NavItems.FirstOrDefault(n => n.ViewModel == current);
+        if (restored != null && !ReferenceEquals(restored, SelectedNavItem))
+            SelectedNavItem = restored;
+        RefreshCurrentModule();
+    }
 
     private void UpdateAuthState()
     {

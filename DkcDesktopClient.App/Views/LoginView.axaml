@@ -11,17 +11,17 @@
       <StackPanel Spacing="16" IsVisible="{Binding !IsTwoFactorStep}">
         <StackPanel Spacing="4">
           <TextBlock Text="Server URL"/>
-          <TextBox Text="{Binding ServerUrl}" PlaceholderText="https://your-server.example.com"/>
+          <TextBox Name="ServerUrlBox" Text="{Binding ServerUrl}" PlaceholderText="https://your-server.example.com"/>
         </StackPanel>
 
         <StackPanel Spacing="4">
           <TextBlock Text="Username"/>
-          <TextBox Text="{Binding Username}" PlaceholderText="Username"/>
+          <TextBox Name="UsernameBox" Text="{Binding Username}" PlaceholderText="Username"/>
         </StackPanel>
 
         <StackPanel Spacing="4">
           <TextBlock Text="Password"/>
-          <TextBox Text="{Binding Password}" PasswordChar="*" PlaceholderText="Password"/>
+          <TextBox Name="PasswordBox" Text="{Binding Password}" PasswordChar="*" PlaceholderText="Password"/>
         </StackPanel>
       </StackPanel>
 
@@ -57,7 +57,7 @@
                  IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                  TextWrapping="Wrap"/>
 
-      <Button Content="Login" Command="{Binding LoginCommand}"
+      <Button Name="LoginButton" Content="Login" Command="{Binding LoginCommand}"
               IsVisible="{Binding !IsTwoFactorStep}"
               HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
 

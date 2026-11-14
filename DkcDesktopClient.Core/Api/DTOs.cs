@@ -150,7 +150,7 @@ public record NeaInspection(
     [property: JsonPropertyName("inspector_name")] string? InspectorName,
     [property: JsonPropertyName("status")] string Status,
     [property: JsonPropertyName("overall_result")] string OverallResult,
-    [property: JsonPropertyName("runtime_hours")] int? RuntimeHours,
+    [property: JsonPropertyName("runtime_hours")] decimal? RuntimeHours,
     [property: JsonPropertyName("notes")] string? Notes,
     [property: JsonPropertyName("created_at")] string? CreatedAt);
 
@@ -173,8 +173,8 @@ public record NeaInspectionDetail(
     [property: JsonPropertyName("inspector_name")] string? InspectorName,
     [property: JsonPropertyName("status")] string Status,
     [property: JsonPropertyName("overall_result")] string OverallResult,
-    [property: JsonPropertyName("runtime_hours")] int? RuntimeHours,
-    [property: JsonPropertyName("runtime_hours_after")] int? RuntimeHoursAfter,
+    [property: JsonPropertyName("runtime_hours")] decimal? RuntimeHours,
+    [property: JsonPropertyName("runtime_hours_after")] decimal? RuntimeHoursAfter,
     [property: JsonPropertyName("defects_found")] string? DefectsFound,
     [property: JsonPropertyName("corrective_actions")] string? CorrectiveActions,
     [property: JsonPropertyName("notes")] string? Notes,
@@ -379,12 +379,14 @@ public record KeyInventoryItem(
     [property: JsonPropertyName("description")] string? Description,
     [property: JsonPropertyName("total_count")] int? Total,
     [property: JsonPropertyName("available")] int? Available,
-    // Nicht Teil der REST-Antwort (keys_inventory) — nur befüllt, wenn per Protobuf geladen
-    // (KeysInventoryHandler), das die vollständigen Felder für KeysSaveHandler liefert.
-    string Number = "",
-    int TypeId = 0,
-    int CabinetId = 0,
-    bool Enabled = true);
+    // Nur befüllt, wenn per Protobuf geladen (KeysInventoryHandler), das die vollständigen Felder
+    // für KeysSaveHandler liefert. Die REST-Antwort (keys_inventory) enthält sie inzwischen auch,
+    // cabinet_id aber als null bei Schlüsseln ohne Schrank – über die Snake-Case-Namensregel
+    // scheiterte daran das ganze Inventar (Dashboard, Vorladen). Deshalb beim JSON-Lesen ignoriert.
+    [property: JsonIgnore] string Number = "",
+    [property: JsonIgnore] int TypeId = 0,
+    [property: JsonIgnore] int CabinetId = 0,
+    [property: JsonIgnore] bool Enabled = true);
 
 public record KeysInventoryResponse(
     [property: JsonPropertyName("success")] bool Success,

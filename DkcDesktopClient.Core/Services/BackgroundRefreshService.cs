@@ -127,22 +127,20 @@ public class BackgroundRefreshService : BackgroundService
                 ct => api.GetNeaDashboardAsync(ct),
                 stoppingToken));
 
-            if (!IsTokenBasedDesktopAuth())
-            {
-                refreshTasks.Add(TryRefreshAsync(
-                    CacheKeys.NotificationCount,
-                    _config.NotificationCount,
-                    now,
-                    ct => api.GetNotificationCountAsync(ct),
-                    stoppingToken));
+            // Benachrichtigungen über Protobuf (REST-Endpunkt nur für Web-Sitzungen, siehe NotificationsSource).
+            refreshTasks.Add(TryRefreshAsync(
+                CacheKeys.NotificationCount,
+                _config.NotificationCount,
+                now,
+                ct => NotificationsSource.GetCountAsync(_apiFactory, _authService.CurrentToken, ct),
+                stoppingToken));
 
-                refreshTasks.Add(TryRefreshAsync(
-                    CacheKeys.Notifications,
-                    CacheTtl.Notifications,
-                    now,
-                    ct => api.GetNotificationsAsync(ct),
-                    stoppingToken));
-            }
+            refreshTasks.Add(TryRefreshAsync(
+                CacheKeys.Notifications,
+                CacheTtl.Notifications,
+                now,
+                ct => NotificationsSource.GetAsync(_apiFactory, _authService.CurrentToken, ct),
+                stoppingToken));
 
             refreshTasks.Add(TryRefreshAsync(
                 CacheKeys.MmList,
@@ -243,9 +241,4 @@ public class BackgroundRefreshService : BackgroundService
         }
     }
 
-    private bool IsTokenBasedDesktopAuth()
-    {
-        var token = _authService.CurrentToken;
-        return !string.IsNullOrWhiteSpace(token) && token.StartsWith("dkc_", StringComparison.OrdinalIgnoreCase);
-    }
 }

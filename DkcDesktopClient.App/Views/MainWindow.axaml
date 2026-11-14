@@ -144,7 +144,26 @@
             </Border>
           </StackPanel>
         </Border>
-        <Grid Grid.Row="1" RowDefinitions="Auto, *">
+        <Grid Grid.Row="1" RowDefinitions="Auto, Auto, *">
+          <!-- Wartungsmodus des Servers: rot = gesperrt, orange = Zugriff als zugelassener Benutzer -->
+          <Border Grid.Row="1" Name="MaintenanceBlockedBanner"
+                  Background="#FEF2F2" BorderBrush="#DC2626" BorderThickness="0,0,0,1" Padding="10,8"
+                  IsVisible="{Binding IsMaintenanceBlocked}">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBlock Text="🛠" VerticalAlignment="Center"/>
+              <TextBlock Name="MaintenanceBlockedText" Text="{Binding MaintenanceText}" Foreground="#991B1B"
+                         FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Border>
+          <Border Grid.Row="1" Name="MaintenanceAllowedBanner"
+                  Background="#FFF7ED" BorderBrush="#EA580C" BorderThickness="0,0,0,1" Padding="10,6"
+                  IsVisible="{Binding IsMaintenanceAllowed}">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBlock Text="🛠" VerticalAlignment="Center"/>
+              <TextBlock Name="MaintenanceAllowedText" Text="{Binding MaintenanceText}" Foreground="#9A3412"
+                         TextWrapping="Wrap" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Border>
           <Border Grid.Row="0"
                   Background="#FEFCBF" BorderBrush="#D69E2E" BorderThickness="0,0,0,1" Padding="10,8"
                   IsVisible="{Binding AvailableUpdate, Converter={x:Static ObjectConverters.IsNotNull}}">
@@ -165,7 +184,7 @@
               </StackPanel>
             </DockPanel>
           </Border>
-          <ContentControl Grid.Row="1" Content="{Binding CurrentView}"/>
+          <ContentControl Grid.Row="2" Content="{Binding CurrentView}"/>
         </Grid>
       </Grid>
     </SplitView>

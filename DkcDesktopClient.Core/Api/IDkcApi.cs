@@ -213,44 +213,44 @@ public interface IDkcApi
     Task<NotificationCountResponse> GetNotificationCountAsync(CancellationToken ct = default);
 
     // WLS Buildings
-    [Get("/buildings/list")]
+    [Get("/api.php/buildings/list")]
     Task<WlsBuildingListResponse> GetWlsBuildingsAsync(CancellationToken ct = default);
 
-    [Post("/buildings/create")]
+    [Post("/api.php/buildings/create")]
     Task<WlsBuildingResponse> CreateWlsBuildingAsync([Body] WlsBuildingSaveRequest request, CancellationToken ct = default);
 
-    [Post("/buildings/{id}")]
+    [Post("/api.php/buildings/{id}")]
     Task<WlsBuildingResponse> UpdateWlsBuildingAsync(int id, [Body] WlsBuildingSaveRequest request, CancellationToken ct = default);
 
-    [Delete("/buildings/{id}")]
+    [Delete("/api.php/buildings/{id}")]
     Task<ApiError> DeleteWlsBuildingAsync(int id, CancellationToken ct = default);
 
     // WLS Apartments
-    [Get("/apartments/list")]
+    [Get("/api.php/apartments/list")]
     Task<WlsApartmentListResponse> GetWlsApartmentsAsync(CancellationToken ct = default);
 
-    [Get("/apartments/list/{buildingId}")]
+    [Get("/api.php/apartments/list/{buildingId}")]
     Task<WlsApartmentListResponse> GetWlsApartmentsByBuildingAsync(int buildingId, CancellationToken ct = default);
 
-    [Post("/apartments/create")]
+    [Post("/api.php/apartments/create")]
     Task<WlsApartmentResponse> CreateWlsApartmentAsync([Body] WlsApartmentCreateRequest request, CancellationToken ct = default);
 
-    [Post("/apartments/{id}")]
+    [Post("/api.php/apartments/{id}")]
     Task<WlsApartmentResponse> UpdateWlsApartmentAsync(int id, [Body] WlsApartmentUpdateRequest request, CancellationToken ct = default);
 
-    [Delete("/apartments/{id}")]
+    [Delete("/api.php/apartments/{id}")]
     Task<ApiError> DeleteWlsApartmentAsync(int id, CancellationToken ct = default);
 
     // WLS Records
-    [Post("/records/list")]
+    [Post("/api.php/records/list")]
     Task<WlsRecordListResponse> GetWlsRecordsAsync([Body] WlsRecordListRequest request, CancellationToken ct = default);
 
-    [Post("/records/create")]
+    [Post("/api.php/records/create")]
     Task<WlsRecordResponse> CreateWlsRecordAsync([Body] WlsRecordCreateRequest request, CancellationToken ct = default);
 
-    [Post("/records/update/{id}")]
+    [Post("/api.php/records/update/{id}")]
     Task<WlsRecordResponse> UpdateWlsRecordAsync(int id, [Body] WlsRecordUpdateRequest request, CancellationToken ct = default);
 
-    [Delete("/records/remove/{id}")]
+    [Delete("/api.php/records/remove/{id}")]
     Task<ApiError> DeleteWlsRecordAsync(int id, CancellationToken ct = default);
 }

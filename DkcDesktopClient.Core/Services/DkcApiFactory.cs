@@ -15,15 +15,26 @@ public class DkcApiFactory
     private readonly ILogger<DkcApiFactory> _logger;
     private readonly ILoggerFactory _loggerFactory;
     private readonly IOptions<HttpPerformanceConfig> _httpConfig;
+    private readonly MaintenanceMonitor? _maintenance;
     private AuthService? _authService;
 
-    public DkcApiFactory(TokenStore tokenStore, ILogger<DkcApiFactory> logger, ILoggerFactory loggerFactory, IOptions<HttpPerformanceConfig> httpConfig)
+    public DkcApiFactory(
+        TokenStore tokenStore,
+        ILogger<DkcApiFactory> logger,
+        ILoggerFactory loggerFactory,
+        IOptions<HttpPerformanceConfig> httpConfig,
+        MaintenanceMonitor? maintenance = null)
     {
         _tokenStore = tokenStore;
         _logger = logger;
         _loggerFactory = loggerFactory;
         _httpConfig = httpConfig;
+        _maintenance = maintenance;
     }
+
+    /// <summary>Hängt die Wartungserkennung vor den eigentlichen Handler (REST und Protobuf).</summary>
+    private HttpMessageHandler WithMaintenance(HttpMessageHandler handler)
+        => _maintenance != null ? new MaintenanceHandler(_maintenance, handler) : handler;
 
     public void SetAuthService(AuthService authService) => _authService = authService;
 
@@ -33,7 +44,7 @@ public class DkcApiFactory
         _logger.LogDebug("Creating API client for base URL {BaseUrl}", url);
         
         // Konfiguriere optimalen HTTP-Handler für Performance
-        HttpMessageHandler handler = innerHandler ?? CreateOptimizedHttpHandler();
+        HttpMessageHandler handler = WithMaintenance(innerHandler ?? CreateOptimizedHttpHandler());
         
         // Wrap mit Authorization-Handler
         var authHandler = new AuthorizationHandler(token, _authService, _loggerFactory.CreateLogger<AuthorizationHandler>(), handler);
@@ -68,7 +79,7 @@ public class DkcApiFactory
         var url = ResolveBaseUrl(serverUrl);
         _logger.LogDebug("Creating protobuf API client for base URL {BaseUrl}", url);
 
-        var httpClient = new HttpClient(innerHandler ?? new HttpClientHandler())
+        var httpClient = new HttpClient(WithMaintenance(innerHandler ?? new HttpClientHandler()))
         {
             BaseAddress = new Uri(url)
         };

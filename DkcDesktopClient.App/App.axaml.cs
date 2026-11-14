@@ -100,9 +100,14 @@ public partial class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
-    private static void ConfigureServices(IServiceCollection services)
+    /// <summary>
+    /// Registriert alle Dienste der App. Öffentlich, damit End-to-End-Tests (DkcDesktopClient.UiTests)
+    /// die echte Anwendung mit eigenem Datenordner aufbauen können, ohne Token und Cache des
+    /// Benutzers anzufassen.
+    /// </summary>
+    public static void ConfigureServices(IServiceCollection services, string? dataDirOverride = null)
     {
-        var dataDir = Path.Combine(
+        var dataDir = dataDirOverride ?? Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "DkcDesktopClient");
         Directory.CreateDirectory(dataDir);
@@ -163,6 +168,7 @@ public partial class App : Application
 
         // ── Core infrastructure services ──────────────────────────────────────
         services.AddSingleton<TokenStore>();
+        services.AddSingleton<MaintenanceMonitor>();
         services.AddSingleton<DkcApiFactory>();
         services.AddSingleton<UpdateService>();
         services.AddSingleton<DataCacheService>(sp =>

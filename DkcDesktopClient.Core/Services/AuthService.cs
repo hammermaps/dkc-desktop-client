@@ -163,6 +163,10 @@ public class AuthService
         AuthStateChanged?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>Rechte erneut laden, z. B. nach dem Ende eines Wartungsmodus (vorher abgewiesen).</summary>
+    public Task ReloadPermissionsAsync(CancellationToken ct = default)
+        => CurrentToken == null ? Task.CompletedTask : LoadPermissionsAsync(_apiFactory.Create(CurrentToken), ct);
+
     public bool HasPermission(string key) => Permissions.TryGetValue(key, out var v) && v;
 
     private async Task LoadPermissionsAsync(IDkcApi api, CancellationToken ct)

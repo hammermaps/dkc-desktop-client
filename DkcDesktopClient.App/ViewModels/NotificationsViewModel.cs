@@ -60,8 +60,7 @@ public partial class NotificationsViewModel : ViewModelBase, INavigationTarget
         ErrorMessage = null;
         try
         {
-            var api    = _apiFactory.Create(_authService.CurrentToken);
-            var result = await api.GetNotificationsAsync();
+            var result = await NotificationsSource.GetAsync(_apiFactory, _authService.CurrentToken);
             Notifications.Clear();
             TotalCount = result.Count;
             if (result.Success && result.Notifications != null)
