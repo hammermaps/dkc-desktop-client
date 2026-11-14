@@ -41,6 +41,12 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
     [ObservableProperty] private KeyIssuedItem? _selectedIssuedItem;
     [ObservableProperty] private int _selectedTabIndex;
 
+    // Ausgabehistorie eines Schlüssels (KEYS_ISSUE_HISTORY, inkl. bereits zurückgegebener Ausgaben)
+    public const int HistoryTabIndex = 2;
+    public ObservableCollection<KeyHistoryRow> KeyHistory { get; } = new();
+    [ObservableProperty] private string _keyHistoryTitle = "Historie";
+    [ObservableProperty] private string? _keyHistoryInfo = "Schlüssel im Inventar wählen und „Historie“ klicken.";
+
     // Stats tiles
     [ObservableProperty] private int _statTotalKeyTypes;
     [ObservableProperty] private int _statTotalKeys;
@@ -447,6 +453,7 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
 
     partial void OnSelectedInventoryItemChanged(KeyInventoryItem? value)
     {
+        LoadKeyHistoryCommand.NotifyCanExecuteChanged();
         ShowEditKeyFormCommand.NotifyCanExecuteChanged();
         ShowIssueFormCommand.NotifyCanExecuteChanged();
         DeleteKeyCommand.NotifyCanExecuteChanged();
@@ -502,4 +509,40 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
 
     private void OnInventoryCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         => ExportInventoryToCsvCommand.NotifyCanExecuteChanged();
+
+    [RelayCommand(CanExecute = nameof(HasSelectedInventoryItem))]
+    public async Task LoadKeyHistoryAsync()
+    {
+        var key = SelectedInventoryItem;
+        if (key == null) return;
+        KeyHistoryTitle = $"Historie: {key.Name}";
+        KeyHistory.Clear();
+        KeyHistoryInfo = "Wird geladen …";
+        SelectedTabIndex = HistoryTabIndex;
+        try
+        {
+            var r = await ProtoApi.GetKeyIssueHistoryAsync(new DkcDesktopClient.Core.Protocol.KeyIssueHistoryRequest { KeyId = key.Id, Limit = 200 });
+            foreach (var i in r.Issued)
+                KeyHistory.Add(KeyHistoryRow.From(i));
+            var total = r.Page?.Total ?? KeyHistory.Count;
+            KeyHistoryInfo = KeyHistory.Count == 0
+                ? "Dieser Schlüssel wurde noch nie ausgegeben."
+                : total > KeyHistory.Count ? $"Neueste {KeyHistory.Count} von {total} Ausgaben." : $"{total} Ausgabe(n).";
+        }
+        catch (Exception ex)
+        {
+            KeyHistoryInfo = $"Historie konnte nicht geladen werden: {ex.Message}";
+        }
+    }
+}
+
+/// <summary>Zeile der Ausgabehistorie; „offen“ = noch nicht zurückgegeben.</summary>
+public sealed record KeyHistoryRow(int Id, string Recipient, string IssuedAt, string PlannedReturnAt, string ReturnedAt, string Notes)
+{
+    public string State => string.IsNullOrEmpty(ReturnedAt) ? "ausgegeben" : "zurück";
+
+    public static KeyHistoryRow From(DkcDesktopClient.Core.Protocol.KeyIssuedItem i) => new(
+        i.Id,
+        string.IsNullOrWhiteSpace(i.RecipientName) ? i.IssuedTo : i.RecipientName,
+        i.IssuedAt, i.PlannedReturnAt, i.ReturnedAt, i.Notes);
 }

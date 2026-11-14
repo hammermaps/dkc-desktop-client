@@ -14,6 +14,8 @@
       <Button Content="Bearbeiten" Command="{Binding ShowEditKeyFormCommand}"/>
       <Button Content="Löschen" Command="{Binding DeleteKeyCommand}" Foreground="Red"/>
       <Button Content="Ausgeben" Command="{Binding ShowIssueFormCommand}"/>
+      <Button Name="KeyHistoryButton" Content="Historie" Command="{Binding LoadKeyHistoryCommand}"
+              ToolTip.Tip="Alle Ausgaben des gewählten Schlüssels, auch zurückgegebene"/>
       <Separator Width="1" Background="#CCCCCC" Margin="4,0"/>
       <Button Content="🔄 Zurückgeben" Command="{Binding ShowReturnFormCommand}"/>
       <Separator Width="1" Background="#CCCCCC" Margin="4,0"/>
@@ -169,6 +171,21 @@
             <DataGridTextColumn Header="Returned At" Binding="{Binding ReturnedAt}" Width="130"/>
           </DataGrid.Columns>
         </DataGrid>
+      </TabItem>
+      <TabItem Header="{Binding KeyHistoryTitle}">
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Top" Name="KeyHistoryInfoText" Text="{Binding KeyHistoryInfo}" Opacity="0.75" Margin="0,4"/>
+          <DataGrid Name="KeyHistoryGrid" ItemsSource="{Binding KeyHistory}" IsReadOnly="True" AutoGenerateColumns="False">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="Ausgegeben am" Binding="{Binding IssuedAt}" Width="140"/>
+              <DataGridTextColumn Header="Empfänger" Binding="{Binding Recipient}" Width="*"/>
+              <DataGridTextColumn Header="Rückgabe geplant" Binding="{Binding PlannedReturnAt}" Width="120"/>
+              <DataGridTextColumn Header="Zurück am" Binding="{Binding ReturnedAt}" Width="140"/>
+              <DataGridTextColumn Header="Status" Binding="{Binding State}" Width="90"/>
+              <DataGridTextColumn Header="Notizen" Binding="{Binding Notes}" Width="*"/>
+            </DataGrid.Columns>
+          </DataGrid>
+        </DockPanel>
       </TabItem>
     </TabControl>
 

@@ -86,7 +86,17 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty] private bool _isRunningApiStatusCheck;
     [ObservableProperty] private ObservableCollection<ApiStatusItem> _apiStatusItems = new();
 
+    // Passwort ändern (USER_CHANGE_PASSWORD)
+    [ObservableProperty] private string _currentPassword = string.Empty;
+    [ObservableProperty] private string _newPassword = string.Empty;
+    [ObservableProperty] private string _newPasswordRepeat = string.Empty;
+    [ObservableProperty] private string? _passwordError;
+    [ObservableProperty] private string? _passwordMessage;
+    [ObservableProperty] private bool _isChangingPassword;
+
     public bool IsAdmin => _authService.CurrentUser?.IsAdmin ?? false;
+    /// <summary>Wie im Web: Recht edit_profile_password oder Administrator.</summary>
+    public bool CanChangePassword => IsAdmin || _authService.HasPermission("edit_profile_password");
     public string CurrentVersion => UpdateService.CurrentVersion.ToString(3);
     public string? CurrentUsername => _authService.CurrentUser?.Username;
 
@@ -104,6 +114,7 @@ public partial class SettingsViewModel : ViewModelBase
     private void OnAuthStateChanged(object? sender, EventArgs e)
     {
         OnPropertyChanged(nameof(IsAdmin));
+        OnPropertyChanged(nameof(CanChangePassword));
         OnPropertyChanged(nameof(CurrentUsername));
         RunApiStatusCheckCommand.NotifyCanExecuteChanged();
     }
@@ -185,6 +196,53 @@ public partial class SettingsViewModel : ViewModelBase
             IsRunningApiStatusCheck = false;
         }
     }
+
+    /// <summary>Prüfung vor dem Senden; Komplexitätsregeln prüft der Server (Passwortrichtlinie).</summary>
+    public static string? ValidatePasswordChange(string current, string next, string repeat)
+    {
+        if (string.IsNullOrEmpty(current)) return "Bitte das aktuelle Passwort eingeben.";
+        if (string.IsNullOrEmpty(next)) return "Bitte ein neues Passwort eingeben.";
+        if (next != repeat) return "Die Wiederholung stimmt nicht mit dem neuen Passwort überein.";
+        if (next == current) return "Das neue Passwort muss sich vom aktuellen unterscheiden.";
+        return null;
+    }
+
+    [RelayCommand(CanExecute = nameof(CanSubmitPasswordChange))]
+    public async Task ChangePasswordAsync()
+    {
+        PasswordMessage = null;
+        PasswordError = ValidatePasswordChange(CurrentPassword, NewPassword, NewPasswordRepeat);
+        if (PasswordError != null) return;
+
+        IsChangingPassword = true;
+        try
+        {
+            await ProtoApi.ChangePasswordAsync(new DkcDesktopClient.Core.Protocol.ChangePasswordRequest
+            {
+                CurrentPassword = CurrentPassword,
+                NewPassword = NewPassword,
+            });
+            CurrentPassword = NewPassword = NewPasswordRepeat = string.Empty;
+            PasswordMessage = "Passwort geändert.";
+        }
+        catch (DkcProtobufApiException ex)
+        {
+            // Server-Meldung durchreichen (falsches aktuelles Passwort, Passwortrichtlinie, …).
+            PasswordError = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            PasswordError = $"Passwort konnte nicht geändert werden: {ex.Message}";
+        }
+        finally
+        {
+            IsChangingPassword = false;
+        }
+    }
+
+    private bool CanSubmitPasswordChange() => !IsChangingPassword;
+
+    partial void OnIsChangingPasswordChanged(bool value) => ChangePasswordCommand.NotifyCanExecuteChanged();
 
     [RelayCommand]
     public async Task LoadTokensAsync()

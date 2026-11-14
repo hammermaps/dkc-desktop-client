@@ -8,6 +8,13 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
 ## [Unreleased]
 
 ### Neu
+- Einstellungen: „Passwort ändern“ (`USER_CHANGE_PASSWORD`, nur mit `edit_profile_password` oder als
+  Admin). Eingaben werden vorab geprüft, Meldungen der Passwortrichtlinie kommen vom Server.
+- Schlüssel: „Historie“ zeigt alle Ausgaben des gewählten Schlüssels inklusive bereits
+  zurückgegebener (`KEYS_ISSUE_HISTORY`) in einem eigenen Reiter.
+- Change Feed: Nach jeder (Wieder-)Verbindung gleicht der Client die Domänen-Revisionen über
+  `CHANGE_FEED_SNAPSHOT` ab und lädt Ansichten nach, deren Daten sich während der Unterbrechung
+  geändert haben. Beim Abmelden wird der bekannte Stand verworfen.
 - Aufzug- und Sprinklerprüfung: neue Bereiche in der Navigation (nur mit Leserecht sichtbar).
   Anlagen und Prüfungen mit Jahres-/Statusfilter, Prüfung beginnen, Checkliste wie im Web-Wizard
   erfassen (Checkbox „In Ordnung“/„Nicht in Ordnung“, Auswahl, Freitext, Mängelbeschreibung) und

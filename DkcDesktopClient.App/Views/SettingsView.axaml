@@ -104,6 +104,22 @@
         </StackPanel>
       </Border>
 
+      <!-- Passwort ändern -->
+      <Border Name="PasswordSection" BorderThickness="1" BorderBrush="#DDDDDD" CornerRadius="8" Padding="16"
+              IsVisible="{Binding CanChangePassword}">
+        <StackPanel Spacing="8" MaxWidth="420" HorizontalAlignment="Left">
+          <TextBlock Text="Passwort ändern" FontSize="18" FontWeight="SemiBold"/>
+          <TextBox Name="CurrentPasswordBox" Text="{Binding CurrentPassword}" PasswordChar="●" PlaceholderText="Aktuelles Passwort"/>
+          <TextBox Name="NewPasswordBox" Text="{Binding NewPassword}" PasswordChar="●" PlaceholderText="Neues Passwort"/>
+          <TextBox Name="NewPasswordRepeatBox" Text="{Binding NewPasswordRepeat}" PasswordChar="●" PlaceholderText="Neues Passwort wiederholen"/>
+          <TextBlock Name="PasswordErrorText" Text="{Binding PasswordError}" Foreground="#C53030" TextWrapping="Wrap"
+                     IsVisible="{Binding PasswordError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+          <TextBlock Name="PasswordMessageText" Text="{Binding PasswordMessage}" Foreground="#2F855A"
+                     IsVisible="{Binding PasswordMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+          <Button Name="ChangePasswordButton" Content="Passwort ändern" Command="{Binding ChangePasswordCommand}"/>
+        </StackPanel>
+      </Border>
+
       <!-- Projects -->
       <Border BorderThickness="1" BorderBrush="#DDDDDD" CornerRadius="8" Padding="16">
         <StackPanel Spacing="8">

@@ -27,6 +27,10 @@ public class ChangeFeedService : BackgroundService
     private readonly ILogger<ChangeFeedService> _logger;
     private volatile bool _connected;
 
+    /// <summary>Zuletzt bekannte Domänen-Revision je "scope|domain" (aus Snapshot und Ereignissen).</summary>
+    private readonly Dictionary<string, long> _knownRevisions = new();
+    private readonly object _revisionLock = new();
+
     /// <summary>True, sobald der Stream bestätigt ist (Server-Kommentar <c>: connected</c>).</summary>
     public bool IsConnected => _connected;
 
@@ -79,17 +83,49 @@ public class ChangeFeedService : BackgroundService
     }
 
     /// <summary>Verarbeitet ein SSE-Datenfeld; liefert die Domäne oder null.</summary>
-    public static string? ParseDomain(string json)
+    public static string? ParseDomain(string json) => ParseEvent(json)?.Domain;
+
+    /// <summary>Scope, Domäne und Revision eines SSE-Ereignisses; null bei unbrauchbaren Daten.</summary>
+    public static (string Scope, string Domain, long Revision)? ParseEvent(string json)
     {
         try
         {
             using var doc = JsonDocument.Parse(json);
-            return doc.RootElement.TryGetProperty("domain", out var d) ? d.GetString() : null;
+            var root = doc.RootElement;
+            if (root.ValueKind != JsonValueKind.Object || !root.TryGetProperty("domain", out var d) || d.GetString() is not { } domain)
+                return null;
+            var scope = root.TryGetProperty("scope", out var sc) && sc.ValueKind == JsonValueKind.String ? sc.GetString() ?? string.Empty : string.Empty;
+            var revision = root.TryGetProperty("revision", out var rv) && rv.TryGetInt64(out var r) ? r : 0;
+            return (scope, domain, revision);
         }
         catch (JsonException)
         {
             return null;
         }
+    }
+
+    /// <summary>
+    /// Vergleicht einen Snapshot mit den bekannten Revisionen und übernimmt ihn. Liefert die Domänen,
+    /// deren Revision sich seit dem letzten Stand geändert hat – also Änderungen, die während einer
+    /// Unterbrechung des Streams verpasst wurden. Beim ersten Snapshot (nichts bekannt) wird nur der
+    /// Ausgangsstand gemerkt, die Ansichten laden beim Öffnen ohnehin frisch.
+    /// </summary>
+    public static IReadOnlyCollection<string> ApplySnapshot(IDictionary<string, long> known, Protocol.ChangeFeedSnapshotResponse snapshot)
+    {
+        var changed = new HashSet<string>(StringComparer.Ordinal);
+        if (!snapshot.Enabled) return changed;
+        var isBaseline = known.Count == 0;
+        foreach (var scope in snapshot.Scopes)
+        {
+            foreach (var (domain, revision) in scope.Domains)
+            {
+                var key = scope.Scope + "|" + domain;
+                if (!isBaseline && (!known.TryGetValue(key, out var previous) || previous != revision))
+                    changed.Add(domain);
+                known[key] = revision;
+            }
+        }
+        return changed;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -99,6 +135,7 @@ public class ChangeFeedService : BackgroundService
         {
             if (!_authService.IsAuthenticated)
             {
+                lock (_revisionLock) _knownRevisions.Clear();
                 await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken).ConfigureAwait(false);
                 continue;
             }
@@ -162,6 +199,7 @@ public class ChangeFeedService : BackgroundService
                 {
                     confirmed = true;
                     SetConnected(true);
+                    await ReconcileSnapshotAsync(proto, ct).ConfigureAwait(false);
                 }
                 else if (line.StartsWith("data:", StringComparison.Ordinal))
                 {
@@ -183,10 +221,41 @@ public class ChangeFeedService : BackgroundService
 
     private void HandleEvent(string json)
     {
-        var domain = ParseDomain(json);
-        if (domain == null) return;
+        var ev = ParseEvent(json);
+        if (ev == null) return;
+        if (ev.Value.Revision > 0 && ev.Value.Scope.Length > 0)
+            lock (_revisionLock) _knownRevisions[ev.Value.Scope + "|" + ev.Value.Domain] = ev.Value.Revision;
+        NotifyDomain(ev.Value.Domain);
+    }
+
+    private void NotifyDomain(string domain)
+    {
         foreach (var key in KeysForDomain(domain))
             _refresh.NotifyChanged(key);
+    }
+
+    /// <summary>Nach (Wieder-)Verbindung: verpasste Änderungen über CHANGE_FEED_SNAPSHOT nachholen.</summary>
+    private async Task ReconcileSnapshotAsync(DkcProtobufApi proto, CancellationToken ct)
+    {
+        try
+        {
+            var snapshot = await proto.GetChangeFeedSnapshotAsync(ct).ConfigureAwait(false);
+            IReadOnlyCollection<string> changed;
+            lock (_revisionLock) changed = ApplySnapshot(_knownRevisions, snapshot);
+            foreach (var domain in changed)
+                NotifyDomain(domain);
+            if (changed.Count > 0)
+                _logger.LogDebug("Change Feed: verpasste Änderungen nachgeladen ({Domains})", string.Join(", ", changed));
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            // Snapshot ist nur eine Ergänzung; der Stream läuft auch ohne ihn.
+            _logger.LogDebug(ex, "Change-Feed-Snapshot fehlgeschlagen");
+        }
     }
 
     private void SetConnected(bool value)
