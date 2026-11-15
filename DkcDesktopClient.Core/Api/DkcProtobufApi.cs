@@ -230,6 +230,8 @@ public sealed class DkcProtobufApi : IDkcProtobufApi
         => Send<ChangeFeedSnapshotResponse>(Protocol.Action.ChangeFeedSnapshot, null, ct);
     public Task<NotificationsResponse> GetNotificationsAsync(CancellationToken ct = default)
         => Send<NotificationsResponse>(Protocol.Action.Notifications, null, ct);
+    public Task<NotificationsResponse> GetNotificationsAsync(NotificationsRequest request, CancellationToken ct = default)
+        => Send<NotificationsResponse>(Protocol.Action.Notifications, request, ct);
     public Task<NotificationCountResponse> GetNotificationCountAsync(CancellationToken ct = default)
         => Send<NotificationCountResponse>(Protocol.Action.NotificationCount, null, ct);
     public Task<Ack> MarkNotificationReadAsync(NotificationMarkReadRequest request, CancellationToken ct = default)

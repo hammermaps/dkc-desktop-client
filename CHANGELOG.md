@@ -67,6 +67,9 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
   (`BackgroundRefreshService`) liest Klima über Protobuf.
 
 ### Fix
+- Benachrichtigungen: Ohne „Nur ungelesene“ zeigt die Ansicht jetzt den Verlauf inklusive gelesener
+  Einträge (`NotificationsRequest.include_read`); vorher lieferte der Server nur ungelesene und der
+  Schalter hatte keine Wirkung. Das Polling fragt weiterhin nur ungelesene ab.
 - NEA-Betriebsstunden mit Zehnteln bearbeiten (`runtime_hours_exact`); vorher konnte das Formular
   nur ganze Stunden und der Server hätte gerundet gespeichert.
 - NEA-Prüfungen und Dashboard luden nicht: Betriebsstunden kommen als Dezimalzahl, `cabinet_id`

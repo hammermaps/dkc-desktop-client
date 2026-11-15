@@ -129,6 +129,8 @@ public interface IDkcProtobufApi
 
     // ── Benachrichtigungen ──────────────────────────────────────────────────
     Task<NotificationsResponse> GetNotificationsAsync(CancellationToken ct = default);
+    /// <summary>Mit Optionen, z. B. include_read für den Verlauf inklusive gelesener Einträge.</summary>
+    Task<NotificationsResponse> GetNotificationsAsync(NotificationsRequest request, CancellationToken ct = default);
     Task<NotificationCountResponse> GetNotificationCountAsync(CancellationToken ct = default);
     Task<Ack> MarkNotificationReadAsync(NotificationMarkReadRequest request, CancellationToken ct = default);
 

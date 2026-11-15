@@ -11,9 +11,16 @@ namespace DkcDesktopClient.Core.Api;
 /// </summary>
 public static class NotificationsSource
 {
-    public static async Task<NotificationsResponse> GetAsync(DkcApiFactory factory, string? token, CancellationToken ct = default)
+    /// <param name="includeRead">
+    /// false (Standard, Polling): nur ungelesene, höchstens 10 – wie das Web-Dropdown.
+    /// true: Verlauf inklusive gelesener, höchstens 50 – wie die Web-Seite „Benachrichtigungen“.
+    /// </param>
+    public static async Task<NotificationsResponse> GetAsync(DkcApiFactory factory, string? token, CancellationToken ct = default, bool includeRead = false)
     {
-        var r = await new DkcProtobufApi(factory.CreateProtobuf(token)).GetNotificationsAsync(ct).ConfigureAwait(false);
+        var api = new DkcProtobufApi(factory.CreateProtobuf(token));
+        var r = includeRead
+            ? await api.GetNotificationsAsync(new Protocol.NotificationsRequest { IncludeRead = true }, ct).ConfigureAwait(false)
+            : await api.GetNotificationsAsync(ct).ConfigureAwait(false);
         return Map(r);
     }
 
