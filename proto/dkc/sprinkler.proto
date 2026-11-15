@@ -84,8 +84,7 @@ message SprinklerInspectionDetail {
     string corrective_actions = 12;
     string notes              = 13;
     string created_at         = 14;
-    // Free-form JSON checklist payload (server stores JSON, flaches Objekt {step_id: wert}).
-    string checklist_json     = 15;
+    reserved 15; reserved "checklist_json"; // rohes checklist_data – ersetzt durch checklist_steps
     // Prüfpunkte der Vorlage mit gespeicherten Werten; leer, wenn keine aktive Vorlage passt.
     repeated PruefungChecklistStep checklist_steps = 16;
 }

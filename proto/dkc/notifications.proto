@@ -5,7 +5,7 @@ package dkc.api.v1;
 
 option csharp_namespace = "DkcDesktopClient.Core.Protocol";
 
-// NOTIFICATIONS-Anfrage. Leer (wie ältere Clients) = nur ungelesene, höchstens 10 – wie das
+// NOTIFICATIONS-Anfrage. Ohne include_read nur ungelesene, höchstens 10 – wie das
 // Benachrichtigungs-Dropdown im Web. "read" entspricht browser_notifications.sent.
 message NotificationsRequest {
     bool  include_read = 1; // auch gelesene, neueste zuerst (wie die Web-Seite „Benachrichtigungen“)

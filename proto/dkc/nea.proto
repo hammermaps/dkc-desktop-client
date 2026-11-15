@@ -67,11 +67,11 @@ message NeaInspection {
     string inspector_name  = 6;
     string status          = 7;
     string overall_result  = 8;
-    int32  runtime_hours   = 9;
+    reserved 9;                     // früher int32 runtime_hours (gerundet)
     string notes           = 10;
     string created_at      = 11;
-    // Betriebsstunden mit Zehnteln (Spalte decimal(10,1)); runtime_hours ist gerundet.
-    double runtime_hours_exact = 12;
+    double runtime_hours   = 12;    // Betriebsstunden mit Zehnteln (Spalte decimal(10,1))
+    reserved "runtime_hours_exact";
 }
 
 message NeaInspectionsResponse {
@@ -92,17 +92,17 @@ message NeaInspectionDetail {
     string inspector_name      = 7;
     string status              = 8;
     string overall_result      = 9;
-    int32  runtime_hours       = 10;
-    int32  runtime_hours_after = 11;
+    reserved 10, 11;                    // früher int32 runtime_hours/runtime_hours_after (gerundet)
     string defects_found       = 12;
     string corrective_actions  = 13;
     string notes               = 14;
     string created_at          = 15;
     // Free-form JSON for checklist payload (server stores JSON).
     string checklist_json      = 16;
-    // Betriebsstunden mit Zehnteln; runtime_hours/runtime_hours_after sind gerundet.
-    double runtime_hours_exact       = 17;
-    double runtime_hours_after_exact = 18;
+    // Betriebsstunden mit Zehnteln (Spalten decimal(10,1)).
+    double runtime_hours       = 17;
+    double runtime_hours_after = 18;
+    reserved "runtime_hours_exact", "runtime_hours_after_exact";
 }
 
 message NeaInspectionDetailResponse { NeaInspectionDetail inspection = 1; }
@@ -114,12 +114,13 @@ message NeaInspectionSaveRequest {
     string inspection_date    = 4;
     string status             = 5;
     string overall_result     = 6;
-    int32  runtime_hours      = 7;
+    reserved 7;                        // früher int32 runtime_hours (gerundet)
     string notes              = 8;
     string defects_found      = 9;
     string corrective_actions = 10;
-    // > 0: Betriebsstunden mit Zehnteln, hat Vorrang vor runtime_hours (das sonst abgerundet würde).
-    double runtime_hours_exact = 11;
+    // Betriebsstunden mit Zehnteln; 0 = keine Angabe (beim Bearbeiten: unverändert).
+    double runtime_hours      = 11;
+    reserved "runtime_hours_exact";
 }
 
 message NeaInspectionCreateResponse { int32 id = 1; }

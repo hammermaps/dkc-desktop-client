@@ -12,7 +12,7 @@ namespace DkcDesktopClient.Core.Api;
 public static class NotificationsSource
 {
     /// <param name="includeRead">
-    /// false (Standard, Polling): nur ungelesene, höchstens 10 – wie das Web-Dropdown.
+    /// false (Polling): nur ungelesene, höchstens 10 – wie das Web-Dropdown.
     /// true: Verlauf inklusive gelesener, höchstens 50 – wie die Web-Seite „Benachrichtigungen“.
     /// </param>
     public static async Task<NotificationsResponse> GetAsync(DkcApiFactory factory, string? token, CancellationToken ct = default, bool includeRead = false)

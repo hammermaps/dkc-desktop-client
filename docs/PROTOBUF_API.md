@@ -313,7 +313,10 @@ The desktop client maps these 1:1 to `DkcProtobufApiException`.
 - New `Action` values may be added; clients must tolerate unknown
   actions/enum values gracefully (proto3 zero default).
 - Breaking changes require a new package (`dkc.api.v2`) and a parallel
-  endpoint period during migration.
+  endpoint period during migration – **once the client is distributed.**
+  Until then (no client in production, as of 2026-11-15) fields may be
+  removed or retyped directly; server and client change together, no
+  compatibility shadow fields. Field numbers are still never reused.
 
 ---
 

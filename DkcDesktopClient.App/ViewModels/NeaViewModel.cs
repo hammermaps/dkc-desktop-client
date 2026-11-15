@@ -89,13 +89,9 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
     [ObservableProperty] private string _formInspectionDate = string.Empty;
     [ObservableProperty] private string _formInspectionStatus = "open";
     [ObservableProperty] private string _formInspectionResult = "ok";
-    /// <summary>Betriebsstunden mit Zehnteln (Server: decimal(10,1), Protobuf: runtime_hours_exact).</summary>
+    /// <summary>Betriebsstunden mit Zehnteln (Server: decimal(10,1), Protobuf: double runtime_hours).</summary>
     [ObservableProperty] private decimal? _formRuntimeHours;
-    /// <summary>
-    /// Ausgangswert beim Bearbeiten: unverändert wird 0 (= nicht ändern) gesendet, damit ein Server ohne
-    /// runtime_hours_exact den Wert nicht über das gerundete runtime_hours verändert.
-    /// </summary>
-    private decimal? _originalRuntimeHours;
+
     [ObservableProperty] private string _formInspectionNotes = string.Empty;
     [ObservableProperty] private string _formDefectsFound = string.Empty;
     [ObservableProperty] private string _formCorrectiveActions = string.Empty;
@@ -403,7 +399,6 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
         FormInspectionStatus = "open";
         FormInspectionResult = "ok";
         FormRuntimeHours = null;
-        _originalRuntimeHours = null;
         FormInspectionNotes = string.Empty;
         FormDefectsFound = string.Empty;
         FormCorrectiveActions = string.Empty;
@@ -422,7 +417,6 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
         FormInspectionStatus = SelectedInspection.Status;
         FormInspectionResult = SelectedInspection.OverallResult;
         FormRuntimeHours = SelectedInspection.RuntimeHours;
-        _originalRuntimeHours = FormRuntimeHours;
         FormInspectionNotes = SelectedInspection.Notes ?? string.Empty;
         FormDefectsFound = string.Empty;
         FormCorrectiveActions = string.Empty;
@@ -450,7 +444,6 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
         InspectionFormError = null;
         try
         {
-            var runtimeUnchanged = IsEditingInspection && FormRuntimeHours == _originalRuntimeHours;
             var req = new ProtoNeaInspectionSaveRequest
             {
                 Id = IsEditingInspection && _editingInspectionId.HasValue ? _editingInspectionId.Value : 0,
@@ -459,8 +452,7 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
                 InspectionDate = FormInspectionDate,
                 Status = FormInspectionStatus,
                 OverallResult = FormInspectionResult,
-                RuntimeHours = runtimeUnchanged ? 0 : (int)Math.Round(FormRuntimeHours ?? 0),
-                RuntimeHoursExact = runtimeUnchanged ? 0 : (double)(FormRuntimeHours ?? 0),
+                RuntimeHours = (double)(FormRuntimeHours ?? 0),
                 Notes = FormInspectionNotes,
                 DefectsFound = FormDefectsFound,
                 CorrectiveActions = FormCorrectiveActions,
