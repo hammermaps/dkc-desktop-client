@@ -265,6 +265,34 @@ public class ViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task Building_ShowsPreloadedListImmediately_AndKeepsItWhenServerFails()
+    {
+        // Vorgeladener Stand (Hintergrunddienst), danach ist der Server nicht erreichbar.
+        var brs = CreateBrs();
+        brs.StoreLoaded(CacheKeys.BuildingList,
+            new BuildingListResponse(true, 1, new List<Building> { new(1, "Haus A", null, null, true, 1), new(2, "Haus B", null, null, true, 1) }, null),
+            TimeSpan.FromMinutes(10));
+        var vm = new BuildingViewModel(_factory, _authService, brs);
+        _tokenStore.SaveServerUrl("http://127.0.0.1:1"); // geschlossener Port
+
+        await vm.LoadBuildingsAsync();
+
+        Assert.Equal(new[] { "Haus A", "Haus B" }, vm.Buildings.Select(b => b.Name));
+        Assert.Equal(2, vm.StatTotalBuildings);
+        Assert.NotNull(vm.ErrorMessage); // Fehler wird trotzdem gemeldet
+    }
+
+    [Fact]
+    public void Cache_TryPeek_ReturnsExpiredValueButNotWrongType()
+    {
+        _cache.Set("k", new BuildingListResponse(true, null, null, null), TimeSpan.FromMilliseconds(-1));
+        Assert.False(_cache.IsValid("k"));
+        Assert.True(_cache.TryPeek<BuildingListResponse>("k", out var v));
+        Assert.True(v!.Success);
+        Assert.False(_cache.TryPeek<NeaSystemsResponse>("k", out _));
+    }
+
+    [Fact]
     public void Building_IsBuildingFormVisible_FalseInitially()
     {
         var vm = CreateBuilding();

@@ -83,6 +83,22 @@ public class BackgroundRefreshService : BackgroundService
         DataRefreshed?.Invoke(this, cacheKey);
     }
 
+    /// <summary>
+    /// Zuletzt vorgeladener oder von einer Ansicht geladener Wert (auch abgelaufen). Ansichten zeigen
+    /// ihn beim Öffnen sofort an und laden dann frisch – statt mit leerer Liste auf den Server zu warten.
+    /// </summary>
+    public bool TryGetCached<T>(string cacheKey, out T? value) => _cache.TryPeek(cacheKey, out value);
+
+    /// <summary>
+    /// Nach dem Laden in einer Ansicht: Ergebnis in den Cache legen (nächstes Öffnen und Dashboard
+    /// profitieren) und die nächste Hintergrundaktualisierung aufschieben.
+    /// </summary>
+    public void StoreLoaded<T>(string cacheKey, T value, TimeSpan ttl)
+    {
+        _cache.Set(cacheKey, value, ttl);
+        NotifyUserActivity(cacheKey);
+    }
+
     public void NotifyUserActivity(string cacheKey)
     {
         _lastLoaded[cacheKey] = DateTime.UtcNow;

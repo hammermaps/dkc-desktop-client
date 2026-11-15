@@ -120,15 +120,19 @@ public class LiveClientTests
     }
 
     /// <summary>Öffnet einen Navigationspunkt und wartet, bis die Ansicht geladen hat.</summary>
-    private static async Task<(string? Error, int Items, long Ms)> OpenAsync(RunningApp app, NavItem item)
+    private static async Task<(string? Error, int Items, long Ms, long FirstVisibleMs)> OpenAsync(RunningApp app, NavItem item)
     {
         var sw = Stopwatch.StartNew();
         app.Vm.SelectedNavItem = item;
+        // Zeit bis die ersten Einträge sichtbar sind (aus dem Cache sofort, sonst nach dem Laden)
+        Dispatcher.UIThread.RunJobs();
+        await WaitUntil(() => Items(item.ViewModel) > 0 || Prop(item.ViewModel, "IsLoading") is not true, TimeSpan.FromSeconds(30));
+        var firstVisible = Items(item.ViewModel) > 0 ? sw.ElapsedMilliseconds : -1;
         await Task.Delay(150);
         await WaitUntil(() => Prop(item.ViewModel, "IsLoading") is not true, TimeSpan.FromSeconds(30));
         await Task.Delay(300); // nachgelagerte Ladevorgänge (Details, zweite Liste)
         await WaitUntil(() => Prop(item.ViewModel, "IsLoading") is not true, TimeSpan.FromSeconds(30));
-        return (Prop(item.ViewModel, "ErrorMessage") as string, Items(item.ViewModel), sw.ElapsedMilliseconds);
+        return (Prop(item.ViewModel, "ErrorMessage") as string, Items(item.ViewModel), sw.ElapsedMilliseconds, firstVisible);
     }
 
     [AvaloniaFact]
@@ -174,8 +178,8 @@ public class LiveClientTests
             // ── 3. Jede Ansicht öffnen und neu laden ────────────────────────────
             foreach (var item in app.Vm.NavItems.ToList())
             {
-                var (error, items, ms) = await OpenAsync(app, item);
-                Log($"Ansicht {item.Title,-20} {ms,6} ms, {items,5} Einträge{(error != null ? ", FEHLER: " + error : "")}");
+                var (error, items, ms, first) = await OpenAsync(app, item);
+                Log($"Ansicht {item.Title,-20} erste Einträge {(first < 0 ? "  -" : first + " ms"),8}, fertig {ms,5} ms, {items,5} Einträge{(error != null ? ", FEHLER: " + error : "")}");
                 if (error != null) problems.Add($"{item.Title}: {error}");
                 Screenshot(app.Window, "10_" + item.Title.ToLowerInvariant());
 

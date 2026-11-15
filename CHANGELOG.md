@@ -8,6 +8,10 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
 ## [Unreleased]
 
 ### Neu
+- Sofortanzeige aus dem Vorladen: NEA-Anlagen, NEA-Prüfungen (ungefiltert), Gebäude und
+  WLS-Gebäude zeigen beim ersten Öffnen den vom Hintergrunddienst geladenen Stand und laden
+  parallel frisch; selbst geladene Ergebnisse landen im Cache (`StoreLoaded`). Klima,
+  Mängelmeldungen und Schlüssel laden weiter direkt (andere Datentypen bzw. Filter).
 - Wartungsmodus des Servers: Hinweisleiste (orange = Zugriff als zugelassener Benutzer, rot =
   gesperrt) aus den Headern `X-DKC-Maintenance*`; gesperrte Benutzer bleiben angemeldet, Ansichten
   melden „Wartungsmodus – …“ statt eines HTTP-Fehlers. Nach dem Ende werden Rechte, Navigation

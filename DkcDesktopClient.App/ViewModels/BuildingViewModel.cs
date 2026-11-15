@@ -135,6 +135,14 @@ public partial class BuildingViewModel : ViewModelBase, INavigationTarget
         if (!silent)
             ErrorMessage = null;
         var previouslySelectedId = silent ? SelectedBuilding?.Id : null;
+        // Sofortanzeige: vorgeladener Stand (Hintergrunddienst/letztes Öffnen), danach frisch laden.
+        if (!silent && Buildings.Count == 0
+            && _backgroundRefreshService.TryGetCached<BuildingListResponse>(CacheKeys.BuildingList, out var cached)
+            && cached is { Success: true, Buildings: { } cachedItems })
+        {
+            foreach (var b in cachedItems) Buildings.Add(b);
+            StatTotalBuildings = Buildings.Count;
+        }
         try
         {
             var api = _apiFactory.Create(_authService.CurrentToken);
@@ -148,7 +156,7 @@ public partial class BuildingViewModel : ViewModelBase, INavigationTarget
                 StatTotalBuildings = Buildings.Count;
                 if (previouslySelectedId != null)
                     SelectedBuilding = Buildings.FirstOrDefault(b => b.Id == previouslySelectedId);
-                _backgroundRefreshService.NotifyUserActivity(CacheKeys.BuildingList);
+                _backgroundRefreshService.StoreLoaded(CacheKeys.BuildingList, result, CacheTtl.BuildingList);
             }
             else if (!silent)
             {

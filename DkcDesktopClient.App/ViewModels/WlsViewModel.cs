@@ -106,6 +106,13 @@ public partial class WlsViewModel : ViewModelBase, INavigationTarget
         if (!silent)
             ErrorMessage = null;
         var previouslySelectedId = silent ? SelectedBuilding?.Id : null;
+        // Sofortanzeige: vorgeladener Stand (Hintergrunddienst/letztes Öffnen), danach frisch laden.
+        if (!silent && Buildings.Count == 0
+            && _backgroundRefreshService.TryGetCached<WlsBuildingListResponse>(CacheKeys.WlsBuildings, out var cached)
+            && cached is { Success: true, Data: { } cachedItems })
+        {
+            foreach (var b in cachedItems) Buildings.Add(b);
+        }
         try
         {
             var api    = _apiFactory.Create(_authService.CurrentToken);
@@ -118,7 +125,7 @@ public partial class WlsViewModel : ViewModelBase, INavigationTarget
                         Buildings.Add(b);
                 if (previouslySelectedId != null)
                     SelectedBuilding = Buildings.FirstOrDefault(b => b.Id == previouslySelectedId);
-                _backgroundRefreshService.NotifyUserActivity(CacheKeys.WlsBuildings);
+                _backgroundRefreshService.StoreLoaded(CacheKeys.WlsBuildings, result, CacheTtl.BuildingList);
             }
             else if (!silent)
             {

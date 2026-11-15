@@ -116,6 +116,26 @@ public class DataCacheService
         _logger.LogDebug("Cache fully invalidated");
     }
 
+    /// <summary>
+    /// Letzter bekannter Wert, auch wenn abgelaufen (stale-while-revalidate): Ansichten zeigen ihn
+    /// sofort an und laden parallel frisch. Kein Netzwerkzugriff; false bei fehlendem Eintrag oder
+    /// anderem Typ.
+    /// </summary>
+    public bool TryPeek<T>(string key, out T? value)
+    {
+        if (_cache.TryGetValue(key, out var e) && e.Value is T typed)
+        {
+            value = typed;
+            return true;
+        }
+        value = default;
+        return false;
+    }
+
+    /// <summary>Legt einen von einer Ansicht geladenen Wert ab (gleiche Daten wie der Hintergrunddienst).</summary>
+    public void Set<T>(string key, T value, TimeSpan ttl)
+        => _cache[key] = new CacheEntry(value, DateTime.UtcNow + ttl);
+
     /// <summary>Returns true if a valid (non-expired) entry exists for <paramref name="key"/>.</summary>
     public bool IsValid(string key)
         => _cache.TryGetValue(key, out var e) && DateTime.UtcNow < e.ExpiresAt;

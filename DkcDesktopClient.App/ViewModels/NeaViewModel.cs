@@ -157,6 +157,13 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
         if (!silent)
             ErrorMessage = null;
         var previouslySelectedId = silent ? SelectedSystem?.Id : null;
+        // Sofortanzeige: vorgeladener Stand (Hintergrunddienst/letztes Öffnen), danach frisch laden.
+        if (!silent && Systems.Count == 0
+            && _backgroundRefreshService.TryGetCached<NeaSystemsResponse>(CacheKeys.NeaSystems, out var cached)
+            && cached is { Success: true, Systems: { } cachedItems })
+        {
+            foreach (var s in cachedItems) Systems.Add(s);
+        }
         try
         {
             var api = _apiFactory.Create(_authService.CurrentToken);
@@ -169,7 +176,7 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
                         Systems.Add(s);
                 if (previouslySelectedId != null)
                     SelectedSystem = Systems.FirstOrDefault(s => s.Id == previouslySelectedId);
-                _backgroundRefreshService.NotifyUserActivity(CacheKeys.NeaSystems);
+                _backgroundRefreshService.StoreLoaded(CacheKeys.NeaSystems, result, CacheTtl.NeaSystems);
             }
         }
         catch (OperationCanceledException)
@@ -198,6 +205,16 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
             ErrorMessage = null;
         CurrentOffset = 0;
         var previouslySelectedId = silent ? SelectedInspection?.Id : null;
+        // Der Cache hält nur die ungefilterte Liste (wie der Hintergrunddienst sie lädt).
+        var unfiltered = SelectedSystem == null && FilterYear == null && string.IsNullOrEmpty(FilterStatus);
+        // Sofortanzeige: vorgeladener Stand (Hintergrunddienst/letztes Öffnen), danach frisch laden.
+        if (!silent && unfiltered && Inspections.Count == 0
+            && _backgroundRefreshService.TryGetCached<NeaInspectionsResponse>(CacheKeys.NeaInspections, out var cached)
+            && cached is { Success: true, Inspections: { } cachedItems })
+        {
+            foreach (var i in cachedItems.Take(PageSize)) Inspections.Add(i);
+            TotalInspections = cached.Total ?? Inspections.Count;
+        }
         try
         {
             var api = _apiFactory.Create(_authService.CurrentToken);
@@ -217,7 +234,10 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
                         Inspections.Add(i);
                 if (previouslySelectedId != null)
                     SelectedInspection = Inspections.FirstOrDefault(i => i.Id == previouslySelectedId);
-                _backgroundRefreshService.NotifyUserActivity(CacheKeys.NeaInspections);
+                if (unfiltered)
+                    _backgroundRefreshService.StoreLoaded(CacheKeys.NeaInspections, result, CacheTtl.NeaInspections);
+                else
+                    _backgroundRefreshService.NotifyUserActivity(CacheKeys.NeaInspections);
             }
         }
         catch (OperationCanceledException)
