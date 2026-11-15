@@ -317,6 +317,8 @@ The desktop client maps these 1:1 to `DkcProtobufApiException`.
   Until then (no client in production, as of 2026-11-15) fields may be
   removed or retyped directly; server and client change together, no
   compatibility shadow fields. Field numbers are still never reused.
+  This exemption covers only this Protobuf contract – the server's REST/JSON
+  API and its web templates stay backward compatible.
 
 ---
 
