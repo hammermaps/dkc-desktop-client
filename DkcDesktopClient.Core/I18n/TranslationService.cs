@@ -1,6 +1,5 @@
 using System.Text.Json;
 using DkcDesktopClient.Core.Protobuf;
-using DkcDesktopClient.Core.Protocol;
 using DkcDesktopClient.Core.Services;
 using Microsoft.Extensions.Logging;
 
@@ -110,26 +109,26 @@ public sealed class TranslationService
     public async Task<bool> SyncAsync(DkcApiFactory factory, CancellationToken ct = default)
     {
         var language = _translator.Language;
-        var cached = LoadCache(language);
+        var cached   = LoadCache(language);
+        var knownHash = cached is null ? string.Empty : Translator.ComputeHash(cached);
         try
         {
-            using var client = factory.CreateProtobuf();
-            var response = await client.SendAsync<TranslationsResponse>(
-                Protocol.Action.Translations,
-                new TranslationsRequest { Language = language, KnownHash = cached is null ? string.Empty : Translator.ComputeHash(cached) },
-                ct: ct).ConfigureAwait(false);
-            if (response.Unchanged || response.Entries.Count == 0) return false;
+            // Öffentlicher REST-Endpunkt (kein Auth): schlanker HTTP-GET statt Protobuf,
+            // verfügbar vor dem Login und auch im Wartungsmodus.
+            var api      = factory.Create();
+            var response = await api.GetDesktopTranslationsAsync(language, knownHash, ct).ConfigureAwait(false);
+            var data     = response.Data;
+            if (data is null || data.Unchanged || data.Entries is null || data.Entries.Count == 0) return false;
 
-            var entries = new Dictionary<string, string>(response.Entries);
-            SaveCache(response.Language, entries);
-            if (Translator.Normalize(response.Language) == _translator.Language) Activate(_translator.Language);
-            _logger?.LogInformation("Übersetzungen für {Language} aktualisiert ({Count} Einträge)", response.Language, entries.Count);
+            SaveCache(data.Language, data.Entries);
+            if (Translator.Normalize(data.Language) == _translator.Language) Activate(_translator.Language);
+            _logger?.LogInformation("Übersetzungen für {Language} aktualisiert ({Count} Einträge)", data.Language, data.Entries.Count);
             return true;
         }
         catch (OperationCanceledException) { throw; }
         catch (Exception ex)
         {
-            // Älterer Server ohne TRANSLATIONS oder offline: mitgelieferter Stand genügt.
+            // Älterer Server ohne desktop_translations oder offline: mitgelieferter Stand genügt.
             _logger?.LogDebug(ex, "Übersetzungsabgleich nicht möglich");
             return false;
         }

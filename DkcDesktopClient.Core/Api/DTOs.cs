@@ -811,3 +811,17 @@ public record WlsRecordUpdateRequest(
     [property: JsonPropertyName("latitude")] double? Latitude,
     [property: JsonPropertyName("longitude")] double? Longitude,
     [property: JsonPropertyName("location_accuracy")] double? LocationAccuracy);
+
+// ── Desktop-Übersetzungen (public endpoint) ───────────────────────────────────
+
+public record DesktopTranslationsData(
+    [property: JsonPropertyName("language")] string Language,
+    [property: JsonPropertyName("hash")] string Hash,
+    [property: JsonPropertyName("unchanged")] bool Unchanged,
+    [property: JsonPropertyName("entries")] Dictionary<string, string>? Entries,
+    [property: JsonPropertyName("available_languages")] string[]? AvailableLanguages);
+
+public record DesktopTranslationsResponse(
+    [property: JsonPropertyName("success")] bool Success,
+    [property: JsonPropertyName("data")] DesktopTranslationsData? Data,
+    [property: JsonPropertyName("error")] string? Error);

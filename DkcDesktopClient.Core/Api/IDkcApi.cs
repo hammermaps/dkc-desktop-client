@@ -4,6 +4,16 @@ namespace DkcDesktopClient.Core.Api;
 
 public interface IDkcApi
 {
+    // ── Öffentliche Endpunkte (kein Auth) ────────────────────────────────────────
+
+    [Get("/api.php?action=desktop_translations")]
+    Task<DesktopTranslationsResponse> GetDesktopTranslationsAsync(
+        [Query] string lang = "de",
+        [Query] string hash = "",
+        CancellationToken ct = default);
+
+    // ── Auth ──────────────────────────────────────────────────────────────────────
+
     [Post("/api.php?action=auth_login")]
     Task<LoginResponse> LoginAsync([Body] LoginRequest request, CancellationToken ct = default);
 
