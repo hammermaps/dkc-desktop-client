@@ -12,6 +12,22 @@ public static class Labels
     public static readonly IValueConverter ChecklistChoice =
         new FuncValueConverter<string?, string>(v => PruefungValues.ChoiceLabel(v ?? string.Empty));
 
+    /// <summary>Klima-Betriebsart (cooling, heating, …) übersetzt; unbekannte Werte unverändert.</summary>
+    public static readonly IValueConverter KlimaMode =
+        new FuncValueConverter<string?, string>(v => Code("desktop.klima.mode_", v));
+
+    /// <summary>Klima-Lüfterstufe (low, medium_low, …) übersetzt; unbekannte Werte unverändert.</summary>
+    public static readonly IValueConverter KlimaFan =
+        new FuncValueConverter<string?, string>(v => Code("desktop.klima.fan_", v));
+
+    private static string Code(string prefix, string? value)
+    {
+        if (string.IsNullOrEmpty(value)) return string.Empty;
+        var key = prefix + value;
+        var text = Translator.T(key);
+        return text == key ? value : text;
+    }
+
     /// <summary>
     /// Gebundener Wert in einem übersetzten Text: <c>ConverterParameter="desktop.keys.issue_title|name"</c>
     /// setzt den Wert für <c>{name}</c> ein (Ersatz für StringFormat mit festem Text).

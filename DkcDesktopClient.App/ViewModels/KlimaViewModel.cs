@@ -24,7 +24,36 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
     /// </summary>
     private DkcProtobufApi ProtoApi => new(_apiFactory.CreateProtobuf(_authService.CurrentToken));
 
-    private static ProtoKlimaDeviceControlRequest BuildDeviceControlRequest(
+    /// <summary>„Alle AN“: nur einschalten – Betriebsart, Sollwert und Lüfter des Geräts bleiben.</summary>
+    public static ProtoKlimaDeviceControlRequest AllOnRequest(KlimaDeviceStatus s)
+        => BuildDeviceControlRequest(s.Address, true, null, null, null, s.ControllerId);
+
+    /// <summary>
+    /// „Letzten Status“: gespeicherten Zustand zurückschreiben, aber nur Felder, die vom aktuellen
+    /// abweichen. Jeder gesendete Modus/Lüfter setzt serverseitig die Automatik-Flags
+    /// (rmiOperating.mode_auto/fan_speed_auto) neu – ein unverändertes Feld mitzuschicken würde
+    /// z. B. nach „Alle AUS“ die Modus-Automatik eines Geräts abschalten. null = nichts zu tun.
+    /// </summary>
+    public static ProtoKlimaDeviceControlRequest? RestoreRequest(KlimaDeviceStatus saved, KlimaDeviceStatus? current)
+        => ChangeRequest(current, saved.Address, saved.ControllerId, saved.Power, saved.Mode, saved.Setpoint, saved.FanSpeed);
+
+    /// <summary>
+    /// Steuerbefehl mit nur den Feldern, die sich gegenüber <paramref name="current"/> ändern
+    /// (ohne bekannten Zustand: alle). null, wenn nichts zu ändern ist.
+    /// </summary>
+    public static ProtoKlimaDeviceControlRequest? ChangeRequest(
+        KlimaDeviceStatus? current, int address, int controllerId, bool power, string? mode, double? setpoint, string? fanSpeed)
+    {
+        bool? p = current == null || current.Power != power ? power : null;
+        var m = !string.IsNullOrEmpty(mode) && (current == null || current.Mode != mode) ? mode : null;
+        double? s = setpoint.HasValue && (current?.Setpoint is not { } cs || Math.Abs(cs - setpoint.Value) > 0.01) ? setpoint : null;
+        var f = !string.IsNullOrEmpty(fanSpeed) && (current == null || current.FanSpeed != fanSpeed) ? fanSpeed : null;
+        return p == null && m == null && s == null && f == null
+            ? null
+            : BuildDeviceControlRequest(address, p, m, s, f, controllerId);
+    }
+
+    public static ProtoKlimaDeviceControlRequest BuildDeviceControlRequest(
         int address, bool? power, string? mode, double? setpoint, string? fanSpeed, int controllerId = 1)
     {
         var req = new ProtoKlimaDeviceControlRequest
@@ -70,8 +99,9 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
 
     public static IReadOnlyList<string> ModeOptions { get; } =
         new[] { "cooling", "heating", "fan", "auto", "dry" };
+    /// <summary>Namen wie in klima.proto (KlimaCodes::FAN_SPEED); medium_low = M-Net MID2.</summary>
     public static IReadOnlyList<string> FanSpeedOptions { get; } =
-        new[] { "auto", "low", "medium", "high" };
+        new[] { "auto", "low", "medium_low", "medium", "high" };
 
     private CancellationTokenSource? _pollCts;
 
@@ -290,9 +320,11 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
         ControlError = null;
         try
         {
-            var request = BuildDeviceControlRequest(
-                SelectedDeviceStatus.Address, ControlPower, ControlMode, ControlSetpoint, ControlFanSpeed, SelectedDeviceStatus.ControllerId);
-            await ProtoApi.ControlKlimaDeviceAsync(request);
+            // Nur Geändertes senden (siehe RestoreRequest) – der Rest des Geräts bleibt unangetastet.
+            var request = ChangeRequest(SelectedDeviceStatus, SelectedDeviceStatus.Address, SelectedDeviceStatus.ControllerId,
+                ControlPower, ControlMode, ControlSetpoint, ControlFanSpeed);
+            if (request != null)
+                await ProtoApi.ControlKlimaDeviceAsync(request);
             IsControlPanelVisible = false;
             await RefreshStatusAsync();
         }
@@ -372,10 +404,10 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
         GlobalControlResult = null;
         try
         {
-            foreach (var s in DeviceStatuses)
+            // Kopie: Change-Feed-Meldungen laden die Liste während der Schleife neu
+            foreach (var s in DeviceStatuses.ToList())
             {
-                await ProtoApi.ControlKlimaDeviceAsync(
-                    BuildDeviceControlRequest(s.Address, true, ControlMode, ControlSetpoint, ControlFanSpeed, s.ControllerId));
+                await ProtoApi.ControlKlimaDeviceAsync(AllOnRequest(s));
             }
             GlobalControlResult = T("desktop.klima.all_switched_on", ("count", DeviceStatuses.Count));
             await RefreshStatusAsync();
@@ -397,7 +429,8 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
         GlobalControlResult = null;
         try
         {
-            foreach (var s in DeviceStatuses)
+            // Kopie: Change-Feed-Meldungen laden die Liste während der Schleife neu
+            foreach (var s in DeviceStatuses.ToList())
             {
                 await ProtoApi.ControlKlimaDeviceAsync(
                     BuildDeviceControlRequest(s.Address, false, null, null, null, s.ControllerId));
@@ -434,10 +467,14 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
         GlobalControlResult = null;
         try
         {
+            // Aktuellen Zustand holen, damit nur Abweichungen gesendet werden
+            await RefreshStatusAsync();
+            var current = DeviceStatuses.ToList().ToDictionary(d => (d.ControllerId, d.Address));
             foreach (var s in _savedState)
             {
-                await ProtoApi.ControlKlimaDeviceAsync(
-                    BuildDeviceControlRequest(s.Address, s.Power, s.Mode, s.Setpoint, s.FanSpeed, s.ControllerId));
+                var request = RestoreRequest(s, current.GetValueOrDefault((s.ControllerId, s.Address)));
+                if (request != null)
+                    await ProtoApi.ControlKlimaDeviceAsync(request);
             }
             GlobalControlResult = T("desktop.klima.state_restored", ("count", _savedState.Count));
             await RefreshStatusAsync();

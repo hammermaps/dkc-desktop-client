@@ -48,7 +48,13 @@
           <StackPanel Orientation="Horizontal" Spacing="4">
             <TextBlock Text="{i18n:T desktop.common.mode}" VerticalAlignment="Center"/>
             <ComboBox ItemsSource="{x:Static vm:KlimaViewModel.ModeOptions}"
-                      SelectedItem="{Binding ControlMode}" MinWidth="100"/>
+                      SelectedItem="{Binding ControlMode}" MinWidth="100">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="x:String">
+                  <TextBlock Text="{Binding Converter={x:Static i18n:Labels.KlimaMode}}"/>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
           </StackPanel>
           <StackPanel Orientation="Horizontal" Spacing="4">
             <TextBlock Text="{i18n:T desktop.klima.setpoint_c}" VerticalAlignment="Center"/>
@@ -58,7 +64,13 @@
           <StackPanel Orientation="Horizontal" Spacing="4">
             <TextBlock Text="{i18n:T desktop.klima.fan_speed}" VerticalAlignment="Center"/>
             <ComboBox ItemsSource="{x:Static vm:KlimaViewModel.FanSpeedOptions}"
-                      SelectedItem="{Binding ControlFanSpeed}" MinWidth="90"/>
+                      SelectedItem="{Binding ControlFanSpeed}" MinWidth="90">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="x:String">
+                  <TextBlock Text="{Binding Converter={x:Static i18n:Labels.KlimaFan}}"/>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
           </StackPanel>
         </StackPanel>
         <StackPanel Orientation="Horizontal" Spacing="8">
@@ -82,10 +94,10 @@
             <DataGridTextColumn Header="{i18n:T desktop.common.name}" Binding="{Binding Name}" Width="*"/>
             <DataGridCheckBoxColumn Header="{i18n:T desktop.common.online}" Binding="{Binding Online}" Width="Auto"/>
             <DataGridCheckBoxColumn Header="{i18n:T desktop.klima.power}" Binding="{Binding Power}" Width="Auto"/>
-            <DataGridTextColumn Header="{i18n:T desktop.common.mode}" Binding="{Binding Mode}" Width="Auto"/>
+            <DataGridTextColumn Header="{i18n:T desktop.common.mode}" Binding="{Binding Mode, Converter={x:Static i18n:Labels.KlimaMode}}" Width="Auto"/>
             <DataGridTextColumn Header="{i18n:T desktop.klima.setpoint}" Binding="{Binding Setpoint}" Width="Auto"/>
             <DataGridTextColumn Header="{i18n:T desktop.klima.current_c}" Binding="{Binding CurrentTemp}" Width="Auto"/>
-            <DataGridTextColumn Header="{i18n:T desktop.klima.fan}" Binding="{Binding FanSpeed}" Width="Auto"/>
+            <DataGridTextColumn Header="{i18n:T desktop.klima.fan}" Binding="{Binding FanSpeed, Converter={x:Static i18n:Labels.KlimaFan}}" Width="Auto"/>
             <DataGridTextColumn Header="{i18n:T desktop.klima.error}" Binding="{Binding ErrorCode}" Width="Auto"/>
           </DataGrid.Columns>
         </DataGrid>

@@ -41,7 +41,8 @@ public class TranslationTests
                 used.Add(m.Groups[1].Success ? m.Groups[1].Value : m.Groups[2].Value);
 
         Assert.True(used.Count > 400, $"nur {used.Count} Schlüssel gefunden – Suchmuster prüfen");
-        var missing = used.Where(k => !german.ContainsKey(k)).ToList();
+        // Präfixe (z. B. "desktop.klima.mode_" + Wert) prüft Klima_OptionsHaveTranslations
+        var missing = used.Where(k => !k.EndsWith('_') && !german.ContainsKey(k)).ToList();
         Assert.True(missing.Count == 0,
             "Fehlende Schlüssel (in lang/de.json des Servers ergänzen, dann tools/export-desktop-translations.php): "
             + string.Join(", ", missing));
@@ -82,6 +83,16 @@ public class TranslationTests
                 if (Regex.IsMatch(m.Groups[1].Value + m.Groups[2].Value, @"\p{L}{2,}"))
                     found.Add($"{Path.GetFileName(file)}: {m.Value}");
         Assert.True(found.Count == 0, "Feste Texte statt {i18n:T …} bzw. Labels.Format: " + string.Join("; ", found));
+    }
+
+    [Fact]
+    public void Klima_OptionsHaveTranslations()
+    {
+        var german = Translator.LoadEmbedded("de");
+        foreach (var mode in DkcDesktopClient.App.ViewModels.KlimaViewModel.ModeOptions)
+            Assert.True(german.ContainsKey("desktop.klima.mode_" + mode), mode);
+        foreach (var fan in DkcDesktopClient.App.ViewModels.KlimaViewModel.FanSpeedOptions)
+            Assert.True(german.ContainsKey("desktop.klima.fan_" + fan), fan);
     }
 
     [Fact]

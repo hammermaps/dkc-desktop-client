@@ -369,6 +369,75 @@ public class ViewModelTests : IDisposable
         Assert.False(vm.IsLoading);
     }
 
+    private static KlimaDeviceStatus KlimaState(bool power, string? mode, double? setpoint, string? fan)
+        => new(5, "E-03", true, power, mode, setpoint, 21.0, fan, null, 2);
+
+    [Fact]
+    public void Klima_AllOn_OnlySwitchesPower()
+    {
+        // Früher setzte „Alle AN“ zusätzlich Kühlen/22 °C/Auto aus dem Steuerfeld auf jedem Gerät.
+        var req = KlimaViewModel.AllOnRequest(KlimaState(false, "heating", 20, "low"));
+
+        Assert.True(req.PowerSet);
+        Assert.True(req.Power);
+        Assert.Equal(string.Empty, req.Mode);
+        Assert.Equal(string.Empty, req.FanSpeed);
+        Assert.False(req.SetpointSet);
+        Assert.Equal(5, req.Address);
+        Assert.Equal(2, req.ControllerId);
+    }
+
+    [Theory]
+    [InlineData("heating", "medium_low")]
+    [InlineData("auto", "auto")]
+    [InlineData("dry", "high")]
+    public void Klima_Restore_WithoutKnownCurrent_WritesFullState(string mode, string fan)
+    {
+        var req = KlimaViewModel.RestoreRequest(KlimaState(true, mode, 21.5, fan), null)!;
+
+        Assert.True(req.PowerSet && req.Power);
+        Assert.Equal(mode, req.Mode);
+        Assert.Equal(fan, req.FanSpeed);
+        Assert.True(req.SetpointSet);
+        Assert.Equal(21.5, req.Setpoint);
+        // Was der Server liefert, muss die Steuerung auch annehmen (KlimaCodes im Server)
+        Assert.Contains(mode, KlimaViewModel.ModeOptions);
+        Assert.Contains(fan, KlimaViewModel.FanSpeedOptions);
+    }
+
+    [Fact]
+    public void Klima_Restore_AfterAllOff_OnlySwitchesPowerBackOn()
+    {
+        // Modus/Lüfter mitzuschicken würde serverseitig mode_auto/fan_speed_auto zurücksetzen.
+        var saved = KlimaState(true, "fan", 22, "high");
+        var req = KlimaViewModel.RestoreRequest(saved, saved with { Power = false })!;
+
+        Assert.True(req.PowerSet && req.Power);
+        Assert.Equal(string.Empty, req.Mode);
+        Assert.Equal(string.Empty, req.FanSpeed);
+        Assert.False(req.SetpointSet);
+    }
+
+    [Fact]
+    public void Klima_Restore_UnchangedDevice_SendsNothing()
+    {
+        var saved = KlimaState(false, "auto", 21, "high");
+        Assert.Null(KlimaViewModel.RestoreRequest(saved, saved));
+    }
+
+    [Fact]
+    public void Klima_ChangeRequest_SendsOnlyChangedSetpoint()
+    {
+        var current = KlimaState(true, "heating", 20, "low");
+        var req = KlimaViewModel.ChangeRequest(current, 5, 2, true, "heating", 21, "low")!;
+
+        Assert.False(req.PowerSet);
+        Assert.Equal(string.Empty, req.Mode);
+        Assert.Equal(string.Empty, req.FanSpeed);
+        Assert.True(req.SetpointSet);
+        Assert.Equal(21, req.Setpoint);
+    }
+
     [Fact]
     public void Klima_ModeOptions_ContainsExpectedValues()
     {

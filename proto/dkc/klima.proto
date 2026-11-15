@@ -19,6 +19,10 @@ message KlimaDevicesResponse {
     repeated KlimaDevice devices = 1;
 }
 
+// Betriebsart (operating_mode/mode): fan | cooling | heating | dry | auto
+// Lüfterstufe (fan_speed):          low | medium_low | medium | high | auto
+// Status-Antworten und Steuerbefehle verwenden dieselben Namen, ein gelesener Zustand lässt sich
+// unverändert zurückschreiben. "" = unbekannt (Status) bzw. nicht ändern (Steuerung).
 message KlimaStatusDevice {
     int32  address        = 1;
     string name           = 2;
