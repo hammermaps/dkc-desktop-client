@@ -7,6 +7,12 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
 
 ## [Unreleased]
 
+### Sicherheit
+- Avalonia 12.0.0 → 12.0.5 (DataGrid 12.0.1): bringt `Tmds.DBus.Protocol` 0.92.0 statt 0.90.3 mit
+  (GHSA-xrw6-gwf8-vvr9, hoch: gefälschte D-Bus-Signale, Ressourcenerschöpfung). Im Testprojekt
+  `System.Net.Http` 4.3.4 und `System.Text.RegularExpressions` 4.3.1 festgesetzt (transitiv 4.3.0).
+  `dotnet list package --vulnerable` ohne Befund.
+
 ### Neu
 - Sofortanzeige aus dem Vorladen: NEA-Anlagen, NEA-Prüfungen (ungefiltert), Gebäude und
   WLS-Gebäude zeigen beim ersten Öffnen den vom Hintergrunddienst geladenen Stand und laden
