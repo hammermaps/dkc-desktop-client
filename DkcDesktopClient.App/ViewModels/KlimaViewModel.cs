@@ -7,6 +7,7 @@ using DkcDesktopClient.Core.Protobuf;
 using DkcDesktopClient.Core.Services;
 using ProtoKlimaDeviceControlRequest = DkcDesktopClient.Core.Protocol.KlimaDeviceControlRequest;
 using ProtoKlimaGroupControlRequest = DkcDesktopClient.Core.Protocol.KlimaGroupControlRequest;
+using static DkcDesktopClient.Core.I18n.Translator;
 
 namespace DkcDesktopClient.App.ViewModels;
 
@@ -133,7 +134,7 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
                     .OrderBy(g => g.Key.ControllerId).ThenBy(g => g.Key.GroupId);
                 Groups.Clear();
                 foreach (var g in grouped)
-                    Groups.Add(new KlimaGroup(g.Key.GroupId, $"Gruppe {g.Key.GroupId}", g.Count(), g.Key.ControllerId));
+                    Groups.Add(new KlimaGroup(g.Key.GroupId, T("desktop.common.group_n", ("id", g.Key.GroupId)), g.Count(), g.Key.ControllerId));
             }
             else if (groupsResult.Groups != null && groupsResult.Groups.Count > 0)
             {
@@ -150,12 +151,12 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
                     .OrderBy(g => g.Key.ControllerId).ThenBy(g => g.Key.GroupId);
                 Groups.Clear();
                 foreach (var g in grouped)
-                    Groups.Add(new KlimaGroup(g.Key.GroupId, $"Gruppe {g.Key.GroupId}", g.Count(), g.Key.ControllerId));
+                    Groups.Add(new KlimaGroup(g.Key.GroupId, T("desktop.common.group_n", ("id", g.Key.GroupId)), g.Count(), g.Key.ControllerId));
             }
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error loading climate data: {ex.GetBaseException().Message}";
+            ErrorMessage = T("desktop.klima.load_failed", ("message", ex.GetBaseException().Message));
         }
         finally
         {
@@ -184,7 +185,7 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Status refresh error: {ex.Message}";
+            ErrorMessage = T("desktop.klima.status_failed", ("message", ex.Message));
         }
     }
 
@@ -237,7 +238,7 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
                 }
                 catch (Exception ex)
                 {
-                    ErrorMessage = $"Polling error: {ex.Message}";
+                    ErrorMessage = T("desktop.klima.polling_failed", ("message", ex.Message));
                 }
                 await Task.Delay(TimeSpan.FromSeconds(10), ct);
             }
@@ -297,7 +298,7 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            ControlError = $"Error: {ex.Message}";
+            ControlError = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -329,7 +330,7 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            ControlError = $"Error: {ex.Message}";
+            ControlError = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -376,12 +377,12 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
                 await ProtoApi.ControlKlimaDeviceAsync(
                     BuildDeviceControlRequest(s.Address, true, ControlMode, ControlSetpoint, ControlFanSpeed, s.ControllerId));
             }
-            GlobalControlResult = $"Alle {DeviceStatuses.Count} Geräte eingeschaltet.";
+            GlobalControlResult = T("desktop.klima.all_switched_on", ("count", DeviceStatuses.Count));
             await RefreshStatusAsync();
         }
         catch (Exception ex)
         {
-            GlobalControlResult = $"Fehler: {ex.Message}";
+            GlobalControlResult = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -401,12 +402,12 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
                 await ProtoApi.ControlKlimaDeviceAsync(
                     BuildDeviceControlRequest(s.Address, false, null, null, null, s.ControllerId));
             }
-            GlobalControlResult = $"Alle {DeviceStatuses.Count} Geräte ausgeschaltet.";
+            GlobalControlResult = T("desktop.klima.all_switched_off", ("count", DeviceStatuses.Count));
             await RefreshStatusAsync();
         }
         catch (Exception ex)
         {
-            GlobalControlResult = $"Fehler: {ex.Message}";
+            GlobalControlResult = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -418,7 +419,7 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
     public void SaveState()
     {
         _savedState = new List<KlimaDeviceStatus>(DeviceStatuses);
-        GlobalControlResult = $"Status gespeichert ({_savedState.Count} Geräte).";
+        GlobalControlResult = T("desktop.klima.state_saved", ("count", _savedState.Count));
     }
 
     [RelayCommand]
@@ -426,7 +427,7 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
     {
         if (_savedState == null || _savedState.Count == 0)
         {
-            GlobalControlResult = "Kein gespeicherter Status vorhanden.";
+            GlobalControlResult = T("desktop.klima.no_saved_state");
             return;
         }
         IsSendingControl = true;
@@ -438,12 +439,12 @@ public partial class KlimaViewModel : ViewModelBase, INavigationTarget
                 await ProtoApi.ControlKlimaDeviceAsync(
                     BuildDeviceControlRequest(s.Address, s.Power, s.Mode, s.Setpoint, s.FanSpeed, s.ControllerId));
             }
-            GlobalControlResult = $"Letzter Status auf {_savedState.Count} Geräten wiederhergestellt.";
+            GlobalControlResult = T("desktop.klima.state_restored", ("count", _savedState.Count));
             await RefreshStatusAsync();
         }
         catch (Exception ex)
         {
-            GlobalControlResult = $"Fehler: {ex.Message}";
+            GlobalControlResult = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {

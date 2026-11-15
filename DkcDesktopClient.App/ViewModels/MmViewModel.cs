@@ -14,6 +14,7 @@ using ProtoMmUpdateStatusRequest = DkcDesktopClient.Core.Protocol.MmUpdateStatus
 using ProtoMmAssignContractorRequest = DkcDesktopClient.Core.Protocol.MmAssignContractorRequest;
 using Proto = DkcDesktopClient.Core.Protocol;
 using ProtoMmDeleteRequest = DkcDesktopClient.Core.Protocol.MmDeleteRequest;
+using static DkcDesktopClient.Core.I18n.Translator;
 
 namespace DkcDesktopClient.App.ViewModels;
 
@@ -143,11 +144,11 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
     {
         var picked = await _filePicker.PickOpenFilesAsync(new[]
         {
-            ("Bilder", "*.jpg;*.jpeg;*.png;*.webp;*.gif;*.JPG;*.JPEG;*.PNG"),
+            (T("desktop.file.images"), "*.jpg;*.jpeg;*.png;*.webp;*.gif;*.JPG;*.JPEG;*.PNG"),
         });
         foreach (var path in picked)
         {
-            if (FormPhotos.Count >= MaxPhotos) { FormError = $"Maximal {MaxPhotos} Fotos."; break; }
+            if (FormPhotos.Count >= MaxPhotos) { FormError = T("desktop.mm.max_photos", ("count", MaxPhotos)); break; }
             if (!FormPhotos.Contains(path)) FormPhotos.Add(path);
         }
     }
@@ -189,7 +190,7 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            FormError = $"Auswahllisten konnten nicht geladen werden: {ex.Message}";
+            FormError = T("desktop.mm.options_failed", ("message", ex.Message));
         }
     }
 
@@ -211,14 +212,14 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            FormError = $"Wohnungsliste konnte nicht geladen werden: {ex.Message}";
+            FormError = T("desktop.mm.apartments_failed", ("message", ex.Message));
         }
     }
 
     /// <summary>Übernimmt bekannte Mieterdaten (Name, Rufnummern, E-Mail) wie im Web-Formular.</summary>
     private async Task LookupTenantAsync(Proto.MmWhgItem unit)
     {
-        TenantHint = unit.Sonder ? "Sonderwohnung: Melder und Telefonnummer sind nicht erforderlich." : null;
+        TenantHint = unit.Sonder ? T("desktop.mm.special_apartment") : null;
         try
         {
             var tenant = await ProtoApi.LookupMmTenantAsync(new Proto.MmTenantLookupRequest { Whg = unit.Value });
@@ -229,7 +230,7 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            TenantHint = $"Mieterdaten konnten nicht geladen werden: {ex.Message}";
+            TenantHint = T("desktop.mm.tenant_failed", ("message", ex.Message));
         }
     }
 
@@ -241,7 +242,7 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
     public static IReadOnlyList<MmStatusOption> StatusFilterOptions { get; } =
         new[]
         {
-            new MmStatusOption(null, "— Alle —"),
+            new MmStatusOption(null, T("desktop.common.all_option")),
             new MmStatusOption(0,    MmStatusHelper.StatusLabel(0)),
             new MmStatusOption(1,    MmStatusHelper.StatusLabel(1)),
             new MmStatusOption(2,    MmStatusHelper.StatusLabel(2)),
@@ -266,7 +267,7 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
     public static IReadOnlyList<MmFilterOption> DringlichkeitFilterOptions { get; } =
         new[]
         {
-            new MmFilterOption("", "— Alle —"),
+            new MmFilterOption("", T("desktop.common.all_option")),
             new MmFilterOption("niedrig", "🔵 Niedrig"),
             new MmFilterOption("normal", "⚪ Normal"),
             new MmFilterOption("hoch", "🔴 Hoch"),
@@ -276,9 +277,9 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
     public static IReadOnlyList<MmSortOption> SortOptions { get; } =
         new[]
         {
-            new MmSortOption("Neueste zuerst", "created_at", false),
-            new MmSortOption("Älteste zuerst", "created_at", true),
-            new MmSortOption("Betreff A–Z", "betreff", true),
+            new MmSortOption(T("desktop.mm.sort_newest"), "created_at", false),
+            new MmSortOption(T("desktop.mm.sort_oldest"), "created_at", true),
+            new MmSortOption(T("desktop.mm.sort_subject"), "betreff", true),
             new MmSortOption("Dringlichkeit", "dringlichkeit", false),
             new MmSortOption("Status", "status", true),
         };
@@ -333,18 +334,18 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
     {
         var path = await _filePicker.PickSaveFileAsync(
             $"maengelmeldungen_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
-            new[] { ("CSV-Datei", "*.csv") });
+            new[] { (T("desktop.file.csv_file"), "*.csv") });
         if (path == null) return;
 
         var columns = new (string, Func<MmMessage, string?>)[]
         {
             ("UID",           m => m.Uid),
-            ("Status",        m => m.StatusText),
-            ("Betreff",       m => m.Betreff),
-            ("Dringlichkeit", m => m.DringlichkeitText),
-            ("Melder",        m => m.Melder),
-            ("Datum",         m => m.Datetime),
-            ("Zugehörigkeit", m => m.Zugeh),
+            (T("desktop.common.status"),        m => m.StatusText),
+            (T("desktop.mm.subject"),       m => m.Betreff),
+            (T("desktop.common.urgency"), m => m.DringlichkeitText),
+            (T("desktop.common.reporter"),        m => m.Melder),
+            (T("desktop.common.date"),         m => m.Datetime),
+            (T("desktop.common.membership"), m => m.Zugeh),
         };
 
         try
@@ -353,7 +354,7 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"CSV-Export fehlgeschlagen: {ex.Message}";
+            ErrorMessage = T("desktop.common.csv_export_failed", ("message", ex.Message));
         }
     }
 
@@ -451,7 +452,7 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
         catch (Exception ex)
         {
             if (!silent)
-                ErrorMessage = $"Fehler beim Laden der Mängelmeldungen: {ex.Message}";
+                ErrorMessage = T("desktop.mm.load_failed", ("message", ex.Message));
         }
         finally
         {
@@ -506,7 +507,7 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Fehler beim Laden des Details: {ex.Message}";
+            ErrorMessage = T("desktop.mm.detail_failed", ("message", ex.Message));
         }
         finally
         {
@@ -548,7 +549,7 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
         catch (Exception ex)
         {
             // Surface unexpected errors (network, deserialization, etc.) as a non-blocking warning
-            ErrorMessage = $"Benutzerliste konnte nicht geladen werden: {ex.Message}";
+            ErrorMessage = T("desktop.mm.users_failed", ("message", ex.Message));
         }
         finally
         {
@@ -630,17 +631,17 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
     {
         if (string.IsNullOrWhiteSpace(FormBetreff))
         {
-            FormError = "Betreff ist ein Pflichtfeld.";
+            FormError = T("desktop.mm.subject_is_required");
             return;
         }
         if (FormStreetChoice == null || FormWhgChoice == null)
         {
-            FormError = "Bitte Straße und Wohnung aus der Liste wählen.";
+            FormError = T("desktop.mm.choose_street_apartment");
             return;
         }
         if (!FormWhgChoice.Sonder && (string.IsNullOrWhiteSpace(FormMelder) || string.IsNullOrWhiteSpace(FormTel)))
         {
-            FormError = "Melder und mindestens eine Telefonnummer sind erforderlich (außer bei Sonderwohnungen).";
+            FormError = T("desktop.mm.reporter_phone_required");
             return;
         }
         IsSaving  = true;
@@ -673,7 +674,7 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
                     var info = new FileInfo(path);
                     if (!info.Exists || info.Length == 0 || info.Length > MaxPhotoBytes)
                     {
-                        FormError = $"Foto „{info.Name}“ ist leer, nicht lesbar oder größer als 10 MB.";
+                        FormError = T("desktop.mm.photo_invalid", ("name", info.Name));
                         return;
                     }
                     req.Photos.Add(new Proto.MmPhoto
@@ -691,7 +692,7 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            FormError = $"Fehler: {ex.Message}";
+            FormError = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -704,8 +705,8 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
     {
         if (SelectedMessage == null) return;
         var confirmed = await _dialogService.ConfirmAsync(
-            "Mängelmeldung löschen",
-            $"Soll die Mängelmeldung „{SelectedMessage.Betreff}“ ({SelectedMessage.Uid}) wirklich unwiderruflich gelöscht werden?");
+            T("desktop.mm.delete_title"),
+            T("desktop.mm.delete_confirm", ("subject", SelectedMessage.Betreff), ("uid", SelectedMessage.Uid)));
         if (!confirmed) return;
 
         IsLoading    = true;
@@ -719,7 +720,7 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Fehler: {ex.Message}";
+            ErrorMessage = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -755,7 +756,7 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Fehler: {ex.Message}";
+            ErrorMessage = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -780,7 +781,7 @@ public partial class MmViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Fehler: {ex.Message}";
+            ErrorMessage = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {

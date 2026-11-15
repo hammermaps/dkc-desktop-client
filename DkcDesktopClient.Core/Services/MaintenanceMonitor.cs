@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using DkcDesktopClient.Core.I18n;
 
 namespace DkcDesktopClient.Core.Services;
 
@@ -92,8 +93,8 @@ public sealed class MaintenanceBlockedException : HttpRequestException
 
     public static string BuildMessage(string serverMessage)
         => string.IsNullOrWhiteSpace(serverMessage)
-            ? "Wartungsmodus – Daten können gerade nicht geladen werden."
-            : $"Wartungsmodus – {serverMessage.Trim()}";
+            ? Translator.T("desktop.maintenance.request_blocked")
+            : Translator.T("desktop.maintenance.request_blocked_message", ("message", serverMessage.Trim()));
 }
 
 /// <summary>

@@ -7,6 +7,21 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
 
 ## [Unreleased]
 
+### Neu
+- Mehrsprachigkeit statt Deutsch/Englisch-Mix: alle Ansichten, Meldungen, CSV-Spalten, Tray-Menü und
+  Navigation laufen über Übersetzungsschlüssel `desktop.*` (de, en, fr, es, tr, ru, pl). Quelle ist
+  `lang/*.json` des ProxyServers – dieselben Texte und `{name}`-Platzhalter wie im Web.
+- Mitgelieferter Stand in `DkcDesktopClient.Core/I18n/lang/` (Export: `php tools/export-desktop-translations.php`
+  im ProxyServer); beim Start und nach der Anmeldung Abgleich über die Protobuf-Aktion `TRANSLATIONS`
+  mit Hash – geänderte Texte kommen ohne Client-Update an.
+- Einstellungen → Sprache: „Automatisch“ (Kontosprache, vor der Anmeldung Systemsprache) oder fest;
+  der Wechsel wirkt sofort auf alle offenen Ansichten.
+- CI: GUI-Tests (`DkcDesktopClient.UiTests`, Avalonia.Headless) laufen in `build.yml` mit.
+
+### Behoben
+- Klima-Tabelle: Spaltenbreiten passen sich den Überschriften an (abgeschnittene Köpfe).
+- Prüfung: Hinweis auf offene Pflichtpunkte hing an der deutschen Formulierung („Pflichtpunkt“).
+
 ### Sicherheit
 - Avalonia 12.0.0 → 12.0.5 (DataGrid 12.0.1): bringt `Tmds.DBus.Protocol` 0.92.0 statt 0.90.3 mit
   (GHSA-xrw6-gwf8-vvr9, hoch: gefälschte D-Bus-Signale, Ressourcenerschöpfung). Im Testprojekt

@@ -34,6 +34,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Übersetzungsstand aus lang/*.json des ProxyServers (tools/export-desktop-translations.php) -->
+    <EmbeddedResource Include="I18n\lang\*.json" LogicalName="DkcDesktopClient.Core.I18n.lang.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!--
       Generate C# Protobuf classes from the .proto contract files under /proto.
       Output namespace is DkcDesktopClient.Core.Protocol (set via csharp_namespace).

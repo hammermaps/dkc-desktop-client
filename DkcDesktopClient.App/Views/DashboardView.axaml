@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:i18n="using:DkcDesktopClient.App.I18n"
              xmlns:vm="using:DkcDesktopClient.App.ViewModels"
              xmlns:api="using:DkcDesktopClient.Core.Api"
              xmlns:controls="using:DkcDesktopClient.App.Controls"
@@ -11,15 +12,15 @@
       <DockPanel LastChildFill="True">
         <controls:RefreshIndicator DockPanel.Dock="Right" IsRefreshing="{Binding IsRefreshing}" Margin="12,12,0,0"/>
         <StackPanel>
-          <TextBlock Text="Dashboard" FontSize="24" FontWeight="Bold"/>
-          <TextBlock Text="Übersicht über aktuelle Kennzahlen und Prüfungen" Foreground="{DynamicResource TextSecondaryBrush}"/>
+          <TextBlock Text="{i18n:T desktop.nav.dashboard}" FontSize="24" FontWeight="Bold"/>
+          <TextBlock Text="{i18n:T desktop.dashboard.subtitle}" Foreground="{DynamicResource TextSecondaryBrush}"/>
         </StackPanel>
       </DockPanel>
 
       <!-- Project quick-switch -->
       <Border Classes="card" Background="#F0F9FF" BorderBrush="#BAE6FD" IsVisible="{Binding Projects.Count}">
         <StackPanel Orientation="Horizontal" Spacing="10">
-          <TextBlock Text="Aktives Projekt:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+          <TextBlock Text="{i18n:T desktop.dashboard.active_project}" VerticalAlignment="Center" FontWeight="SemiBold"/>
           <ComboBox ItemsSource="{Binding Projects}"
                     SelectedItem="{Binding SelectedProject}"
                     MinWidth="240">
@@ -29,7 +30,7 @@
               </DataTemplate>
             </ComboBox.ItemTemplate>
           </ComboBox>
-          <Button Content="Als aktiv setzen" Command="{Binding SetActiveProjectCommand}" Classes="primary"/>
+          <Button Content="{i18n:T desktop.dashboard.set_active}" Command="{Binding SetActiveProjectCommand}" Classes="primary"/>
           <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSettingProject}" Width="60" Height="14" VerticalAlignment="Center"/>
         </StackPanel>
       </Border>
@@ -40,31 +41,31 @@
 
       <!-- Stats tiles -->
       <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="12" HorizontalAlignment="Stretch">
-        <controls:StatCard Grid.Column="0" Title="Mängelmeldungen" Value="{Binding MmTotalText}" Icon="🔧" BackgroundColor="#EFF6FF"
-                           ToolTip.Tip="Gesamtzahl der geladenen Mängelmeldungen"/>
-        <controls:StatCard Grid.Column="1" Title="NEA-Systeme" Value="{Binding NeaTotalSystemsText}" Icon="⚡" BackgroundColor="#EEF2FF"
-                           ToolTip.Tip="Gesamtzahl der NEA-Systeme"/>
-        <controls:StatCard Grid.Column="2" Title="Schlüssel verfügbar" Value="{Binding KeysAvailableText}" Icon="🔑" BackgroundColor="#ECFDF5" TrendColor="#10B981"
-                           ToolTip.Tip="Anzahl verfügbarer Schlüssel"/>
-        <controls:StatCard Grid.Column="3" Title="Überfällige Prüfungen" Value="{Binding NeaOverdueInspectionsText}" Icon="⚠" BackgroundColor="#FEF2F2" TrendColor="#EF4444"
-                           ToolTip.Tip="Anzahl überfälliger NEA-Prüfungen"/>
+        <controls:StatCard Grid.Column="0" Title="{i18n:T desktop.nav.mm}" Value="{Binding MmTotalText}" Icon="🔧" BackgroundColor="#EFF6FF"
+                           ToolTip.Tip="{i18n:T desktop.dashboard.mm_total_tip}"/>
+        <controls:StatCard Grid.Column="1" Title="{i18n:T desktop.dashboard.nea_systems}" Value="{Binding NeaTotalSystemsText}" Icon="⚡" BackgroundColor="#EEF2FF"
+                           ToolTip.Tip="{i18n:T desktop.dashboard.nea_systems_tip}"/>
+        <controls:StatCard Grid.Column="2" Title="{i18n:T desktop.dashboard.keys_available}" Value="{Binding KeysAvailableText}" Icon="🔑" BackgroundColor="#ECFDF5" TrendColor="#10B981"
+                           ToolTip.Tip="{i18n:T desktop.dashboard.keys_available_tip}"/>
+        <controls:StatCard Grid.Column="3" Title="{i18n:T desktop.dashboard.overdue_inspections}" Value="{Binding NeaOverdueInspectionsText}" Icon="⚠" BackgroundColor="#FEF2F2" TrendColor="#EF4444"
+                           ToolTip.Tip="{i18n:T desktop.dashboard.overdue_inspections_tip}"/>
       </Grid>
 
       <!-- MM stats row -->
       <Border Classes="card">
         <Grid ColumnDefinitions="*,1,*,1,*" ColumnSpacing="0">
           <StackPanel Grid.Column="0" HorizontalAlignment="Center">
-            <TextBlock Text="Offen" FontSize="12" Foreground="#4A5568" HorizontalAlignment="Center"/>
+            <TextBlock Text="{i18n:T desktop.common.open}" FontSize="12" Foreground="#4A5568" HorizontalAlignment="Center"/>
             <TextBlock Text="{Binding MmOpenText}" FontSize="28" FontWeight="Bold" Foreground="#D97706" HorizontalAlignment="Center"/>
           </StackPanel>
           <Border Grid.Column="1" Background="#E2E8F0"/>
           <StackPanel Grid.Column="2" HorizontalAlignment="Center">
-            <TextBlock Text="In Bearbeitung" FontSize="12" Foreground="#4A5568" HorizontalAlignment="Center"/>
+            <TextBlock Text="{i18n:T desktop.common.in_progress}" FontSize="12" Foreground="#4A5568" HorizontalAlignment="Center"/>
             <TextBlock Text="{Binding MmInProgress}" FontSize="28" FontWeight="Bold" Foreground="#3B82F6" HorizontalAlignment="Center"/>
           </StackPanel>
           <Border Grid.Column="3" Background="#E2E8F0"/>
           <StackPanel Grid.Column="4" HorizontalAlignment="Center">
-            <TextBlock Text="Gesamt" FontSize="12" Foreground="#4A5568" HorizontalAlignment="Center"/>
+            <TextBlock Text="{i18n:T desktop.common.total}" FontSize="12" Foreground="#4A5568" HorizontalAlignment="Center"/>
             <TextBlock Text="{Binding MmTotalText}" FontSize="28" FontWeight="Bold" HorizontalAlignment="Center"/>
           </StackPanel>
         </Grid>
@@ -72,17 +73,17 @@
 
       <!-- Web-Dashboard-Kacheln (dashboard_overview.tpl): Sammelstörung, Ausgegebene Schlüssel, Ø Temperatur -->
       <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12" HorizontalAlignment="Stretch">
-        <controls:StatCard Grid.Column="0" Title="Sammelstörung" Value="{Binding SammelstoerungCountText}" Icon="🚨" BackgroundColor="#FEF2F2" TrendColor="#EF4444"
-                           IsVisible="{Binding SammelstoerungPermission}" ToolTip.Tip="Aktive Störungen über Klima/SiBe/KinCony/RCO"/>
-        <controls:StatCard Grid.Column="1" Title="Ausgegebene Schlüssel" Value="{Binding IssuedKeysCountText}" Icon="🔑" BackgroundColor="#ECFDF5"
-                           IsVisible="{Binding IssuedKeysPermission}" ToolTip.Tip="Aktuell ausgegebene Schlüssel/Bunde"/>
-        <controls:StatCard Grid.Column="2" Title="Ø Temperatur" Value="{Binding TemperatureAverageText}" Icon="🌡" BackgroundColor="#EFF6FF"
-                           IsVisible="{Binding TemperaturePermission}" ToolTip.Tip="Durchschnittstemperatur laufender Klimageräte"/>
+        <controls:StatCard Grid.Column="0" Title="{i18n:T desktop.dashboard.collective_fault}" Value="{Binding SammelstoerungCountText}" Icon="🚨" BackgroundColor="#FEF2F2" TrendColor="#EF4444"
+                           IsVisible="{Binding SammelstoerungPermission}" ToolTip.Tip="{i18n:T desktop.dashboard.collective_fault_tip}"/>
+        <controls:StatCard Grid.Column="1" Title="{i18n:T desktop.dashboard.issued_keys}" Value="{Binding IssuedKeysCountText}" Icon="🔑" BackgroundColor="#ECFDF5"
+                           IsVisible="{Binding IssuedKeysPermission}" ToolTip.Tip="{i18n:T desktop.dashboard.issued_keys_tip}"/>
+        <controls:StatCard Grid.Column="2" Title="{i18n:T desktop.dashboard.avg_temperature}" Value="{Binding TemperatureAverageText}" Icon="🌡" BackgroundColor="#EFF6FF"
+                           IsVisible="{Binding TemperaturePermission}" ToolTip.Tip="{i18n:T desktop.dashboard.avg_temperature_tip}"/>
       </Grid>
 
       <Border Classes="card" IsVisible="{Binding TemperaturePermission}">
         <StackPanel Spacing="10">
-          <TextBlock Text="Temperaturverlauf (14 Tage)" FontSize="18" FontWeight="SemiBold"/>
+          <TextBlock Text="{i18n:T desktop.dashboard.temperature_history}" FontSize="18" FontWeight="SemiBold"/>
           <lvc:CartesianChart Series="{Binding TemperatureSeries}"
                                XAxes="{Binding TemperatureXAxes}"
                                YAxes="{Binding TemperatureYAxes}"
@@ -92,14 +93,14 @@
 
       <Border Classes="card" IsVisible="{Binding SammelstoerungPermission}">
         <StackPanel Spacing="10">
-          <TextBlock Text="Sammelstörung" FontSize="18" FontWeight="SemiBold"/>
-          <TextBlock Text="Keine aktiven Störungen" IsVisible="{Binding !HasSammelstoerung}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+          <TextBlock Text="{i18n:T desktop.dashboard.collective_fault}" FontSize="18" FontWeight="SemiBold"/>
+          <TextBlock Text="{i18n:T desktop.dashboard.no_faults}" IsVisible="{Binding !HasSammelstoerung}" Foreground="{DynamicResource TextSecondaryBrush}"/>
           <DataGrid ItemsSource="{Binding Sammelstoerung}" IsReadOnly="True" AutoGenerateColumns="False" Height="160" IsVisible="{Binding HasSammelstoerung}">
             <DataGrid.Columns>
-              <DataGridTextColumn Header="Quelle" Binding="{Binding SourceLabel}" Width="100"/>
-              <DataGridTextColumn Header="Gerät" Binding="{Binding DeviceName}" Width="*"/>
-              <DataGridTextColumn Header="Meldung" Binding="{Binding AlarmText}" Width="2*"/>
-              <DataGridTextColumn Header="Zeit" Binding="{Binding Timestamp}" Width="140"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.source}" Binding="{Binding SourceLabel}" Width="100"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.device}" Binding="{Binding DeviceName}" Width="*"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.message}" Binding="{Binding AlarmText}" Width="2*"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.time}" Binding="{Binding Timestamp}" Width="140"/>
             </DataGrid.Columns>
           </DataGrid>
         </StackPanel>
@@ -107,13 +108,13 @@
 
       <Border Classes="card" IsVisible="{Binding IssuedKeysPermission}">
         <StackPanel Spacing="10">
-          <TextBlock Text="Ausgegebene Schlüssel" FontSize="18" FontWeight="SemiBold"/>
+          <TextBlock Text="{i18n:T desktop.dashboard.issued_keys}" FontSize="18" FontWeight="SemiBold"/>
           <DataGrid ItemsSource="{Binding IssuedKeysList}" IsReadOnly="True" AutoGenerateColumns="False" Height="160">
             <DataGrid.Columns>
-              <DataGridTextColumn Header="Name/Nr." Binding="{Binding Name}" Width="*"/>
-              <DataGridTextColumn Header="Empfänger" Binding="{Binding EmpfaengerName}" Width="*"/>
-              <DataGridTextColumn Header="Ausgegeben am" Binding="{Binding AusgegebenAm}" Width="150"/>
-              <DataGridTextColumn Header="Rückgabe geplant" Binding="{Binding RueckgabeGeplant}" Width="150"/>
+              <DataGridTextColumn Header="{i18n:T desktop.dashboard.name_no}" Binding="{Binding Name}" Width="*"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.recipient}" Binding="{Binding EmpfaengerName}" Width="*"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.issued_at}" Binding="{Binding AusgegebenAm}" Width="150"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.return_planned}" Binding="{Binding RueckgabeGeplant}" Width="150"/>
             </DataGrid.Columns>
           </DataGrid>
         </StackPanel>
@@ -121,13 +122,13 @@
 
       <Border Classes="card" IsVisible="{Binding ApprovalsPermission}">
         <StackPanel Spacing="10">
-          <TextBlock Text="Offene Freigaben" FontSize="18" FontWeight="SemiBold"/>
+          <TextBlock Text="{i18n:T desktop.dashboard.open_approvals}" FontSize="18" FontWeight="SemiBold"/>
           <DataGrid ItemsSource="{Binding Approvals}" IsReadOnly="True" AutoGenerateColumns="False" Height="160">
             <DataGrid.Columns>
-              <DataGridTextColumn Header="Adresse" Binding="{Binding Address}" Width="*"/>
-              <DataGridTextColumn Header="Titel" Binding="{Binding Title}" Width="2*"/>
-              <DataGridTextColumn Header="Nachunternehmer" Binding="{Binding NachunternehmerName}" Width="160"/>
-              <DataGridTextColumn Header="Tage wartend" Binding="{Binding DaysWaiting}" Width="110"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.address}" Binding="{Binding Address}" Width="*"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.title}" Binding="{Binding Title}" Width="2*"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.contractor}" Binding="{Binding NachunternehmerName}" Width="160"/>
+              <DataGridTextColumn Header="{i18n:T desktop.dashboard.days_waiting}" Binding="{Binding DaysWaiting}" Width="110"/>
             </DataGrid.Columns>
           </DataGrid>
         </StackPanel>
@@ -137,14 +138,14 @@
         <StackPanel Spacing="10">
           <StackPanel Orientation="Horizontal" Spacing="8">
             <TextBlock Text="⚠" FontSize="18"/>
-            <TextBlock Text="Überfällige Mängelmeldungen" FontSize="18" FontWeight="SemiBold"/>
+            <TextBlock Text="{i18n:T desktop.dashboard.overdue_mm}" FontSize="18" FontWeight="SemiBold"/>
           </StackPanel>
           <DataGrid ItemsSource="{Binding OverdueComplaints}" IsReadOnly="True" AutoGenerateColumns="False" Height="160">
             <DataGrid.Columns>
-              <DataGridTextColumn Header="Adresse" Binding="{Binding Address}" Width="*"/>
-              <DataGridTextColumn Header="Titel" Binding="{Binding Title}" Width="2*"/>
-              <DataGridTextColumn Header="Status" Binding="{Binding StatusLabel}" Width="140"/>
-              <DataGridTextColumn Header="Tage offen" Binding="{Binding DaysOpen}" Width="100"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.address}" Binding="{Binding Address}" Width="*"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.title}" Binding="{Binding Title}" Width="2*"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.status}" Binding="{Binding StatusLabel}" Width="140"/>
+              <DataGridTextColumn Header="{i18n:T desktop.dashboard.days_open}" Binding="{Binding DaysOpen}" Width="100"/>
             </DataGrid.Columns>
           </DataGrid>
         </StackPanel>
@@ -152,13 +153,13 @@
 
       <Border Classes="card" IsVisible="{Binding WlsPermission}">
         <StackPanel Spacing="10">
-          <TextBlock Text="WLS-Spülungen fällig" FontSize="18" FontWeight="SemiBold"/>
+          <TextBlock Text="{i18n:T desktop.dashboard.wls_due}" FontSize="18" FontWeight="SemiBold"/>
           <DataGrid ItemsSource="{Binding WlsFlushings}" IsReadOnly="True" AutoGenerateColumns="False" Height="160">
             <DataGrid.Columns>
-              <DataGridTextColumn Header="Wohnung" Binding="{Binding Label}" Width="*"/>
-              <DataGridTextColumn Header="Gebäude" Binding="{Binding BuildingName}" Width="*"/>
-              <DataGridTextColumn Header="Letzte Spülung" Binding="{Binding LastFlushDate}" Width="140"/>
-              <DataGridTextColumn Header="Tage überfällig" Binding="{Binding DaysOverdue}" Width="120"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.apartment}" Binding="{Binding Label}" Width="*"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.building}" Binding="{Binding BuildingName}" Width="*"/>
+              <DataGridTextColumn Header="{i18n:T desktop.dashboard.last_flush}" Binding="{Binding LastFlushDate}" Width="140"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.days_overdue}" Binding="{Binding DaysOverdue}" Width="120"/>
             </DataGrid.Columns>
           </DataGrid>
         </StackPanel>
@@ -168,13 +169,13 @@
         <StackPanel Spacing="10">
           <StackPanel Orientation="Horizontal" Spacing="8">
             <TextBlock Text="⚠" FontSize="18"/>
-            <TextBlock Text="Überfällige NEA-Prüfungen" FontSize="18" FontWeight="SemiBold"/>
+            <TextBlock Text="{i18n:T desktop.dashboard.overdue_nea}" FontSize="18" FontWeight="SemiBold"/>
           </StackPanel>
           <DataGrid ItemsSource="{Binding OverdueItems}" IsReadOnly="True" AutoGenerateColumns="False" Height="190">
             <DataGrid.Columns>
-              <DataGridTextColumn Header="System" Binding="{Binding SystemName}" Width="*"/>
-              <DataGridTextColumn Header="Tage überfällig" Binding="{Binding DaysOverdue}" Width="140"/>
-              <DataGridTextColumn Header="Letzte Prüfung" Binding="{Binding LastInspection}" Width="160"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.system}" Binding="{Binding SystemName}" Width="*"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.days_overdue}" Binding="{Binding DaysOverdue}" Width="140"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.last_inspection}" Binding="{Binding LastInspection}" Width="160"/>
             </DataGrid.Columns>
           </DataGrid>
         </StackPanel>
@@ -182,24 +183,24 @@
 
       <Border Classes="card">
         <StackPanel Spacing="12">
-          <TextBlock Text="Quick Actions" FontSize="18" FontWeight="SemiBold"/>
+          <TextBlock Text="{i18n:T desktop.dashboard.quick_actions}" FontSize="18" FontWeight="SemiBold"/>
           <StackPanel Orientation="Horizontal" Spacing="10">
-            <Button Content="Neue Mängelmeldung" Command="{Binding CreateMmCommand}" Classes="primary"/>
-            <Button Content="NEA-Prüfung starten" Command="{Binding StartNeaInspectionCommand}" Classes="primary"/>
-            <Button Content="Dashboard neu laden" Command="{Binding LoadDataCommand}"/>
+            <Button Content="{i18n:T desktop.dashboard.new_mm}" Command="{Binding CreateMmCommand}" Classes="primary"/>
+            <Button Content="{i18n:T desktop.dashboard.start_nea}" Command="{Binding StartNeaInspectionCommand}" Classes="primary"/>
+            <Button Content="{i18n:T desktop.dashboard.reload}" Command="{Binding LoadDataCommand}"/>
           </StackPanel>
         </StackPanel>
       </Border>
 
       <Border Classes="card">
         <StackPanel Spacing="10">
-          <TextBlock Text="Letzte NEA-Prüfungen" FontSize="18" FontWeight="SemiBold"/>
+          <TextBlock Text="{i18n:T desktop.dashboard.last_nea}" FontSize="18" FontWeight="SemiBold"/>
           <DataGrid ItemsSource="{Binding RecentInspections}" IsReadOnly="True" AutoGenerateColumns="False" Height="220">
             <DataGrid.Columns>
-              <DataGridTextColumn Header="Datum" Binding="{Binding InspectionDate}" Width="120"/>
-              <DataGridTextColumn Header="Prüfer" Binding="{Binding InspectorName}" Width="*"/>
-              <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="120"/>
-              <DataGridTextColumn Header="Ergebnis" Binding="{Binding OverallResult}" Width="120"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.date}" Binding="{Binding InspectionDate}" Width="120"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.inspector}" Binding="{Binding InspectorName}" Width="*"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.status}" Binding="{Binding Status}" Width="120"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.result}" Binding="{Binding OverallResult}" Width="120"/>
             </DataGrid.Columns>
           </DataGrid>
         </StackPanel>

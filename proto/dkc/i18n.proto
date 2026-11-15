@@ -1,0 +1,24 @@
+// Übersetzungen für den DKC Desktop Client.
+//
+// Quelle sind die Schlüssel mit Präfix "desktop." aus lang/{sprache}.json – dieselben Dateien und
+// dieselben {name}-Platzhalter wie in der Web-Oberfläche. Der Client bringt einen Stand als
+// eingebettete Ressource mit und gleicht ihn beim Start über TRANSLATIONS ab.
+syntax = "proto3";
+
+package dkc.api.v1;
+
+option csharp_namespace = "DkcDesktopClient.Core.Protocol";
+
+// TRANSLATIONS – ohne Anmeldung (wird schon auf dem Anmeldebildschirm gebraucht).
+message TranslationsRequest {
+    string language   = 1; // ISO-639-1; unbekannt oder leer = "de"
+    string known_hash = 2; // hash des beim Client vorhandenen Stands; gleich = unchanged
+}
+
+message TranslationsResponse {
+    string              language            = 1; // tatsächlich gelieferte Sprache
+    string              hash                = 2; // SHA-1 über die sortierten Einträge
+    bool                unchanged           = 3; // true: known_hash passt, entries bleibt leer
+    map<string, string> entries             = 4; // vollständig: fehlende Schlüssel aus "de" ergänzt
+    repeated string     available_languages = 5;
+}

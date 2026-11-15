@@ -1,3 +1,4 @@
+using DkcDesktopClient.Core.I18n;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
@@ -43,10 +44,10 @@ public partial class StatusBadge : UserControl
         var status = (Status ?? string.Empty).ToLowerInvariant();
         var (label, color) = status switch
         {
-            "ok" or "success" => ("OK", "#10B981"),
-            "warning" => ("Warnung", "#F59E0B"),
-            "error" or "danger" => ("Fehler", "#EF4444"),
-            _ => ("Info", "#3B82F6")
+            "ok" or "success" => (Translator.T("desktop.common.ok"), "#10B981"),
+            "warning" => (Translator.T("desktop.common.warning"), "#F59E0B"),
+            "error" or "danger" => (Translator.T("desktop.common.error_short"), "#EF4444"),
+            _ => (Translator.T("desktop.common.info"), "#3B82F6")
         };
         _label.Text = string.IsNullOrWhiteSpace(Text) ? label : Text;
         _badge.Background = Brush.Parse(color);

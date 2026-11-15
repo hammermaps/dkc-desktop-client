@@ -10,6 +10,7 @@ using ProtoBuildingSaveRequest = DkcDesktopClient.Core.Protocol.BuildingSaveRequ
 using ProtoBuildingInspectionSaveRequest = DkcDesktopClient.Core.Protocol.BuildingInspectionSaveRequest;
 using ProtoBuildingInspectionCompleteRequest = DkcDesktopClient.Core.Protocol.BuildingInspectionCompleteRequest;
 using ProtoBuildingCheckpointUpdateRequest = DkcDesktopClient.Core.Protocol.BuildingCheckpointUpdateRequest;
+using static DkcDesktopClient.Core.I18n.Translator;
 
 namespace DkcDesktopClient.App.ViewModels;
 
@@ -160,13 +161,13 @@ public partial class BuildingViewModel : ViewModelBase, INavigationTarget
             }
             else if (!silent)
             {
-                ErrorMessage = result.Error ?? "Error loading buildings.";
+                ErrorMessage = result.Error ?? T("desktop.building.load_failed");
             }
         }
         catch (Exception ex)
         {
             if (!silent)
-                ErrorMessage = $"Error loading buildings: {ex.Message}";
+                ErrorMessage = T("desktop.building.load_failed_message", ("message", ex.Message));
         }
         finally
         {
@@ -200,7 +201,7 @@ public partial class BuildingViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error loading inspections: {ex.Message}";
+            ErrorMessage = T("desktop.common.inspections_failed", ("message", ex.Message));
         }
         finally
         {
@@ -225,7 +226,7 @@ public partial class BuildingViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error loading inspection detail: {ex.Message}";
+            ErrorMessage = T("desktop.common.inspection_failed", ("message", ex.Message));
         }
         finally
         {
@@ -292,7 +293,7 @@ public partial class BuildingViewModel : ViewModelBase, INavigationTarget
     {
         if (string.IsNullOrWhiteSpace(FormBuildingName))
         {
-            BuildingFormError = "Name is required.";
+            BuildingFormError = T("desktop.common.name_is_required");
             return;
         }
         IsSavingBuilding = true;
@@ -318,7 +319,7 @@ public partial class BuildingViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            BuildingFormError = $"Error: {ex.Message}";
+            BuildingFormError = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -396,7 +397,7 @@ public partial class BuildingViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            InspectionFormError = $"Error: {ex.Message}";
+            InspectionFormError = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -422,7 +423,7 @@ public partial class BuildingViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error: {ex.Message}";
+            ErrorMessage = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -455,7 +456,7 @@ public partial class BuildingViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            CheckpointError = $"Fehler: {ex.Message}";
+            CheckpointError = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -482,7 +483,7 @@ public partial class BuildingViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error: {ex.Message}";
+            ErrorMessage = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {

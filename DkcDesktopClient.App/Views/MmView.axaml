@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:i18n="using:DkcDesktopClient.App.I18n"
              xmlns:vm="using:DkcDesktopClient.App.ViewModels"
              xmlns:proto="using:DkcDesktopClient.Core.Protocol"
              xmlns:api="using:DkcDesktopClient.Core.Api"
@@ -11,13 +12,13 @@
 
     <!-- ═══════════════════════════════════  Toolbar  ═══════════════════════════════════ -->
     <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
-      <TextBlock Text="Mängelmeldungen" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
-      <Button Content="Laden" Command="{Binding LoadMessagesCommand}"/>
-      <Button Content="Neue Meldung" Command="{Binding ShowCreateFormCommand}"/>
-      <Button Content="Bearbeiten" Command="{Binding ShowEditFormCommand}"/>
-      <Button Content="Löschen" Command="{Binding DeleteCommand}" Foreground="Red"/>
-      <Button Content="📥 CSV-Export" Command="{Binding ExportMessagesToCsvCommand}"
-              ToolTip.Tip="Aktuelle Liste als CSV exportieren"/>
+      <TextBlock Text="{i18n:T desktop.nav.mm}" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
+      <Button Content="{i18n:T desktop.common.load}" Command="{Binding LoadMessagesCommand}"/>
+      <Button Content="{i18n:T desktop.mm.new}" Command="{Binding ShowCreateFormCommand}"/>
+      <Button Content="{i18n:T desktop.common.edit}" Command="{Binding ShowEditFormCommand}"/>
+      <Button Content="{i18n:T desktop.common.delete}" Command="{Binding DeleteCommand}" Foreground="Red"/>
+      <Button Content="{i18n:T desktop.common.csv_export}" Command="{Binding ExportMessagesToCsvCommand}"
+              ToolTip.Tip="{i18n:T desktop.mm.export_tip}"/>
     </StackPanel>
 
     <!-- ═══════════════════════════════  Filter-Leiste  ════════════════════════════════ -->
@@ -25,24 +26,24 @@
       <StackPanel Spacing="6">
         <!-- Quick filter chips -->
         <StackPanel Orientation="Horizontal" Spacing="6">
-          <TextBlock Text="Schnellfilter:" VerticalAlignment="Center" FontSize="12" Foreground="#6B7280"/>
-          <Button Content="Alle" Command="{Binding SetFilterAllCommand}"
+          <TextBlock Text="{i18n:T desktop.mm.quick_filter}" VerticalAlignment="Center" FontSize="12" Foreground="#6B7280"/>
+          <Button Content="{i18n:T desktop.common.all}" Command="{Binding SetFilterAllCommand}"
                   Padding="10,3" FontSize="12"
                   Background="{Binding FilterChipAllBg}" Foreground="{Binding FilterChipAllFg}"/>
-          <Button Content="Offen" Command="{Binding SetFilterOpenCommand}"
+          <Button Content="{i18n:T desktop.common.open}" Command="{Binding SetFilterOpenCommand}"
                   Padding="10,3" FontSize="12"
                   Background="{Binding FilterChipOpenBg}" Foreground="{Binding FilterChipOpenFg}"/>
-          <Button Content="In Bearbeitung" Command="{Binding SetFilterInProgressCommand}"
+          <Button Content="{i18n:T desktop.common.in_progress}" Command="{Binding SetFilterInProgressCommand}"
                   Padding="10,3" FontSize="12"
                   Background="{Binding FilterChipInProgressBg}" Foreground="{Binding FilterChipInProgressFg}"/>
-          <Button Content="Erledigt" Command="{Binding SetFilterCompletedCommand}"
+          <Button Content="{i18n:T desktop.common.done}" Command="{Binding SetFilterCompletedCommand}"
                   Padding="10,3" FontSize="12"
                   Background="{Binding FilterChipCompletedBg}" Foreground="{Binding FilterChipCompletedFg}"/>
         </StackPanel>
 
         <!-- Main filter row -->
         <StackPanel Orientation="Horizontal" Spacing="8">
-          <TextBlock Text="Status:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+          <TextBlock Text="{i18n:T desktop.common.status_label}" VerticalAlignment="Center" FontWeight="SemiBold"/>
           <ComboBox ItemsSource="{x:Static vm:MmViewModel.StatusFilterOptions}"
                     SelectedItem="{Binding FilterStatusOption}"
                     MinWidth="140">
@@ -53,7 +54,7 @@
             </ComboBox.ItemTemplate>
           </ComboBox>
 
-          <TextBlock Text="Dringlichkeit:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+          <TextBlock Text="{i18n:T desktop.common.urgency_label}" VerticalAlignment="Center" FontWeight="SemiBold"/>
           <ComboBox ItemsSource="{x:Static vm:MmViewModel.DringlichkeitFilterOptions}"
                     SelectedItem="{Binding FilterDringlichkeitOption}"
                     MinWidth="130">
@@ -64,13 +65,13 @@
             </ComboBox.ItemTemplate>
           </ComboBox>
 
-          <TextBlock Text="Straße:" VerticalAlignment="Center" FontWeight="SemiBold"/>
-          <TextBox Text="{Binding FilterStreet}" PlaceholderText="Straße filtern…" Width="110"/>
+          <TextBlock Text="{i18n:T desktop.common.street_label}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+          <TextBox Text="{Binding FilterStreet}" PlaceholderText="{i18n:T desktop.mm.street_filter}" Width="110"/>
 
-          <TextBlock Text="Jahr:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+          <TextBlock Text="{i18n:T desktop.common.year_label}" VerticalAlignment="Center" FontWeight="SemiBold"/>
           <TextBox Text="{Binding FilterYear}" PlaceholderText="z. B. 2026" Width="80"/>
 
-          <TextBlock Text="Sortierung:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+          <TextBlock Text="{i18n:T desktop.common.sorting_label}" VerticalAlignment="Center" FontWeight="SemiBold"/>
           <ComboBox ItemsSource="{x:Static vm:MmViewModel.SortOptions}"
                     SelectedItem="{Binding SortOption}"
                     MinWidth="140">
@@ -84,10 +85,10 @@
 
         <!-- Search row -->
         <StackPanel Orientation="Horizontal" Spacing="8">
-          <TextBlock Text="Suche:" VerticalAlignment="Center" FontWeight="SemiBold"/>
-          <TextBox Text="{Binding SearchText}" PlaceholderText="Betreff, DKC-ID, Melder, Wohnung…" Width="260"/>
-          <Button Content="Suchen" Command="{Binding LoadMessagesCommand}" Classes="primary"/>
-          <TextBlock Text="{Binding TotalMessages, StringFormat='Gesamt: {0}'}"
+          <TextBlock Text="{i18n:T desktop.common.search_label}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+          <TextBox Text="{Binding SearchText}" PlaceholderText="{i18n:T desktop.mm.search_placeholder}" Width="260"/>
+          <Button Content="{i18n:T desktop.common.search}" Command="{Binding LoadMessagesCommand}" Classes="primary"/>
+          <TextBlock Text="{Binding TotalMessages, Converter={x:Static i18n:Labels.Format}, ConverterParameter=desktop.mm.total_count|count}"
                      VerticalAlignment="Center" Foreground="#4A5568"/>
         </StackPanel>
       </StackPanel>
@@ -108,10 +109,10 @@
         <!-- Formular-Titel -->
         <StackPanel Orientation="Horizontal" Spacing="8">
           <TextBlock FontSize="15" FontWeight="SemiBold"
-                     Text="Neue Mängelmeldung"
+                     Text="{i18n:T desktop.dashboard.new_mm}"
                      IsVisible="{Binding IsEditingMessage, Converter={x:Static BoolConverters.Not}}"/>
           <TextBlock FontSize="15" FontWeight="SemiBold"
-                     Text="Mängelmeldung bearbeiten"
+                     Text="{i18n:T desktop.mm.edit_title}"
                      IsVisible="{Binding IsEditingMessage}"/>
         </StackPanel>
 
@@ -121,13 +122,13 @@
 
         <!-- Zeile 1: Betreff (volle Breite) -->
         <Grid ColumnDefinitions="130,8,*">
-          <TextBlock Grid.Column="0" Text="Betreff *" VerticalAlignment="Center" FontWeight="SemiBold"/>
-          <TextBox   Grid.Column="2" Text="{Binding FormBetreff}" PlaceholderText="Betreff der Meldung (Pflichtfeld)"/>
+          <TextBlock Grid.Column="0" Text="{i18n:T desktop.mm.subject_required}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+          <TextBox   Grid.Column="2" Text="{Binding FormBetreff}" PlaceholderText="{i18n:T desktop.mm.subject_placeholder}"/>
         </Grid>
 
         <!-- Zeile 2: Straße + Wohnung -->
         <Grid ColumnDefinitions="130,8,*,16,130,8,*">
-          <TextBlock Grid.Column="0" Text="Straße" VerticalAlignment="Center"/>
+          <TextBlock Grid.Column="0" Text="{i18n:T desktop.common.street}" VerticalAlignment="Center"/>
           <ComboBox  Grid.Column="2"
                      ItemsSource="{Binding StreetChoices}"
                      SelectedItem="{Binding FormStreetChoice}"
@@ -136,7 +137,7 @@
               <DataTemplate x:DataType="proto:MmFormOption"><TextBlock Text="{Binding Name}"/></DataTemplate>
             </ComboBox.ItemTemplate>
           </ComboBox>
-          <TextBlock Grid.Column="4" Text="Wohnung" VerticalAlignment="Center"/>
+          <TextBlock Grid.Column="4" Text="{i18n:T desktop.common.apartment}" VerticalAlignment="Center"/>
           <ComboBox  Grid.Column="6"
                      ItemsSource="{Binding WhgChoices}"
                      SelectedItem="{Binding FormWhgChoice}"
@@ -153,13 +154,13 @@
 
         <!-- Zeile 3: Melder + Dringlichkeit -->
         <Grid ColumnDefinitions="130,8,*,16,130,8,*">
-          <TextBlock Grid.Column="0" Text="Melder" VerticalAlignment="Center"/>
+          <TextBlock Grid.Column="0" Text="{i18n:T desktop.common.reporter}" VerticalAlignment="Center"/>
           <ComboBox  Grid.Column="2"
                      ItemsSource="{Binding MelderOptions}"
                      Text="{Binding FormMelder}"
                      IsEditable="True"
                      HorizontalAlignment="Stretch"/>
-          <TextBlock Grid.Column="4" Text="Dringlichkeit" VerticalAlignment="Center"/>
+          <TextBlock Grid.Column="4" Text="{i18n:T desktop.common.urgency}" VerticalAlignment="Center"/>
           <ComboBox  Grid.Column="6"
                      ItemsSource="{x:Static vm:MmViewModel.DringlichkeitOptions}"
                      SelectedItem="{Binding FormDringlichkeit}"
@@ -168,15 +169,15 @@
 
         <!-- Zeile 4: Telefon + E-Mail -->
         <Grid ColumnDefinitions="130,8,*,16,130,8,*">
-          <TextBlock Grid.Column="0" Text="Telefon" VerticalAlignment="Center"/>
-          <TextBox   Grid.Column="2" Text="{Binding FormTel}" PlaceholderText="Rückrufnummer"/>
-          <TextBlock Grid.Column="4" Text="E-Mail" VerticalAlignment="Center"/>
-          <TextBox   Grid.Column="6" Text="{Binding FormEmail}" PlaceholderText="E-Mail-Adresse"/>
+          <TextBlock Grid.Column="0" Text="{i18n:T desktop.common.phone}" VerticalAlignment="Center"/>
+          <TextBox   Grid.Column="2" Text="{Binding FormTel}" PlaceholderText="{i18n:T desktop.mm.callback_number}"/>
+          <TextBlock Grid.Column="4" Text="{i18n:T desktop.common.email}" VerticalAlignment="Center"/>
+          <TextBox   Grid.Column="6" Text="{Binding FormEmail}" PlaceholderText="{i18n:T desktop.common.email_address}"/>
         </Grid>
 
         <!-- Zeile 5: Nachunternehmer + Zugehörigkeit -->
         <Grid ColumnDefinitions="130,8,*,16,130,8,*">
-          <TextBlock Grid.Column="0" Text="Nachunternehmer" VerticalAlignment="Center"/>
+          <TextBlock Grid.Column="0" Text="{i18n:T desktop.common.contractor}" VerticalAlignment="Center"/>
           <ComboBox  Grid.Column="2"
                      ItemsSource="{Binding ContractorChoices}"
                      SelectedItem="{Binding FormContractorChoice}"
@@ -185,19 +186,19 @@
               <DataTemplate x:DataType="proto:MmFormOption"><TextBlock Text="{Binding Name}"/></DataTemplate>
             </ComboBox.ItemTemplate>
           </ComboBox>
-          <TextBlock Grid.Column="4" Text="Zugehörigkeit" VerticalAlignment="Center"/>
-          <TextBox   Grid.Column="6" Text="{Binding FormZugeh}" PlaceholderText="Zugehörigkeit"/>
+          <TextBlock Grid.Column="4" Text="{i18n:T desktop.common.membership}" VerticalAlignment="Center"/>
+          <TextBox   Grid.Column="6" Text="{Binding FormZugeh}" PlaceholderText="{i18n:T desktop.common.membership}"/>
         </Grid>
 
         <!-- Zeile 6: Meldungstext -->
-        <TextBlock Text="Meldungstext" FontWeight="SemiBold"/>
+        <TextBlock Text="{i18n:T desktop.mm.report_text}" FontWeight="SemiBold"/>
         <controls:HtmlEditorControl HtmlContent="{Binding FormMeldung}" MinHeight="140"/>
 
         <!-- Fotos und Benachrichtigung (nur beim Anlegen, Web-Pendant: Bilder + notify_email) -->
         <StackPanel Spacing="6" IsVisible="{Binding !IsEditingMessage}">
           <StackPanel Orientation="Horizontal" Spacing="8">
-            <Button Content="Fotos hinzufügen…" Command="{Binding AddPhotosCommand}"/>
-            <TextBlock Text="{Binding FormPhotos.Count, StringFormat='{}{0} Foto(s), max. 10 je 10 MB'}"
+            <Button Content="{i18n:T desktop.mm.add_photos}" Command="{Binding AddPhotosCommand}"/>
+            <TextBlock Text="{Binding FormPhotos.Count, Converter={x:Static i18n:Labels.Format}, ConverterParameter=desktop.mm.photo_count|count}"
                        VerticalAlignment="Center" Foreground="#4A5568"/>
           </StackPanel>
           <ItemsControl ItemsSource="{Binding FormPhotos}">
@@ -213,13 +214,13 @@
             </ItemsControl.ItemTemplate>
           </ItemsControl>
           <CheckBox IsChecked="{Binding FormSuppressTenantEmail}"
-                    Content="Keine Eingangsbestätigung per E-Mail an den Melder senden"/>
+                    Content="{i18n:T desktop.mm.no_confirmation}"/>
         </StackPanel>
 
         <!-- Aktions-Buttons -->
         <StackPanel Orientation="Horizontal" Spacing="8">
-          <Button Content="Speichern" Command="{Binding SaveCommand}"/>
-          <Button Content="Abbrechen" Command="{Binding CancelFormCommand}"/>
+          <Button Content="{i18n:T desktop.common.save}" Command="{Binding SaveCommand}"/>
+          <Button Content="{i18n:T desktop.common.cancel}" Command="{Binding CancelFormCommand}"/>
           <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSaving}" Width="80" Height="16" VerticalAlignment="Center"/>
         </StackPanel>
 
@@ -234,15 +235,15 @@
                 AutoGenerateColumns="False"
                 GridLinesVisibility="Horizontal">
         <DataGrid.Columns>
-          <DataGridTextColumn Header="UID"       Binding="{Binding Uid}"      Width="130"/>
-          <DataGridTextColumn Header="Betreff"   Binding="{Binding Betreff}"  Width="*"/>
-          <DataGridTextColumn Header="Objekt"    Binding="{Binding StreetName}" Width="150"/>
-          <DataGridTextColumn Header="Whg"       Binding="{Binding Whg}"      Width="60"/>
-          <DataGridTextColumn Header="Melder"    Binding="{Binding Melder}"   Width="130"/>
-          <DataGridTextColumn Header="Nachunternehmer" Binding="{Binding NachunternehmerName}" Width="150"/>
-          <DataGridTextColumn Header="Folge" Binding="{Binding FollowupCount}" Width="55"/>
-          <DataGridTextColumn Header="Datum"     Binding="{Binding Datetime}" Width="140"/>
-          <DataGridTemplateColumn Header="Status" Width="120">
+          <DataGridTextColumn Header="{i18n:T desktop.mm.uid}"       Binding="{Binding Uid}"      Width="130"/>
+          <DataGridTextColumn Header="{i18n:T desktop.mm.subject}"   Binding="{Binding Betreff}"  Width="*"/>
+          <DataGridTextColumn Header="{i18n:T desktop.mm.object}"    Binding="{Binding StreetName}" Width="150"/>
+          <DataGridTextColumn Header="{i18n:T desktop.mm.apartment_short}"       Binding="{Binding Whg}"      Width="60"/>
+          <DataGridTextColumn Header="{i18n:T desktop.common.reporter}"    Binding="{Binding Melder}"   Width="130"/>
+          <DataGridTextColumn Header="{i18n:T desktop.common.contractor}" Binding="{Binding NachunternehmerName}" Width="150"/>
+          <DataGridTextColumn Header="{i18n:T desktop.mm.followups}" Binding="{Binding FollowupCount}" Width="55"/>
+          <DataGridTextColumn Header="{i18n:T desktop.common.date}"     Binding="{Binding Datetime}" Width="140"/>
+          <DataGridTemplateColumn Header="{i18n:T desktop.common.status}" Width="120">
             <DataGridTemplateColumn.CellTemplate>
               <DataTemplate x:DataType="api:MmMessage">
                 <Border Background="{Binding StatusColorHex}" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left" VerticalAlignment="Center">
@@ -251,7 +252,7 @@
               </DataTemplate>
             </DataGridTemplateColumn.CellTemplate>
           </DataGridTemplateColumn>
-          <DataGridTemplateColumn Header="Dringlichkeit" Width="120">
+          <DataGridTemplateColumn Header="{i18n:T desktop.common.urgency}" Width="120">
             <DataGridTemplateColumn.CellTemplate>
               <DataTemplate x:DataType="api:MmMessage">
                 <Border Background="{Binding DringlichkeitColorHex}" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left" VerticalAlignment="Center">
@@ -263,7 +264,7 @@
         </DataGrid.Columns>
       </DataGrid>
       <controls:EmptyStateView Icon="🔧"
-                               Title="Keine Mängelmeldungen gefunden"
+                               Title="{i18n:T desktop.mm.empty}"
                                Message="Passe die Filter an oder lege eine neue Meldung an."
                                ActionText="Neue Meldung"
                                ActionCommand="{Binding ShowCreateFormCommand}"
@@ -272,16 +273,16 @@
 
     <!-- ═══════════════════════════════════  Pagination  ════════════════════════════════ -->
     <StackPanel Grid.Row="5" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
-      <Button Content="◀ Vorherige Seite" Command="{Binding PreviousPageCommand}"/>
+      <Button Content="{i18n:T desktop.mm.prev_page}" Command="{Binding PreviousPageCommand}"/>
       <TextBlock VerticalAlignment="Center" Foreground="#4A5568">
         <TextBlock.Text>
-          <MultiBinding StringFormat="Seite {0} von {1}">
+          <MultiBinding Converter="{x:Static i18n:Labels.FormatMany}" ConverterParameter="desktop.mm.page_of|page|pages">
             <Binding Path="CurrentPageNumber"/>
             <Binding Path="TotalPages"/>
           </MultiBinding>
         </TextBlock.Text>
       </TextBlock>
-      <Button Content="Nächste Seite ▶" Command="{Binding NextPageCommand}"/>
+      <Button Content="{i18n:T desktop.mm.next_page}" Command="{Binding NextPageCommand}"/>
     </StackPanel>
 
     <GridSplitter Grid.Row="6" Height="4" HorizontalAlignment="Stretch"/>
@@ -291,43 +292,43 @@
       <StackPanel Margin="4" Spacing="10"
                   IsVisible="{Binding SelectedDetail, Converter={x:Static ObjectConverters.IsNotNull}}">
 
-        <TextBlock Text="Detail" FontSize="15" FontWeight="SemiBold"/>
+        <TextBlock Text="{i18n:T desktop.common.detail}" FontSize="15" FontWeight="SemiBold"/>
 
         <Grid ColumnDefinitions="160,16,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="5">
 
           <!-- UID + Datum -->
-          <TextBlock Grid.Row="0" Grid.Column="0" Text="UID:" FontWeight="SemiBold"/>
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="{i18n:T desktop.mm.uid_label}" FontWeight="SemiBold"/>
           <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding SelectedDetail.Uid}"/>
 
-          <TextBlock Grid.Row="1" Grid.Column="0" Text="Erfasst am:" FontWeight="SemiBold"/>
+          <TextBlock Grid.Row="1" Grid.Column="0" Text="{i18n:T desktop.mm.created_label}" FontWeight="SemiBold"/>
           <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding SelectedDetail.Datetime}"/>
 
           <!-- Objekt / Wohnung -->
-          <TextBlock Grid.Row="2" Grid.Column="0" Text="Objekt / Wohnung:" FontWeight="SemiBold"/>
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="{i18n:T desktop.mm.object_apartment_label}" FontWeight="SemiBold"/>
           <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" Spacing="6">
             <TextBlock Text="{Binding SelectedDetail.StreetName}"/>
-            <TextBlock Text="{Binding SelectedDetail.Whg, StringFormat=', Whg. {0}'}"/>
+            <TextBlock Text="{Binding SelectedDetail.Whg, Converter={x:Static i18n:Labels.Format}, ConverterParameter=desktop.mm.apartment_suffix|number}"/>
           </StackPanel>
 
           <!-- Betreff + Meldungstext -->
-          <TextBlock Grid.Row="3" Grid.Column="0" Text="Betreff:" FontWeight="SemiBold"/>
+          <TextBlock Grid.Row="3" Grid.Column="0" Text="{i18n:T desktop.mm.subject_label}" FontWeight="SemiBold"/>
           <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding SelectedDetail.Betreff}" TextWrapping="Wrap"/>
 
-          <TextBlock Grid.Row="4" Grid.Column="0" Text="Meldungstext:" FontWeight="SemiBold" VerticalAlignment="Top"/>
+          <TextBlock Grid.Row="4" Grid.Column="0" Text="{i18n:T desktop.mm.report_text_label}" FontWeight="SemiBold" VerticalAlignment="Top"/>
           <controls:HtmlDisplayControl Grid.Row="4" Grid.Column="2" HtmlContent="{Binding SelectedDetail.MeldungMassage}" MaxHeight="120"/>
 
           <!-- Kontakt -->
-          <TextBlock Grid.Row="5" Grid.Column="0" Text="Telefon / E-Mail:" FontWeight="SemiBold"/>
+          <TextBlock Grid.Row="5" Grid.Column="0" Text="{i18n:T desktop.mm.contact_label}" FontWeight="SemiBold"/>
           <StackPanel Grid.Row="5" Grid.Column="2" Orientation="Horizontal" Spacing="12">
             <TextBlock Text="{Binding SelectedDetail.Tel}"/>
             <TextBlock Text="{Binding SelectedDetail.Email}" Foreground="#2B6CB0"/>
           </StackPanel>
 
           <!-- Zeit / Planon-Gruppe / Zusatzanweisungen (Web-Pendant: mm_view.tpl Prüfungs-/Freigabe-Daten) -->
-          <TextBlock Grid.Row="6" Grid.Column="0" Text="Zeit / Planon-Gruppe:" FontWeight="SemiBold"/>
+          <TextBlock Grid.Row="6" Grid.Column="0" Text="{i18n:T desktop.mm.time_planon_label}" FontWeight="SemiBold"/>
           <StackPanel Grid.Row="6" Grid.Column="2" Orientation="Horizontal" Spacing="12"
                       IsVisible="{Binding SelectedDetail.Zeit, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-            <TextBlock Text="{Binding SelectedDetail.Zeit, StringFormat='{}{0} Min.'}"/>
+            <TextBlock Text="{Binding SelectedDetail.Zeit, Converter={x:Static i18n:Labels.Format}, ConverterParameter=desktop.mm.minutes|count}"/>
             <TextBlock Text="{Binding SelectedDetail.Planon}" Foreground="#4A5568"/>
           </StackPanel>
           <ItemsControl Grid.Row="7" Grid.Column="2" ItemsSource="{Binding SelectedDetail.Instructions}">
@@ -337,10 +338,10 @@
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
-          <TextBlock Grid.Row="7" Grid.Column="0" Text="Zusatzanweisungen:" FontWeight="SemiBold" VerticalAlignment="Top"/>
+          <TextBlock Grid.Row="7" Grid.Column="0" Text="{i18n:T desktop.mm.extra_instructions_label}" FontWeight="SemiBold" VerticalAlignment="Top"/>
 
           <!-- Status-Schnellbearbeitung -->
-          <TextBlock Grid.Row="8" Grid.Column="0" Text="Status ändern:" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          <TextBlock Grid.Row="8" Grid.Column="0" Text="{i18n:T desktop.mm.change_status_label}" FontWeight="SemiBold" VerticalAlignment="Center"/>
           <StackPanel Grid.Row="8" Grid.Column="2" Orientation="Horizontal" Spacing="8">
             <ComboBox ItemsSource="{x:Static vm:MmViewModel.StatusEditOptions}"
                       SelectedItem="{Binding DetailStatusOption}"
@@ -351,37 +352,37 @@
                 </DataTemplate>
               </ComboBox.ItemTemplate>
             </ComboBox>
-            <TextBox Text="{Binding DetailStatusComment}" PlaceholderText="Kommentar zum Statuswechsel (optional)…" Width="220"/>
-            <Button Content="Status speichern" Command="{Binding UpdateStatusCommand}"/>
+            <TextBox Text="{Binding DetailStatusComment}" PlaceholderText="{i18n:T desktop.mm.status_comment_placeholder}" Width="220"/>
+            <Button Content="{i18n:T desktop.klima.save_state}" Command="{Binding UpdateStatusCommand}"/>
           </StackPanel>
 
           <!-- Nachunternehmer-Schnellzuweisung -->
-          <TextBlock Grid.Row="9" Grid.Column="0" Text="Nachunternehmer:" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          <TextBlock Grid.Row="9" Grid.Column="0" Text="{i18n:T desktop.mm.contractor_label}" FontWeight="SemiBold" VerticalAlignment="Center"/>
           <StackPanel Grid.Row="9" Grid.Column="2" Orientation="Horizontal" Spacing="8">
             <ComboBox ItemsSource="{Binding ContractorChoices}" SelectedItem="{Binding DetailContractorChoice}"
-                      PlaceholderText="Nachunternehmer wählen…" MinWidth="220">
+                      PlaceholderText="{i18n:T desktop.mm.contractor_placeholder}" MinWidth="220">
               <ComboBox.ItemTemplate>
                 <DataTemplate x:DataType="proto:MmFormOption"><TextBlock Text="{Binding Name}"/></DataTemplate>
               </ComboBox.ItemTemplate>
             </ComboBox>
-            <Button Content="Zuweisen" Command="{Binding AssignContractorCommand}"/>
+            <Button Content="{i18n:T desktop.mm.assign}" Command="{Binding AssignContractorCommand}"/>
             <TextBlock Text="{Binding SelectedDetail.NachunternehmerName}" Foreground="#2D3748" VerticalAlignment="Center"/>
           </StackPanel>
 
           <!-- Freigabe-/Prüfungs-Workflow (Web-Pendant: Status-/Prüfungs-Modal mm_list.tpl) —
                nur relevant, wenn oben Status "Freigabe" oder "Freigegeben" gewählt ist. -->
-          <TextBlock Grid.Row="10" Grid.Column="0" Text="Freigabe-Workflow:" FontWeight="SemiBold" VerticalAlignment="Top"
+          <TextBlock Grid.Row="10" Grid.Column="0" Text="{i18n:T desktop.mm.approval_workflow_label}" FontWeight="SemiBold" VerticalAlignment="Top"
                      IsVisible="{Binding IsFreigabeWorkflowVisible}"/>
           <StackPanel Grid.Row="10" Grid.Column="2" Spacing="6" IsVisible="{Binding IsFreigabeWorkflowVisible}">
             <StackPanel Orientation="Horizontal" Spacing="8">
-              <TextBox Text="{Binding DetailEkpreis}" PlaceholderText="EK-Preis" Width="100"/>
-              <TextBox Text="{Binding DetailPlanonGruppe}" PlaceholderText="Planon-Arbeitsauftragsgruppe" Width="220"/>
-              <TextBox Text="{Binding DetailAktNr}" PlaceholderText="Freigabe-Akt-Nr." Width="140"/>
+              <TextBox Text="{Binding DetailEkpreis}" PlaceholderText="{i18n:T desktop.mm.purchase_price}" Width="100"/>
+              <TextBox Text="{Binding DetailPlanonGruppe}" PlaceholderText="{i18n:T desktop.mm.planon_group}" Width="220"/>
+              <TextBox Text="{Binding DetailAktNr}" PlaceholderText="{i18n:T desktop.mm.approval_no}" Width="140"/>
             </StackPanel>
-            <TextBox Text="{Binding DetailFolge}" PlaceholderText="Folgemaßnahmen" AcceptsReturn="True" Height="50" TextWrapping="Wrap"/>
+            <TextBox Text="{Binding DetailFolge}" PlaceholderText="{i18n:T desktop.mm.followup_measures}" AcceptsReturn="True" Height="50" TextWrapping="Wrap"/>
           </StackPanel>
 
-          <TextBlock Grid.Row="11" Grid.Column="0" Text="Zusatzanweisungen:" FontWeight="SemiBold" VerticalAlignment="Top"
+          <TextBlock Grid.Row="11" Grid.Column="0" Text="{i18n:T desktop.mm.extra_instructions_label}" FontWeight="SemiBold" VerticalAlignment="Top"
                      IsVisible="{Binding IsFreigabeWorkflowVisible}"/>
           <ItemsControl Grid.Row="11" Grid.Column="2" ItemsSource="{Binding DetailInstructionOptions}"
                         IsVisible="{Binding IsFreigabeWorkflowVisible}">
@@ -398,12 +399,12 @@
           </ItemsControl>
 
           <!-- Erledigt-Workflow — nur relevant, wenn oben Status "Erledigt" gewählt ist. -->
-          <TextBlock Grid.Row="12" Grid.Column="0" Text="Auftragsnummer:" FontWeight="SemiBold" VerticalAlignment="Center"
+          <TextBlock Grid.Row="12" Grid.Column="0" Text="{i18n:T desktop.mm.order_number_label}" FontWeight="SemiBold" VerticalAlignment="Center"
                      IsVisible="{Binding IsErledigtWorkflowVisible}"/>
           <TextBox Grid.Row="12" Grid.Column="2" Text="{Binding DetailAuftragsnummer}" Width="180" HorizontalAlignment="Left"
-                   PlaceholderText="z. B. 1234567 oder P700123"
+                   PlaceholderText="{i18n:T desktop.mm.order_number_placeholder}"
                    IsVisible="{Binding IsErledigtWorkflowVisible}"
-                   ToolTip.Tip="P700+Ziffern oder 7–10-stellige Ziffernfolge; ungültige Werte werden beim Speichern ignoriert"/>
+                   ToolTip.Tip="{i18n:T desktop.mm.order_number_tip}"/>
 
         </Grid>
       </StackPanel>

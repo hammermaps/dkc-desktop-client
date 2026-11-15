@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using DkcDesktopClient.App.Services;
 using DkcDesktopClient.Core.Api;
 using DkcDesktopClient.Core.Services;
+using static DkcDesktopClient.Core.I18n.Translator;
 
 namespace DkcDesktopClient.App.ViewModels;
 
@@ -129,13 +130,13 @@ public partial class WlsViewModel : ViewModelBase, INavigationTarget
             }
             else if (!silent)
             {
-                ErrorMessage = result.Error ?? "Laden der Gebäude fehlgeschlagen.";
+                ErrorMessage = result.Error ?? T("desktop.wls.buildings_failed");
             }
         }
         catch (Exception ex)
         {
             if (!silent)
-                ErrorMessage = $"Fehler: {ex.Message}";
+                ErrorMessage = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -180,7 +181,7 @@ public partial class WlsViewModel : ViewModelBase, INavigationTarget
     {
         if (string.IsNullOrWhiteSpace(FormBuildingName))
         {
-            BuildingFormError = "Name ist ein Pflichtfeld.";
+            BuildingFormError = T("desktop.common.name_is_required");
             return;
         }
         IsSavingBuilding = true;
@@ -212,12 +213,12 @@ public partial class WlsViewModel : ViewModelBase, INavigationTarget
             }
             else
             {
-                BuildingFormError = error ?? "Speichern fehlgeschlagen.";
+                BuildingFormError = error ?? T("desktop.common.save_failed");
             }
         }
         catch (Exception ex)
         {
-            BuildingFormError = $"Fehler: {ex.Message}";
+            BuildingFormError = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -238,11 +239,11 @@ public partial class WlsViewModel : ViewModelBase, INavigationTarget
             if (result.Success)
                 Buildings.Remove(SelectedBuilding);
             else
-                ErrorMessage = result.Error ?? "Löschen fehlgeschlagen.";
+                ErrorMessage = result.Error ?? T("desktop.common.delete_failed");
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Fehler: {ex.Message}";
+            ErrorMessage = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -271,11 +272,11 @@ public partial class WlsViewModel : ViewModelBase, INavigationTarget
                 foreach (var a in result.Data)
                     Apartments.Add(a);
             else if (!result.Success)
-                ErrorMessage = result.Error ?? "Laden der Wohnungen fehlgeschlagen.";
+                ErrorMessage = result.Error ?? T("desktop.wls.apartments_failed");
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Fehler: {ex.Message}";
+            ErrorMessage = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -323,7 +324,7 @@ public partial class WlsViewModel : ViewModelBase, INavigationTarget
     {
         if (string.IsNullOrWhiteSpace(FormApartmentValue))
         {
-            ApartmentFormError = "Wohnungsnummer ist ein Pflichtfeld.";
+            ApartmentFormError = T("desktop.wls.apartment_no_is_required");
             return;
         }
         IsSavingApartment = true;
@@ -350,7 +351,7 @@ public partial class WlsViewModel : ViewModelBase, INavigationTarget
             {
                 if (SelectedBuilding == null)
                 {
-                    ApartmentFormError = "Bitte zuerst ein Gebäude auswählen.";
+                    ApartmentFormError = T("desktop.wls.choose_building_first");
                     return;
                 }
                 var req = new WlsApartmentCreateRequest(
@@ -370,12 +371,12 @@ public partial class WlsViewModel : ViewModelBase, INavigationTarget
             }
             else
             {
-                ApartmentFormError = error ?? "Speichern fehlgeschlagen.";
+                ApartmentFormError = error ?? T("desktop.common.save_failed");
             }
         }
         catch (Exception ex)
         {
-            ApartmentFormError = $"Fehler: {ex.Message}";
+            ApartmentFormError = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -396,11 +397,11 @@ public partial class WlsViewModel : ViewModelBase, INavigationTarget
             if (result.Success)
                 Apartments.Remove(SelectedApartment);
             else
-                ErrorMessage = result.Error ?? "Löschen fehlgeschlagen.";
+                ErrorMessage = result.Error ?? T("desktop.common.delete_failed");
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Fehler: {ex.Message}";
+            ErrorMessage = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -435,7 +436,7 @@ public partial class WlsViewModel : ViewModelBase, INavigationTarget
                 foreach (var r in result.Data)
                     Records.Add(r);
             else if (!result.Success)
-                ErrorMessage = result.Error ?? "Laden der Erfassungen fehlgeschlagen.";
+                ErrorMessage = result.Error ?? T("desktop.wls.records_failed");
         }
         catch (OperationCanceledException)
         {
@@ -443,7 +444,7 @@ public partial class WlsViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Fehler: {ex.Message}";
+            ErrorMessage = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -490,7 +491,7 @@ public partial class WlsViewModel : ViewModelBase, INavigationTarget
     {
         if (string.IsNullOrWhiteSpace(FormRecordStartTime))
         {
-            RecordFormError = "Startzeit ist ein Pflichtfeld.";
+            RecordFormError = T("desktop.wls.start_time_is_required");
             return;
         }
         IsSavingRecord = true;
@@ -518,7 +519,7 @@ public partial class WlsViewModel : ViewModelBase, INavigationTarget
             {
                 if (SelectedApartment == null || SelectedBuilding == null)
                 {
-                    RecordFormError = "Bitte Gebäude und Wohnung auswählen.";
+                    RecordFormError = T("desktop.wls.choose_building_apartment");
                     return;
                 }
                 var req = new WlsRecordCreateRequest(
@@ -539,12 +540,12 @@ public partial class WlsViewModel : ViewModelBase, INavigationTarget
             }
             else
             {
-                RecordFormError = error ?? "Speichern fehlgeschlagen.";
+                RecordFormError = error ?? T("desktop.common.save_failed");
             }
         }
         catch (Exception ex)
         {
-            RecordFormError = $"Fehler: {ex.Message}";
+            RecordFormError = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -565,11 +566,11 @@ public partial class WlsViewModel : ViewModelBase, INavigationTarget
             if (result.Success)
                 Records.Remove(SelectedRecord);
             else
-                ErrorMessage = result.Error ?? "Löschen fehlgeschlagen.";
+                ErrorMessage = result.Error ?? T("desktop.common.delete_failed");
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Fehler: {ex.Message}";
+            ErrorMessage = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -625,20 +626,20 @@ public partial class WlsViewModel : ViewModelBase, INavigationTarget
     {
         var path = await _filePicker.PickSaveFileAsync(
             $"wls_erfassungen_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
-            new[] { ("CSV-Datei", "*.csv") });
+            new[] { (T("desktop.file.csv_file"), "*.csv") });
         if (path == null) return;
 
         var columns = new (string, Func<WlsRecord, string?>)[]
         {
             ("ID",           r => r.Id.ToString()),
-            ("Gebäude-ID",   r => r.BuildingId.ToString()),
-            ("Wohnungs-ID",  r => r.ApartmentId.ToString()),
-            ("Benutzer",     r => r.UserName),
-            ("Startzeit",    r => r.StartTime),
-            ("Endzeit",      r => r.EndTime),
-            ("Dauer",        r => r.DurationText),
-            ("Latitude",     r => r.Latitude?.ToString("F6")),
-            ("Longitude",    r => r.Longitude?.ToString("F6")),
+            (T("desktop.wls.building_id"),   r => r.BuildingId.ToString()),
+            (T("desktop.wls.apartment_id"),  r => r.ApartmentId.ToString()),
+            (T("desktop.common.user"),     r => r.UserName),
+            (T("desktop.common.start_time"),    r => r.StartTime),
+            (T("desktop.common.end_time"),      r => r.EndTime),
+            (T("desktop.common.duration"),        r => r.DurationText),
+            (T("desktop.common.latitude"),     r => r.Latitude?.ToString("F6")),
+            (T("desktop.common.longitude"),    r => r.Longitude?.ToString("F6")),
         };
 
         try
@@ -647,7 +648,7 @@ public partial class WlsViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"CSV-Export fehlgeschlagen: {ex.Message}";
+            ErrorMessage = T("desktop.common.csv_export_failed", ("message", ex.Message));
         }
     }
 

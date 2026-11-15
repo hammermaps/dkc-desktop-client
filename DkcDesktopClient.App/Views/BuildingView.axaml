@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:i18n="using:DkcDesktopClient.App.I18n"
              xmlns:vm="using:DkcDesktopClient.App.ViewModels"
              xmlns:controls="using:DkcDesktopClient.App.Controls"
              x:Class="DkcDesktopClient.App.Views.BuildingView"
@@ -8,40 +9,40 @@
 
     <!-- Toolbar -->
     <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
-      <TextBlock Text="Buildings" FontSize="24" FontWeight="Bold" VerticalAlignment="Center"/>
-      <Button Content="Load" Command="{Binding LoadBuildingsCommand}"/>
+      <TextBlock Text="{i18n:T desktop.building.title}" FontSize="24" FontWeight="Bold" VerticalAlignment="Center"/>
+      <Button Content="{i18n:T desktop.common.load}" Command="{Binding LoadBuildingsCommand}"/>
       <Separator Width="1" Background="#CCCCCC" Margin="4,0"/>
-      <Button Content="New Building" Command="{Binding ShowCreateBuildingFormCommand}"/>
-      <Button Content="Edit Building" Command="{Binding ShowEditBuildingFormCommand}"/>
+      <Button Content="{i18n:T desktop.building.new}" Command="{Binding ShowCreateBuildingFormCommand}"/>
+      <Button Content="{i18n:T desktop.building.edit}" Command="{Binding ShowEditBuildingFormCommand}"/>
       <Separator Width="1" Background="#CCCCCC" Margin="4,0"/>
-      <Button Content="New Inspection" Command="{Binding ShowCreateInspectionFormCommand}"/>
-      <Button Content="Edit Inspection" Command="{Binding ShowEditInspectionFormCommand}"/>
-      <Button Content="Complete" Command="{Binding CompleteInspectionCommand}"/>
+      <Button Content="{i18n:T desktop.building.new_inspection}" Command="{Binding ShowCreateInspectionFormCommand}"/>
+      <Button Content="{i18n:T desktop.building.edit_inspection}" Command="{Binding ShowEditInspectionFormCommand}"/>
+      <Button Content="{i18n:T desktop.common.complete}" Command="{Binding CompleteInspectionCommand}"/>
     </StackPanel>
 
     <!-- Stats tiles -->
     <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,0">
       <Border Background="#90CDF4" BorderBrush="#63B3ED" BorderThickness="1" CornerRadius="4" Padding="12" Margin="0,0,8,0">
         <StackPanel HorizontalAlignment="Center">
-          <TextBlock Text="Gebäude" FontSize="12" Foreground="#4A5568" HorizontalAlignment="Center"/>
+          <TextBlock Text="{i18n:T desktop.common.building}" FontSize="12" Foreground="#4A5568" HorizontalAlignment="Center"/>
           <TextBlock Text="{Binding StatTotalBuildings}" FontSize="28" FontWeight="Bold" HorizontalAlignment="Center"/>
         </StackPanel>
       </Border>
       <Border Background="#9AE6B4" BorderBrush="#68D391" BorderThickness="1" CornerRadius="4" Padding="12" Margin="0,0,8,0">
         <StackPanel HorizontalAlignment="Center">
-          <TextBlock Text="Begehungen gesamt" FontSize="12" Foreground="#4A5568" HorizontalAlignment="Center"/>
+          <TextBlock Text="{i18n:T desktop.building.total_inspections}" FontSize="12" Foreground="#4A5568" HorizontalAlignment="Center"/>
           <TextBlock Text="{Binding StatTotalInspections}" FontSize="28" FontWeight="Bold" HorizontalAlignment="Center"/>
         </StackPanel>
       </Border>
       <Border Background="#FBD38D" BorderBrush="#F6AD55" BorderThickness="1" CornerRadius="4" Padding="12" Margin="0,0,8,0">
         <StackPanel HorizontalAlignment="Center">
-          <TextBlock Text="Offen" FontSize="12" Foreground="#4A5568" HorizontalAlignment="Center"/>
+          <TextBlock Text="{i18n:T desktop.common.open}" FontSize="12" Foreground="#4A5568" HorizontalAlignment="Center"/>
           <TextBlock Text="{Binding StatOpenInspections}" FontSize="28" FontWeight="Bold" HorizontalAlignment="Center"/>
         </StackPanel>
       </Border>
       <Border Background="#D6BCFA" BorderBrush="#B794F4" BorderThickness="1" CornerRadius="4" Padding="12">
         <StackPanel HorizontalAlignment="Center">
-          <TextBlock Text="Abgeschlossen" FontSize="12" Foreground="#4A5568" HorizontalAlignment="Center"/>
+          <TextBlock Text="{i18n:T desktop.common.completed}" FontSize="12" Foreground="#4A5568" HorizontalAlignment="Center"/>
           <TextBlock Text="{Binding StatCompletedInspections}" FontSize="28" FontWeight="Bold" HorizontalAlignment="Center"/>
         </StackPanel>
       </Border>
@@ -56,29 +57,29 @@
     <Border Grid.Row="3" IsVisible="{Binding IsBuildingFormVisible}"
             Background="#CBD5E0" BorderThickness="1" BorderBrush="#CBD5E0" CornerRadius="4" Padding="12">
       <StackPanel Spacing="8">
-        <TextBlock Text="Building" FontSize="15" FontWeight="SemiBold"/>
+        <TextBlock Text="{i18n:T desktop.common.building}" FontSize="15" FontWeight="SemiBold"/>
         <TextBlock Text="{Binding BuildingFormError}" Foreground="Red"
                    IsVisible="{Binding BuildingFormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
         <Grid ColumnDefinitions="100,8,*,16,100,8,*" RowDefinitions="Auto,8,Auto,8,Auto" RowSpacing="0">
-          <TextBlock Grid.Row="0" Grid.Column="0" Text="Name *" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding FormBuildingName}" PlaceholderText="Building name (required)"/>
-          <TextBlock Grid.Row="0" Grid.Column="4" Text="Enabled" VerticalAlignment="Center"/>
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="{i18n:T desktop.common.name_required}" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding FormBuildingName}" PlaceholderText="{i18n:T desktop.building.name_placeholder}"/>
+          <TextBlock Grid.Row="0" Grid.Column="4" Text="{i18n:T desktop.common.enabled}" VerticalAlignment="Center"/>
           <CheckBox Grid.Row="0" Grid.Column="6" IsChecked="{Binding FormBuildingEnabled}"/>
 
-          <TextBlock Grid.Row="2" Grid.Column="0" Text="Address" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding FormBuildingAddress}" PlaceholderText="Address"/>
-          <TextBlock Grid.Row="2" Grid.Column="4" Text="Description" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="2" Grid.Column="6" Text="{Binding FormBuildingDescription}" PlaceholderText="Description"/>
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="{i18n:T desktop.common.address}" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding FormBuildingAddress}" PlaceholderText="{i18n:T desktop.common.address}"/>
+          <TextBlock Grid.Row="2" Grid.Column="4" Text="{i18n:T desktop.common.description}" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="2" Grid.Column="6" Text="{Binding FormBuildingDescription}" PlaceholderText="{i18n:T desktop.common.description}"/>
 
-          <TextBlock Grid.Row="4" Grid.Column="0" Text="Complete Result" VerticalAlignment="Center"/>
+          <TextBlock Grid.Row="4" Grid.Column="0" Text="{i18n:T desktop.building.complete_result}" VerticalAlignment="Center"/>
           <ComboBox Grid.Row="4" Grid.Column="2" ItemsSource="{x:Static vm:BuildingViewModel.ResultOptions}"
                     SelectedItem="{Binding FormCompleteResult}" MinWidth="120"/>
-          <TextBlock Grid.Row="4" Grid.Column="4" Text="Complete Notes" VerticalAlignment="Top" Margin="0,4,0,0"/>
+          <TextBlock Grid.Row="4" Grid.Column="4" Text="{i18n:T desktop.building.complete_notes}" VerticalAlignment="Top" Margin="0,4,0,0"/>
           <controls:HtmlEditorControl Grid.Row="4" Grid.Column="6" HtmlContent="{Binding FormCompleteNotes}" MinHeight="100"/>
         </Grid>
         <StackPanel Orientation="Horizontal" Spacing="8">
-          <Button Content="Save" Command="{Binding SaveBuildingCommand}"/>
-          <Button Content="Cancel" Command="{Binding CancelBuildingFormCommand}"/>
+          <Button Content="{i18n:T desktop.common.save}" Command="{Binding SaveBuildingCommand}"/>
+          <Button Content="{i18n:T desktop.common.cancel}" Command="{Binding CancelBuildingFormCommand}"/>
           <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSavingBuilding}" Width="80" Height="16" VerticalAlignment="Center"/>
         </StackPanel>
       </StackPanel>
@@ -88,29 +89,29 @@
     <Border Grid.Row="4" IsVisible="{Binding IsInspectionFormVisible}"
             Background="#FAF089" BorderThickness="1" BorderBrush="#F6C90E" CornerRadius="4" Padding="12">
       <StackPanel Spacing="8">
-        <TextBlock Text="Inspection" FontSize="15" FontWeight="SemiBold"/>
+        <TextBlock Text="{i18n:T desktop.building.inspection}" FontSize="15" FontWeight="SemiBold"/>
         <TextBlock Text="{Binding InspectionFormError}" Foreground="Red"
                    IsVisible="{Binding InspectionFormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
         <Grid ColumnDefinitions="100,8,*,16,100,8,*" RowDefinitions="Auto,8,Auto,8,Auto" RowSpacing="0">
-          <TextBlock Grid.Row="0" Grid.Column="0" Text="Title" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding FormInspectionTitle}" PlaceholderText="Inspection title"/>
-          <TextBlock Grid.Row="0" Grid.Column="4" Text="Date" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="0" Grid.Column="6" Text="{Binding FormInspectionDate}" PlaceholderText="YYYY-MM-DD"/>
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="{i18n:T desktop.common.title}" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding FormInspectionTitle}" PlaceholderText="{i18n:T desktop.building.inspection_title_placeholder}"/>
+          <TextBlock Grid.Row="0" Grid.Column="4" Text="{i18n:T desktop.common.date}" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="0" Grid.Column="6" Text="{Binding FormInspectionDate}" PlaceholderText="{i18n:T desktop.common.date_placeholder}"/>
 
-          <TextBlock Grid.Row="2" Grid.Column="0" Text="Status" VerticalAlignment="Center"/>
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="{i18n:T desktop.common.status}" VerticalAlignment="Center"/>
           <ComboBox Grid.Row="2" Grid.Column="2" ItemsSource="{x:Static vm:BuildingViewModel.InspectionStatusOptions}"
                     SelectedItem="{Binding FormInspectionStatus}" MinWidth="120"/>
-          <TextBlock Grid.Row="2" Grid.Column="4" Text="Weather" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="2" Grid.Column="6" Text="{Binding FormInspectionWeather}" PlaceholderText="Weather"/>
+          <TextBlock Grid.Row="2" Grid.Column="4" Text="{i18n:T desktop.common.weather}" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="2" Grid.Column="6" Text="{Binding FormInspectionWeather}" PlaceholderText="{i18n:T desktop.common.weather}"/>
 
-          <TextBlock Grid.Row="4" Grid.Column="0" Text="Attendees" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="4" Grid.Column="2" Text="{Binding FormInspectionAttendees}" PlaceholderText="Attendees"/>
-          <TextBlock Grid.Row="4" Grid.Column="4" Text="Notes" VerticalAlignment="Top" Margin="0,4,0,0"/>
+          <TextBlock Grid.Row="4" Grid.Column="0" Text="{i18n:T desktop.common.attendees}" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="4" Grid.Column="2" Text="{Binding FormInspectionAttendees}" PlaceholderText="{i18n:T desktop.common.attendees}"/>
+          <TextBlock Grid.Row="4" Grid.Column="4" Text="{i18n:T desktop.common.notes}" VerticalAlignment="Top" Margin="0,4,0,0"/>
           <controls:HtmlEditorControl Grid.Row="4" Grid.Column="6" HtmlContent="{Binding FormInspectionNotes}" MinHeight="100"/>
         </Grid>
         <StackPanel Orientation="Horizontal" Spacing="8">
-          <Button Content="Save" Command="{Binding SaveInspectionCommand}"/>
-          <Button Content="Cancel" Command="{Binding CancelInspectionFormCommand}"/>
+          <Button Content="{i18n:T desktop.common.save}" Command="{Binding SaveInspectionCommand}"/>
+          <Button Content="{i18n:T desktop.common.cancel}" Command="{Binding CancelInspectionFormCommand}"/>
           <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSavingInspection}" Width="80" Height="16" VerticalAlignment="Center"/>
         </StackPanel>
       </StackPanel>
@@ -119,26 +120,26 @@
     <!-- Main content: buildings + inspections + checkpoints -->
     <Grid Grid.Row="5" ColumnDefinitions="280, 8, *">
       <StackPanel Grid.Column="0" Spacing="4">
-        <TextBlock Text="Buildings" FontWeight="SemiBold"/>
+        <TextBlock Text="{i18n:T desktop.building.title}" FontWeight="SemiBold"/>
         <DataGrid ItemsSource="{Binding Buildings}" SelectedItem="{Binding SelectedBuilding}"
                   IsReadOnly="True" AutoGenerateColumns="False">
           <DataGrid.Columns>
-            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
-            <DataGridTextColumn Header="Address" Binding="{Binding Address}" Width="140"/>
+            <DataGridTextColumn Header="{i18n:T desktop.common.name}" Binding="{Binding Name}" Width="*"/>
+            <DataGridTextColumn Header="{i18n:T desktop.common.address}" Binding="{Binding Address}" Width="140"/>
           </DataGrid.Columns>
         </DataGrid>
       </StackPanel>
       <GridSplitter Grid.Column="1" Width="4"/>
       <Grid Grid.Column="2" RowDefinitions="*, 8, *">
         <StackPanel Grid.Row="0" Spacing="4">
-          <TextBlock Text="Inspections" FontWeight="SemiBold"/>
+          <TextBlock Text="{i18n:T desktop.building.inspections}" FontWeight="SemiBold"/>
           <DataGrid ItemsSource="{Binding Inspections}" SelectedItem="{Binding SelectedInspection}"
                     IsReadOnly="True" AutoGenerateColumns="False">
             <DataGrid.Columns>
-              <DataGridTextColumn Header="Title" Binding="{Binding Title}" Width="*"/>
-              <DataGridTextColumn Header="Date" Binding="{Binding InspectionDate}" Width="110"/>
-              <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90"/>
-              <DataGridTextColumn Header="Result" Binding="{Binding OverallResult}" Width="90"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.title}" Binding="{Binding Title}" Width="*"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.date}" Binding="{Binding InspectionDate}" Width="110"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.status}" Binding="{Binding Status}" Width="90"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.result}" Binding="{Binding OverallResult}" Width="90"/>
             </DataGrid.Columns>
           </DataGrid>
         </StackPanel>
@@ -146,16 +147,16 @@
         <ScrollViewer Grid.Row="2">
           <StackPanel Margin="4" Spacing="8" IsVisible="{Binding InspectionDetail, Converter={x:Static ObjectConverters.IsNotNull}}">
             <StackPanel Orientation="Horizontal" Spacing="8">
-              <TextBlock Text="Checkpoint Results" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
-              <Button Content="Alle Änderungen speichern" Command="{Binding SaveAllCheckpointsCommand}"/>
+              <TextBlock Text="{i18n:T desktop.building.checkpoint_results}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+              <Button Content="{i18n:T desktop.building.save_all}" Command="{Binding SaveAllCheckpointsCommand}"/>
               <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSavingCheckpoints}" Width="80" Height="14" VerticalAlignment="Center"/>
             </StackPanel>
             <TextBlock Text="{Binding CheckpointError}" Foreground="Red"
                        IsVisible="{Binding CheckpointError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
             <DataGrid ItemsSource="{Binding CheckpointEdits}" IsReadOnly="False" AutoGenerateColumns="False" MaxHeight="300">
               <DataGrid.Columns>
-                <DataGridTextColumn Header="Prüfpunkt" Binding="{Binding CheckpointName}" Width="*" IsReadOnly="True"/>
-                <DataGridTemplateColumn Header="Status" Width="120">
+                <DataGridTextColumn Header="{i18n:T desktop.building.checkpoint}" Binding="{Binding CheckpointName}" Width="*" IsReadOnly="True"/>
+                <DataGridTemplateColumn Header="{i18n:T desktop.common.status}" Width="120">
                   <DataGridTemplateColumn.CellTemplate>
                     <DataTemplate x:DataType="vm:CheckpointEditItem">
                       <ComboBox ItemsSource="{x:Static vm:CheckpointEditItem.StatusOptions}"
@@ -163,8 +164,8 @@
                     </DataTemplate>
                   </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="Notiz"     Binding="{Binding Note}"    Width="200"/>
-                <DataGridTextColumn Header="Kommentar" Binding="{Binding Comment}" Width="200"/>
+                <DataGridTextColumn Header="{i18n:T desktop.common.note}"     Binding="{Binding Note}"    Width="200"/>
+                <DataGridTextColumn Header="{i18n:T desktop.common.comment}" Binding="{Binding Comment}" Width="200"/>
               </DataGrid.Columns>
             </DataGrid>
           </StackPanel>

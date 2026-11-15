@@ -45,7 +45,8 @@ public partial class HtmlDisplayControl : UserControl
             _webView.NavigationCompleted += OnNavigationCompleted;
             Content = _webView;
             // Load the base display page; content is injected once navigation completes.
-            _webView.NavigateToString(DisplayHtml, new Uri("https://localhost/display.html"));
+            _webView.NavigateToString(DisplayHtml.Replace("__I18N_UNAVAILABLE__",
+                System.Net.WebUtility.HtmlEncode(DkcDesktopClient.Core.I18n.Translator.T("desktop.common.html_unavailable")).Replace("'", "&#39;")), new Uri("https://localhost/display.html"));
         }
         catch
         {
@@ -151,7 +152,7 @@ public partial class HtmlDisplayControl : UserControl
               } else {
                 // DOMPurify failed to load (offline / CDN blocked) — show a notice
                 // rather than risk rendering unsanitized HTML.
-                safe = '<em style="color:#718096">(Inhalt nicht verfügbar – Darstellungsbibliothek konnte nicht geladen werden.)</em>';
+                safe = '<em style="color:#718096">__I18N_UNAVAILABLE__</em>';
               }
               document.getElementById('content').innerHTML = safe;
             }

@@ -10,6 +10,7 @@ using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using SkiaSharp;
+using static DkcDesktopClient.Core.I18n.Translator;
 
 namespace DkcDesktopClient.App.ViewModels;
 
@@ -207,7 +208,7 @@ public partial class DashboardViewModel : ViewModelBase
             ClearNeaDashboardData();
             MmTotal = 0;
             KeysAvailable = 0;
-            ErrorMessage = $"Error loading dashboard: {ex.Message}";
+            ErrorMessage = T("desktop.dashboard.load_failed", ("message", ex.Message));
         }
         finally
         {
@@ -270,7 +271,7 @@ public partial class DashboardViewModel : ViewModelBase
         {
             // Nicht fatal: die klassischen Dashboard-Kacheln (REST, oben) bleiben nutzbar,
             // auch wenn der Protobuf-Endpunkt (noch) nicht erreichbar ist.
-            ErrorMessage ??= $"Dashboard-Widgets konnten nicht geladen werden: {ex.Message}";
+            ErrorMessage ??= T("desktop.dashboard.widgets_failed", ("message", ex.Message));
         }
     }
 
@@ -322,11 +323,11 @@ public partial class DashboardViewModel : ViewModelBase
             var api    = _apiFactory.Create(_authService.CurrentToken);
             var result = await api.SetActiveProjectAsync(new ProjectSetActiveRequest(SelectedProject.Id));
             if (!result.Success)
-                ErrorMessage = result.Error ?? "Projekt konnte nicht gesetzt werden.";
+                ErrorMessage = result.Error ?? T("desktop.dashboard.project_not_set");
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Fehler beim Setzen des Projekts: {ex.Message}";
+            ErrorMessage = T("desktop.dashboard.project_set_error", ("message", ex.Message));
         }
         finally
         {
@@ -362,7 +363,7 @@ public partial class DashboardViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error refreshing dashboard: {ex.Message}";
+            ErrorMessage = T("desktop.dashboard.load_failed", ("message", ex.Message));
         }
         finally
         {

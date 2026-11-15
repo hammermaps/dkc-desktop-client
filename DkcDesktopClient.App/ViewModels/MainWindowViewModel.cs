@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DkcDesktopClient.App.Services;
 using DkcDesktopClient.Core.Services;
+using static DkcDesktopClient.Core.I18n.Translator;
 
 namespace DkcDesktopClient.App.ViewModels;
 
@@ -96,9 +97,9 @@ public partial class MainWindowViewModel : ViewModelBase
         DashboardViewModel.CreateMmRequested += (_, _) =>
         {
             _ = MmViewModel.ShowCreateFormAsync();
-            SelectNavItem(MmViewModel, "Maengelmeldungen");
+            SelectNavItem(MmViewModel, T("desktop.nav.mm"));
         };
-        DashboardViewModel.StartNeaInspectionRequested += (_, _) => SelectNavItem(NeaViewModel, "NEA");
+        DashboardViewModel.StartNeaInspectionRequested += (_, _) => SelectNavItem(NeaViewModel, T("desktop.nav.nea"));
         _notificationPollingService.UnreadCountChanged += (_, count) =>
             Avalonia.Threading.Dispatcher.UIThread.Post(() => UnreadNotificationCount = count);
         _connectivityService.ConnectivityChanged += (_, isOnline) =>
@@ -110,6 +111,7 @@ public partial class MainWindowViewModel : ViewModelBase
         if (_maintenance != null)
         {
             _maintenance.Changed += (_, _) => Avalonia.Threading.Dispatcher.UIThread.Post(ApplyMaintenanceState);
+            DkcDesktopClient.Core.I18n.Translator.Instance.Changed += (_, _) => ApplyMaintenanceState();
             ApplyMaintenanceState();
         }
 
@@ -145,11 +147,11 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (state == MaintenanceState.Off) return string.Empty;
         var text = state == MaintenanceState.Blocked
-            ? "Wartungsmodus – der Server ist vorübergehend nicht verfügbar."
-            : "Wartungsmodus aktiv – Ihr Konto hat weiterhin Zugriff.";
+            ? T("desktop.maintenance.blocked")
+            : T("desktop.maintenance.allowed");
         if (!string.IsNullOrWhiteSpace(message)) text += " " + message.Trim();
-        if (!string.IsNullOrWhiteSpace(end)) text += $" Voraussichtliches Ende: {end}.";
-        if (state == MaintenanceState.Blocked) text += " Der Client prüft automatisch weiter.";
+        if (!string.IsNullOrWhiteSpace(end)) text += " " + T("desktop.maintenance.estimated_end", ("end", end));
+        if (state == MaintenanceState.Blocked) text += " " + T("desktop.maintenance.auto_retry");
         return text;
     }
 
@@ -174,34 +176,34 @@ public partial class MainWindowViewModel : ViewModelBase
             UserInitials = BuildInitials(UserDisplayName);
             RebuildNavItems();
             SelectedNavItem = NavItems.FirstOrDefault(n => n.ViewModel == DashboardViewModel);
-            _navigationService.NavigateToRoot(DashboardViewModel, "Dashboard");
+            _navigationService.NavigateToRoot(DashboardViewModel, T("desktop.nav.dashboard"));
             _ = DashboardViewModel.LoadDataAsync();
         }
         else
         {
             NavItems.Clear();
             UserInitials = string.Empty;
-            _navigationService.NavigateToRoot(LoginViewModel, "Login");
+            _navigationService.NavigateToRoot(LoginViewModel, T("desktop.login.login"));
         }
     }
 
     private void RebuildNavItems()
     {
         NavItems.Clear();
-        NavItems.Add(new NavItem("📊", "Dashboard", DashboardViewModel));
-        NavItems.Add(new NavItem("⚡", "NEA", NeaViewModel));
+        NavItems.Add(new NavItem("📊", "desktop.nav.dashboard", DashboardViewModel));
+        NavItems.Add(new NavItem("⚡", "desktop.nav.nea", NeaViewModel));
         // Wie im Web nur mit Leserecht sichtbar (Admins sehen alles).
         if (CanView(AufzugPruefungViewModel))
-            NavItems.Add(new NavItem("🛗", "Aufzugprüfung", AufzugPruefungViewModel));
+            NavItems.Add(new NavItem("🛗", "desktop.nav.aufzug", AufzugPruefungViewModel));
         if (CanView(SprinklerPruefungViewModel))
-            NavItems.Add(new NavItem("💧", "Sprinklerprüfung", SprinklerPruefungViewModel));
-        NavItems.Add(new NavItem("🔧", "Maengelmeldungen", MmViewModel));
-        NavItems.Add(new NavItem("🏢", "Buildings", BuildingViewModel));
-        NavItems.Add(new NavItem("❄️", "Climate", KlimaViewModel));
-        NavItems.Add(new NavItem("🔑", "Keys", KeysViewModel));
-        NavItems.Add(new NavItem("🏠", "WLS", WlsViewModel));
-        NavItems.Add(new NavItem("🔔", "Benachrichtigungen", NotificationsViewModel));
-        NavItems.Add(new NavItem("⚙️", "Settings", SettingsViewModel));
+            NavItems.Add(new NavItem("💧", "desktop.nav.sprinkler", SprinklerPruefungViewModel));
+        NavItems.Add(new NavItem("🔧", "desktop.nav.mm", MmViewModel));
+        NavItems.Add(new NavItem("🏢", "desktop.nav.buildings", BuildingViewModel));
+        NavItems.Add(new NavItem("❄️", "desktop.nav.klima", KlimaViewModel));
+        NavItems.Add(new NavItem("🔑", "desktop.nav.keys", KeysViewModel));
+        NavItems.Add(new NavItem("🏠", "desktop.nav.wls", WlsViewModel));
+        NavItems.Add(new NavItem("🔔", "desktop.nav.notifications", NotificationsViewModel));
+        NavItems.Add(new NavItem("⚙️", "desktop.nav.settings", SettingsViewModel));
     }
 
     private bool CanView(PruefungViewModel vm)
@@ -289,7 +291,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public async Task InitializeAsync()
     {
         if (!await _authService.TryAutoLoginAsync())
-            _navigationService.NavigateToRoot(LoginViewModel, "Login");
+            _navigationService.NavigateToRoot(LoginViewModel, T("desktop.login.login"));
 
         _ = CheckForUpdateAsync();
     }
@@ -319,19 +321,26 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 }
 
-public class NavItem
+public class NavItem : System.ComponentModel.INotifyPropertyChanged
 {
     public string Icon { get; }
-    public string Title { get; }
+    public string TitleKey { get; }
+    /// <summary>Übersetzter Titel; folgt einem Sprachwechsel.</summary>
+    public string Title => T(TitleKey);
     public ViewModelBase ViewModel { get; }
 
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+
     /// <param name="icon">Short visual icon shown before the navigation title.</param>
-    /// <param name="title">Navigation label shown in the sidebar.</param>
+    /// <param name="titleKey">Übersetzungsschlüssel des Titels (desktop.nav.*).</param>
     /// <param name="viewModel">ViewModel displayed when the item is selected.</param>
-    public NavItem(string icon, string title, ViewModelBase viewModel)
+    public NavItem(string icon, string titleKey, ViewModelBase viewModel)
     {
         Icon      = icon;
-        Title     = title;
+        TitleKey  = titleKey;
         ViewModel = viewModel;
+        // Translator.Changed läuft bereits auf dem UI-Thread (Translator.Notify).
+        DkcDesktopClient.Core.I18n.Translator.Instance.Changed += (_, _) =>
+            PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Title)));
     }
 }

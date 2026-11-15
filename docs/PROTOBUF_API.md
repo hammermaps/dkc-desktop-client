@@ -215,7 +215,14 @@ permanent – removed actions are marked `reserved` rather than renumbered.
 | **Dashboard & Projekte** | `DASHBOARD_DATA`, `PROJECTS_LIST`, `PROJECT_CREATE`, `PROJECT_UPDATE`, `PROJECT_SET_ACTIVE` |
 | **Benutzerverwaltung (Admin)** | `USERS_LIST`, `USER_CREATE`, `USER_UPDATE`, `USER_DELETE` |
 | **Benachrichtigungen** | `NOTIFICATIONS`, `NOTIFICATION_COUNT` |
+| **Übersetzungen**    | `TRANSLATIONS` (260, ohne Anmeldung, auch im Wartungsmodus) |
 | **WLS**              | `WLS_BUILDINGS_LIST`, `WLS_BUILDING_CREATE`, `WLS_BUILDING_UPDATE`, `WLS_BUILDING_DELETE`, `WLS_APARTMENTS_LIST`, `WLS_APARTMENTS_BY_BUILDING`, `WLS_APARTMENT_CREATE`, `WLS_APARTMENT_UPDATE`, `WLS_APARTMENT_DELETE`, `WLS_RECORDS_LIST`, `WLS_RECORD_CREATE`, `WLS_RECORD_UPDATE`, `WLS_RECORD_DELETE` |
+
+`TRANSLATIONS` (`i18n.proto`) liefert die Schlüssel `desktop.*` aus `lang/<sprache>.json` des Servers.
+Der Client schickt `language` und den SHA-1 seines Stands (`known_hash`, über „schlüssel\twert\n“ in
+ordinaler Schlüsselreihenfolge); stimmt er, kommt nur `unchanged = true`. Sonst enthält `entries` den
+vollständigen Bestand der Sprache, fehlende Schlüssel aus Deutsch ergänzt. `UserInfo.language` nennt die
+Kontosprache, die der Client bei der Einstellung „Automatisch“ übernimmt.
 
 Each action's request and response message live in the matching
 `.proto` file, e.g. `MM_LIST` ↔ `MmListRequest` / `MmListResponse` in

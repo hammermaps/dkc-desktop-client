@@ -224,4 +224,36 @@ public class PruefungViewTests
         Assert.Equal(new PruefungSystemInput(0, "Aufzug Neu", "", 4, "haus", true), input);
         Assert.False(Find<Border>(w, "SystemForm").IsVisible);
     }
+
+    /// <summary>
+    /// Sprachwechsel wirkt sofort auf die geöffnete Ansicht (Bindung an Translator.Revision), auch
+    /// auf Checklisten-Werte, die sprachunabhängig gespeichert werden.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task LanguageSwitch_UpdatesOpenViewImmediately()
+    {
+        var translator = DkcDesktopClient.Core.I18n.Translator.Instance;
+        var (w, vm) = Show(Domain(), "aufzug_pruefung_edit");
+        try
+        {
+            await vm.LoadAsync();
+            await Settle();
+            var start = Find<Button>(w, "StartInspectionButton");
+            Assert.Equal("Neue Prüfung", start.Content);
+
+            translator.Use("en", DkcDesktopClient.Core.I18n.Translator.LoadEmbedded("en"));
+            await Settle();
+            Assert.Equal("New inspection", start.Content);
+            Assert.Equal("OK", DkcDesktopClient.Core.Pruefung.PruefungValues.ChoiceLabel(DkcDesktopClient.Core.Pruefung.PruefungValues.CheckboxOk));
+
+            translator.Use("ru", DkcDesktopClient.Core.I18n.Translator.LoadEmbedded("ru"));
+            await Settle();
+            Assert.Equal("Новая проверка", start.Content);
+        }
+        finally
+        {
+            translator.Use("de", DkcDesktopClient.Core.I18n.Translator.LoadEmbedded("de"));
+            w.Close();
+        }
+    }
 }

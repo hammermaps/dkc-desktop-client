@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
+using static DkcDesktopClient.Core.I18n.Translator;
 
 namespace DkcDesktopClient.App.Services;
 
@@ -26,7 +27,7 @@ public class AvaloniaFilePickerService : IFilePickerService
 
         var options = new FilePickerSaveOptions
         {
-            Title                = "Datei speichern",
+            Title                = T("desktop.file.save_title"),
             SuggestedFileName    = suggestedFileName,
             FileTypeChoices      = fileTypes,
             DefaultExtension     = fileTypeFilter?.FirstOrDefault().Pattern?.TrimStart('*', '.'),
@@ -48,7 +49,7 @@ public class AvaloniaFilePickerService : IFilePickerService
 
         var options = new FilePickerOpenOptions
         {
-            Title          = "Dateien auswählen",
+            Title          = T("desktop.file.open_title"),
             AllowMultiple  = true,
             FileTypeFilter = fileTypeFilter?
                 .Select(f => new FilePickerFileType(f.Name) { Patterns = f.Pattern.Split(';') })

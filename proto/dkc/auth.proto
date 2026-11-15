@@ -62,6 +62,7 @@ message UserInfo {
     string email             = 5;
     bool   is_admin          = 6;
     int32  active_project_id = 7;
+    string language          = 8; // users.language (de, en, fr, es, tr, ru, pl) – Vorgabe für die Client-Sprache
 }
 
 message UserInfoResponse {

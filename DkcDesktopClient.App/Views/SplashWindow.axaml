@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:i18n="using:DkcDesktopClient.App.I18n"
         x:Class="DkcDesktopClient.App.Views.SplashWindow"
         Title="DK-Control"
         Width="400" Height="260"
@@ -14,7 +15,7 @@
     <StackPanel Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8">
       <TextBlock Text="DK-Control" Foreground="White" FontSize="32" FontWeight="Bold"
                  HorizontalAlignment="Center"/>
-      <TextBlock Text="Desktop Client" Foreground="#94A3B8" FontSize="14"
+      <TextBlock Text="{i18n:T desktop.splash.subtitle}" Foreground="#94A3B8" FontSize="14"
                  HorizontalAlignment="Center"/>
     </StackPanel>
 
@@ -25,7 +26,7 @@
 
     <!-- Status text -->
     <TextBlock Grid.Row="2" x:Name="StatusText"
-               Text="Starte Anwendung…"
+               Text="{i18n:T desktop.splash.starting}"
                Foreground="#CBD5E0" FontSize="12"
                HorizontalAlignment="Center" Margin="0,0,0,8"/>
 

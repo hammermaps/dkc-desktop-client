@@ -1,11 +1,12 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:i18n="using:DkcDesktopClient.App.I18n"
         xmlns:vm="using:DkcDesktopClient.App.ViewModels"
         xmlns:views="using:DkcDesktopClient.App.Views"
         xmlns:controls="using:DkcDesktopClient.App.Controls"
         x:Class="DkcDesktopClient.App.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Title="DK-Control Desktop Client"
+        Title="{i18n:T desktop.main.window_title}"
         Width="1200" Height="800"
         MinWidth="800" MinHeight="600"
         Background="{DynamicResource ContentBackgroundBrush}">
@@ -84,7 +85,7 @@
 
           <StackPanel DockPanel.Dock="Bottom" Margin="12,8,12,16" Spacing="10">
             <Border Height="1" Background="#334155"/>
-            <Button Content="Logout" Command="{Binding LogoutCommand}"
+            <Button Content="{i18n:T desktop.main.logout}" Command="{Binding LogoutCommand}"
                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                     Classes="danger"/>
           </StackPanel>
@@ -131,15 +132,15 @@
           <StackPanel Orientation="Horizontal" Spacing="8">
             <Button Content="☰" Command="{Binding TogglePaneCommand}" Width="36" Height="32"
                     AutomationProperties.Name="Navigation umschalten"
-                    ToolTip.Tip="Navigation umschalten"/>
+                    ToolTip.Tip="{i18n:T desktop.main.toggle_navigation}"/>
             <!-- Offline indicator -->
             <Border Background="#FEF2F2" BorderBrush="#FECACA" BorderThickness="1" CornerRadius="4"
                     Padding="8,4" VerticalAlignment="Center"
                     IsVisible="{Binding IsOffline}"
-                    ToolTip.Tip="Server nicht erreichbar – Verbindung wird automatisch wiederhergestellt">
+                    ToolTip.Tip="{i18n:T desktop.main.offline_tooltip}">
               <StackPanel Orientation="Horizontal" Spacing="4">
                 <TextBlock Text="⚠" Foreground="#DC2626" VerticalAlignment="Center"/>
-                <TextBlock Text="Offline" Foreground="#DC2626" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center"/>
+                <TextBlock Text="{i18n:T desktop.common.offline}" Foreground="#DC2626" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center"/>
               </StackPanel>
             </Border>
           </StackPanel>
@@ -169,7 +170,7 @@
                   IsVisible="{Binding AvailableUpdate, Converter={x:Static ObjectConverters.IsNotNull}}">
             <DockPanel>
               <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8">
-                <Button Content="Details" Command="{Binding ShowUpdateInSettingsCommand}"
+                <Button Content="{i18n:T desktop.common.details}" Command="{Binding ShowUpdateInSettingsCommand}"
                         Background="#D69E2E" Foreground="White" Padding="8,4"/>
                 <Button Content="✕" Command="{Binding DismissUpdateCommand}"
                         Background="Transparent" Padding="6,4"/>
@@ -177,9 +178,9 @@
               <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                 <TextBlock Text="🔔" VerticalAlignment="Center"/>
                 <TextBlock VerticalAlignment="Center">
-                  <Run Text="Update available: "/>
+                  <Run Text="{i18n:T desktop.main.update_available}"/>
                   <Run Text="{Binding AvailableUpdate.TagName}" FontWeight="Bold"/>
-                  <Run Text=" — Go to Settings to install."/>
+                  <Run Text="{i18n:T desktop.main.update_hint}"/>
                 </TextBlock>
               </StackPanel>
             </DockPanel>

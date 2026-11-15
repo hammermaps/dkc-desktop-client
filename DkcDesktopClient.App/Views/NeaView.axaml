@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:i18n="using:DkcDesktopClient.App.I18n"
              xmlns:vm="using:DkcDesktopClient.App.ViewModels"
              xmlns:controls="using:DkcDesktopClient.App.Controls"
              x:Class="DkcDesktopClient.App.Views.NeaView"
@@ -8,19 +9,19 @@
 
     <!-- Toolbar -->
     <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" FlowDirection="LeftToRight">
-      <TextBlock Text="NEA Inspections" FontSize="24" FontWeight="Bold" VerticalAlignment="Center"/>
-      <Button Content="Refresh" Command="{Binding LoadSystemsCommand}"/>
+      <TextBlock Text="{i18n:T desktop.nea.title}" FontSize="24" FontWeight="Bold" VerticalAlignment="Center"/>
+      <Button Content="{i18n:T desktop.common.refresh}" Command="{Binding LoadSystemsCommand}"/>
       <Separator Width="1" Background="#CCCCCC" Margin="4,0"/>
-      <Button Content="New System" Command="{Binding ShowCreateSystemFormCommand}"/>
-      <Button Content="Edit System" Command="{Binding ShowEditSystemFormCommand}"/>
-      <Button Content="Delete System" Command="{Binding DeleteSystemCommand}" Foreground="Red"/>
+      <Button Content="{i18n:T desktop.nea.new_system}" Command="{Binding ShowCreateSystemFormCommand}"/>
+      <Button Content="{i18n:T desktop.common.edit_system}" Command="{Binding ShowEditSystemFormCommand}"/>
+      <Button Content="{i18n:T desktop.common.delete_system}" Command="{Binding DeleteSystemCommand}" Foreground="Red"/>
       <Separator Width="1" Background="#CCCCCC" Margin="4,0"/>
-      <Button Content="New Inspection" Command="{Binding ShowCreateInspectionFormCommand}"/>
-      <Button Content="Edit Inspection" Command="{Binding ShowEditInspectionFormCommand}"/>
-      <Button Content="Complete" Command="{Binding CompleteInspectionCommand}"/>
+      <Button Content="{i18n:T desktop.building.new_inspection}" Command="{Binding ShowCreateInspectionFormCommand}"/>
+      <Button Content="{i18n:T desktop.building.edit_inspection}" Command="{Binding ShowEditInspectionFormCommand}"/>
+      <Button Content="{i18n:T desktop.common.complete}" Command="{Binding CompleteInspectionCommand}"/>
       <Separator Width="1" Background="#CCCCCC" Margin="4,0"/>
-      <Button Content="📥 CSV-Export" Command="{Binding ExportInspectionsToCsvCommand}"
-              ToolTip.Tip="Prüfungen als CSV exportieren"/>
+      <Button Content="{i18n:T desktop.common.csv_export}" Command="{Binding ExportInspectionsToCsvCommand}"
+              ToolTip.Tip="{i18n:T desktop.nea.export_tip}"/>
     </StackPanel>
 
     <!-- Error / Progress -->
@@ -32,39 +33,39 @@
     <Border Grid.Row="2" IsVisible="{Binding IsSystemFormVisible}"
             Background="#CBD5E0" BorderThickness="1" BorderBrush="#CBD5E0" CornerRadius="4" Padding="12">
       <StackPanel Spacing="8">
-        <TextBlock Text="NEA System" FontSize="15" FontWeight="SemiBold"/>
+        <TextBlock Text="{i18n:T desktop.nea.system}" FontSize="15" FontWeight="SemiBold"/>
         <TextBlock Text="{Binding SystemFormError}" Foreground="Red"
                    IsVisible="{Binding SystemFormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
         <Grid ColumnDefinitions="110,8,*,16,110,8,*" RowDefinitions="Auto,8,Auto,8,Auto,8,Auto,8,Auto" RowSpacing="0">
-          <TextBlock Grid.Row="0" Grid.Column="0" Text="Name *" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding FormSystemName}" PlaceholderText="System name (required)"/>
-          <TextBlock Grid.Row="0" Grid.Column="4" Text="Location" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="0" Grid.Column="6" Text="{Binding FormSystemLocation}" PlaceholderText="Location"/>
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="{i18n:T desktop.common.name_required}" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding FormSystemName}" PlaceholderText="{i18n:T desktop.nea.system_name_placeholder}"/>
+          <TextBlock Grid.Row="0" Grid.Column="4" Text="{i18n:T desktop.common.location}" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="0" Grid.Column="6" Text="{Binding FormSystemLocation}" PlaceholderText="{i18n:T desktop.common.location}"/>
 
-          <TextBlock Grid.Row="2" Grid.Column="0" Text="Manufacturer" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding FormSystemManufacturer}" PlaceholderText="Manufacturer"/>
-          <TextBlock Grid.Row="2" Grid.Column="4" Text="Model" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="2" Grid.Column="6" Text="{Binding FormSystemModel}" PlaceholderText="Model"/>
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="{i18n:T desktop.common.manufacturer}" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding FormSystemManufacturer}" PlaceholderText="{i18n:T desktop.common.manufacturer}"/>
+          <TextBlock Grid.Row="2" Grid.Column="4" Text="{i18n:T desktop.common.model}" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="2" Grid.Column="6" Text="{Binding FormSystemModel}" PlaceholderText="{i18n:T desktop.common.model}"/>
 
-          <TextBlock Grid.Row="4" Grid.Column="0" Text="Serial No." VerticalAlignment="Center"/>
-          <TextBox Grid.Row="4" Grid.Column="2" Text="{Binding FormSystemSerialNumber}" PlaceholderText="Serial number"/>
-          <TextBlock Grid.Row="4" Grid.Column="4" Text="Install Date" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="4" Grid.Column="6" Text="{Binding FormSystemInstallationDate}" PlaceholderText="YYYY-MM-DD"/>
+          <TextBlock Grid.Row="4" Grid.Column="0" Text="{i18n:T desktop.nea.serial_no}" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="4" Grid.Column="2" Text="{Binding FormSystemSerialNumber}" PlaceholderText="{i18n:T desktop.nea.serial_placeholder}"/>
+          <TextBlock Grid.Row="4" Grid.Column="4" Text="{i18n:T desktop.nea.install_date}" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="4" Grid.Column="6" Text="{Binding FormSystemInstallationDate}" PlaceholderText="{i18n:T desktop.common.date_placeholder}"/>
 
-          <TextBlock Grid.Row="6" Grid.Column="0" Text="Description" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="6" Grid.Column="2" Text="{Binding FormSystemDescription}" PlaceholderText="Description"/>
-          <TextBlock Grid.Row="6" Grid.Column="4" Text="Enabled" VerticalAlignment="Center"/>
+          <TextBlock Grid.Row="6" Grid.Column="0" Text="{i18n:T desktop.common.description}" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="6" Grid.Column="2" Text="{Binding FormSystemDescription}" PlaceholderText="{i18n:T desktop.common.description}"/>
+          <TextBlock Grid.Row="6" Grid.Column="4" Text="{i18n:T desktop.common.enabled}" VerticalAlignment="Center"/>
           <CheckBox Grid.Row="6" Grid.Column="6" IsChecked="{Binding FormSystemEnabled}"/>
 
-          <TextBlock Grid.Row="8" Grid.Column="0" Text="Nennleistung (kW)" VerticalAlignment="Center"/>
+          <TextBlock Grid.Row="8" Grid.Column="0" Text="{i18n:T desktop.nea.rated_power}" VerticalAlignment="Center"/>
           <NumericUpDown Grid.Row="8" Grid.Column="2" Value="{Binding FormSystemRatedPower}" Minimum="0" Maximum="9999"/>
-          <TextBlock Grid.Row="8" Grid.Column="4" Text="Kraftstoff" VerticalAlignment="Center"/>
+          <TextBlock Grid.Row="8" Grid.Column="4" Text="{i18n:T desktop.nea.fuel}" VerticalAlignment="Center"/>
           <ComboBox Grid.Row="8" Grid.Column="6" ItemsSource="{x:Static vm:NeaViewModel.FuelTypeOptions}"
                     SelectedItem="{Binding FormSystemFuelType}" MinWidth="100"/>
         </Grid>
         <StackPanel Orientation="Horizontal" Spacing="8">
-          <Button Content="Save" Command="{Binding SaveSystemCommand}"/>
-          <Button Content="Cancel" Command="{Binding CancelSystemFormCommand}"/>
+          <Button Content="{i18n:T desktop.common.save}" Command="{Binding SaveSystemCommand}"/>
+          <Button Content="{i18n:T desktop.common.cancel}" Command="{Binding CancelSystemFormCommand}"/>
           <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSavingSystem}" Width="80" Height="16" VerticalAlignment="Center"/>
         </StackPanel>
       </StackPanel>
@@ -74,36 +75,36 @@
     <Border Grid.Row="3" IsVisible="{Binding IsInspectionFormVisible}"
             Background="#FAF089" BorderThickness="1" BorderBrush="#F6C90E" CornerRadius="4" Padding="12">
       <StackPanel Spacing="8">
-        <TextBlock Text="NEA Inspection" FontSize="15" FontWeight="SemiBold"/>
+        <TextBlock Text="{i18n:T desktop.nea.inspection}" FontSize="15" FontWeight="SemiBold"/>
         <TextBlock Text="{Binding InspectionFormError}" Foreground="Red"
                    IsVisible="{Binding InspectionFormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
         <Grid ColumnDefinitions="110,8,*,16,110,8,*" RowDefinitions="Auto,8,Auto,8,Auto,8,Auto,8,Auto" RowSpacing="0">
-          <TextBlock Grid.Row="0" Grid.Column="0" Text="Date *" VerticalAlignment="Center"/>
-          <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding FormInspectionDate}" PlaceholderText="YYYY-MM-DD"/>
-          <TextBlock Grid.Row="0" Grid.Column="4" Text="Type" VerticalAlignment="Center"/>
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="{i18n:T desktop.common.date_required}" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding FormInspectionDate}" PlaceholderText="{i18n:T desktop.common.date_placeholder}"/>
+          <TextBlock Grid.Row="0" Grid.Column="4" Text="{i18n:T desktop.common.type}" VerticalAlignment="Center"/>
           <ComboBox Grid.Row="0" Grid.Column="6" ItemsSource="{x:Static vm:NeaViewModel.InspectionTypeOptions}"
                     SelectedItem="{Binding FormInspectionType}" MinWidth="120"/>
 
-          <TextBlock Grid.Row="2" Grid.Column="0" Text="Status" VerticalAlignment="Center"/>
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="{i18n:T desktop.common.status}" VerticalAlignment="Center"/>
           <ComboBox Grid.Row="2" Grid.Column="2" ItemsSource="{x:Static vm:NeaViewModel.StatusOptions}"
                     SelectedItem="{Binding FormInspectionStatus}" MinWidth="120"/>
-          <TextBlock Grid.Row="2" Grid.Column="4" Text="Result" VerticalAlignment="Center"/>
+          <TextBlock Grid.Row="2" Grid.Column="4" Text="{i18n:T desktop.common.result}" VerticalAlignment="Center"/>
           <ComboBox Grid.Row="2" Grid.Column="6" ItemsSource="{x:Static vm:NeaViewModel.ResultOptions}"
                     SelectedItem="{Binding FormInspectionResult}" MinWidth="120"/>
 
-          <TextBlock Grid.Row="4" Grid.Column="0" Text="Runtime h" VerticalAlignment="Center"/>
+          <TextBlock Grid.Row="4" Grid.Column="0" Text="{i18n:T desktop.nea.runtime_hours}" VerticalAlignment="Center"/>
           <NumericUpDown Grid.Row="4" Grid.Column="2" Value="{Binding FormRuntimeHours}" Minimum="0" Maximum="999999" Increment="0.1" FormatString="0.0"/>
-          <TextBlock Grid.Row="4" Grid.Column="4" Text="Notes" VerticalAlignment="Top" Margin="0,4,0,0"/>
+          <TextBlock Grid.Row="4" Grid.Column="4" Text="{i18n:T desktop.common.notes}" VerticalAlignment="Top" Margin="0,4,0,0"/>
           <controls:HtmlEditorControl Grid.Row="4" Grid.Column="6" HtmlContent="{Binding FormInspectionNotes}" MinHeight="100"/>
 
-          <TextBlock Grid.Row="6" Grid.Column="0" Text="Defects" VerticalAlignment="Top" Margin="0,4,0,0"/>
+          <TextBlock Grid.Row="6" Grid.Column="0" Text="{i18n:T desktop.common.defects}" VerticalAlignment="Top" Margin="0,4,0,0"/>
           <controls:HtmlEditorControl Grid.Row="6" Grid.Column="2" HtmlContent="{Binding FormDefectsFound}" MinHeight="100"/>
-          <TextBlock Grid.Row="6" Grid.Column="4" Text="Actions" VerticalAlignment="Top" Margin="0,4,0,0"/>
+          <TextBlock Grid.Row="6" Grid.Column="4" Text="{i18n:T desktop.common.actions}" VerticalAlignment="Top" Margin="0,4,0,0"/>
           <controls:HtmlEditorControl Grid.Row="6" Grid.Column="6" HtmlContent="{Binding FormCorrectiveActions}" MinHeight="100"/>
         </Grid>
         <StackPanel Orientation="Horizontal" Spacing="8">
-          <Button Content="Save" Command="{Binding SaveInspectionCommand}"/>
-          <Button Content="Cancel" Command="{Binding CancelInspectionFormCommand}"/>
+          <Button Content="{i18n:T desktop.common.save}" Command="{Binding SaveInspectionCommand}"/>
+          <Button Content="{i18n:T desktop.common.cancel}" Command="{Binding CancelInspectionFormCommand}"/>
           <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSavingInspection}" Width="80" Height="16" VerticalAlignment="Center"/>
         </StackPanel>
       </StackPanel>
@@ -112,33 +113,33 @@
     <!-- Systems + Inspections lists -->
     <Grid Grid.Row="4" ColumnDefinitions="300, 8, *">
       <StackPanel Grid.Column="0" Spacing="4">
-        <TextBlock Text="Systems" FontWeight="SemiBold"/>
+        <TextBlock Text="{i18n:T desktop.common.systems}" FontWeight="SemiBold"/>
         <DataGrid ItemsSource="{Binding Systems}" SelectedItem="{Binding SelectedSystem}"
                   IsReadOnly="True" AutoGenerateColumns="False">
           <DataGrid.Columns>
-            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
-            <DataGridTextColumn Header="Location" Binding="{Binding Location}" Width="120"/>
-            <DataGridTextColumn Header="kW" Binding="{Binding RatedPower}" Width="60"/>
-            <DataGridTextColumn Header="Kraftstoff" Binding="{Binding FuelType}" Width="80"/>
+            <DataGridTextColumn Header="{i18n:T desktop.common.name}" Binding="{Binding Name}" Width="*"/>
+            <DataGridTextColumn Header="{i18n:T desktop.common.location}" Binding="{Binding Location}" Width="120"/>
+            <DataGridTextColumn Header="{i18n:T desktop.nea.kw}" Binding="{Binding RatedPower}" Width="60"/>
+            <DataGridTextColumn Header="{i18n:T desktop.nea.fuel}" Binding="{Binding FuelType}" Width="80"/>
           </DataGrid.Columns>
         </DataGrid>
       </StackPanel>
       <GridSplitter Grid.Column="1" Width="4"/>
       <StackPanel Grid.Column="2" Spacing="4">
         <StackPanel Orientation="Horizontal" Spacing="8">
-          <TextBlock Text="Inspections" FontWeight="SemiBold" VerticalAlignment="Center"/>
-          <TextBox PlaceholderText="Filter status..." Text="{Binding FilterStatus}" Width="120"/>
-          <NumericUpDown Value="{Binding FilterYear}" Minimum="2000" Maximum="2099" Width="100" PlaceholderText="Year"/>
-          <Button Content="Filter" Command="{Binding LoadInspectionsCommand}"/>
+          <TextBlock Text="{i18n:T desktop.building.inspections}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          <TextBox PlaceholderText="{i18n:T desktop.nea.filter_status}" Text="{Binding FilterStatus}" Width="120"/>
+          <NumericUpDown Value="{Binding FilterYear}" Minimum="2000" Maximum="2099" Width="100" PlaceholderText="{i18n:T desktop.common.year}"/>
+          <Button Content="{i18n:T desktop.common.filter}" Command="{Binding LoadInspectionsCommand}"/>
         </StackPanel>
         <DataGrid ItemsSource="{Binding Inspections}" SelectedItem="{Binding SelectedInspection}"
                   IsReadOnly="True" AutoGenerateColumns="False">
           <DataGrid.Columns>
-            <DataGridTextColumn Header="Date" Binding="{Binding InspectionDate}" Width="110"/>
-            <DataGridTextColumn Header="Type" Binding="{Binding InspectionType}" Width="100"/>
-            <DataGridTextColumn Header="Inspector" Binding="{Binding InspectorName}" Width="*"/>
-            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90"/>
-            <DataGridTextColumn Header="Result" Binding="{Binding OverallResult}" Width="90"/>
+            <DataGridTextColumn Header="{i18n:T desktop.common.date}" Binding="{Binding InspectionDate}" Width="110"/>
+            <DataGridTextColumn Header="{i18n:T desktop.common.type}" Binding="{Binding InspectionType}" Width="100"/>
+            <DataGridTextColumn Header="{i18n:T desktop.common.inspector}" Binding="{Binding InspectorName}" Width="*"/>
+            <DataGridTextColumn Header="{i18n:T desktop.common.status}" Binding="{Binding Status}" Width="90"/>
+            <DataGridTextColumn Header="{i18n:T desktop.common.result}" Binding="{Binding OverallResult}" Width="90"/>
           </DataGrid.Columns>
         </DataGrid>
       </StackPanel>
@@ -150,12 +151,12 @@
     <ScrollViewer Grid.Row="6">
       <StackPanel Margin="4" Spacing="8" IsVisible="{Binding InspectionDetail, Converter={x:Static ObjectConverters.IsNotNull}}">
         <StackPanel Orientation="Horizontal" Spacing="8">
-          <TextBlock Text="Inspection Detail" FontSize="18" FontWeight="SemiBold"/>
-          <Button Content="📋 Checkliste" Command="{Binding ShowChecklistCommand}"
+          <TextBlock Text="{i18n:T desktop.nea.inspection_detail}" FontSize="18" FontWeight="SemiBold"/>
+          <Button Content="{i18n:T desktop.nea.checklist}" Command="{Binding ShowChecklistCommand}"
                   IsVisible="{Binding IsChecklistVisible, Converter={x:Static BoolConverters.Not}}"/>
-          <Button Content="Checkliste schließen" Command="{Binding HideChecklistCommand}"
+          <Button Content="{i18n:T desktop.nea.close_checklist}" Command="{Binding HideChecklistCommand}"
                   IsVisible="{Binding IsChecklistVisible}"/>
-          <Button Content="Checkliste speichern" Command="{Binding SaveChecklistCommand}"
+          <Button Content="{i18n:T desktop.nea.save_checklist}" Command="{Binding SaveChecklistCommand}"
                   IsVisible="{Binding IsChecklistVisible}"/>
         </StackPanel>
 
@@ -168,12 +169,12 @@
         <Border IsVisible="{Binding IsChecklistVisible}"
                 Background="#F7FAFC" BorderBrush="#CBD5E0" BorderThickness="1" CornerRadius="4" Padding="8">
           <StackPanel Spacing="6">
-            <TextBlock Text="📋 Prüfliste" FontWeight="SemiBold" FontSize="14"/>
+            <TextBlock Text="{i18n:T desktop.nea.checklist_heading}" FontWeight="SemiBold" FontSize="14"/>
             <DataGrid ItemsSource="{Binding ChecklistItems}"
                       AutoGenerateColumns="False" GridLinesVisibility="Horizontal" MaxHeight="200">
               <DataGrid.Columns>
-                <DataGridTextColumn Header="Prüfpunkt" Binding="{Binding Name}" Width="*" IsReadOnly="True"/>
-                <DataGridTemplateColumn Header="Status" Width="120">
+                <DataGridTextColumn Header="{i18n:T desktop.building.checkpoint}" Binding="{Binding Name}" Width="*" IsReadOnly="True"/>
+                <DataGridTemplateColumn Header="{i18n:T desktop.common.status}" Width="120">
                   <DataGridTemplateColumn.CellTemplate>
                     <DataTemplate x:DataType="vm:NeaChecklistEditItem">
                       <ComboBox ItemsSource="{x:Static vm:NeaChecklistEditItem.StatusOptions}"
@@ -181,25 +182,25 @@
                     </DataTemplate>
                   </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="Notiz"    Binding="{Binding Note}"    Width="200"/>
-                <DataGridTextColumn Header="Kommentar" Binding="{Binding Comment}" Width="200"/>
+                <DataGridTextColumn Header="{i18n:T desktop.common.note}"    Binding="{Binding Note}"    Width="200"/>
+                <DataGridTextColumn Header="{i18n:T desktop.common.comment}" Binding="{Binding Comment}" Width="200"/>
               </DataGrid.Columns>
             </DataGrid>
           </StackPanel>
         </Border>
 
         <Grid ColumnDefinitions="Auto, 16, *" RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto" RowSpacing="4">
-          <TextBlock Grid.Row="0" Grid.Column="0" Text="Status:" FontWeight="SemiBold"/>
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="{i18n:T desktop.common.status_label}" FontWeight="SemiBold"/>
           <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding InspectionDetail.Status}"/>
-          <TextBlock Grid.Row="1" Grid.Column="0" Text="Result:" FontWeight="SemiBold"/>
+          <TextBlock Grid.Row="1" Grid.Column="0" Text="{i18n:T desktop.common.result_label}" FontWeight="SemiBold"/>
           <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding InspectionDetail.OverallResult}"/>
-          <TextBlock Grid.Row="2" Grid.Column="0" Text="Inspector:" FontWeight="SemiBold"/>
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="{i18n:T desktop.common.inspector_label}" FontWeight="SemiBold"/>
           <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding InspectionDetail.InspectorName}"/>
-          <TextBlock Grid.Row="3" Grid.Column="0" Text="Notes:" FontWeight="SemiBold"/>
+          <TextBlock Grid.Row="3" Grid.Column="0" Text="{i18n:T desktop.common.notes_label}" FontWeight="SemiBold"/>
           <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding InspectionDetail.Notes}" TextWrapping="Wrap"/>
-          <TextBlock Grid.Row="4" Grid.Column="0" Text="Defects:" FontWeight="SemiBold"/>
+          <TextBlock Grid.Row="4" Grid.Column="0" Text="{i18n:T desktop.common.defects_label}" FontWeight="SemiBold"/>
           <TextBlock Grid.Row="4" Grid.Column="2" Text="{Binding InspectionDetail.DefectsFound}" TextWrapping="Wrap"/>
-          <TextBlock Grid.Row="5" Grid.Column="0" Text="Actions:" FontWeight="SemiBold"/>
+          <TextBlock Grid.Row="5" Grid.Column="0" Text="{i18n:T desktop.common.actions_label}" FontWeight="SemiBold"/>
           <TextBlock Grid.Row="5" Grid.Column="2" Text="{Binding InspectionDetail.CorrectiveActions}" TextWrapping="Wrap"/>
         </Grid>
       </StackPanel>

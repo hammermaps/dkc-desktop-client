@@ -1,52 +1,53 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:DkcDesktopClient.App.ViewModels"
+             xmlns:i18n="using:DkcDesktopClient.App.I18n"
              x:Class="DkcDesktopClient.App.Views.LoginView"
              x:DataType="vm:LoginViewModel">
   <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Width="400">
     <StackPanel Spacing="16" Margin="32">
-      <TextBlock Text="DK-Control Login" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,16"/>
+      <TextBlock Text="{i18n:T desktop.login.title}" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,16"/>
 
       <!-- Schritt 1: Server, Benutzer, Passwort -->
       <StackPanel Spacing="16" IsVisible="{Binding !IsTwoFactorStep}">
         <StackPanel Spacing="4">
-          <TextBlock Text="Server URL"/>
-          <TextBox Name="ServerUrlBox" Text="{Binding ServerUrl}" PlaceholderText="https://your-server.example.com"/>
+          <TextBlock Text="{i18n:T desktop.login.server_url}"/>
+          <TextBox Name="ServerUrlBox" Text="{Binding ServerUrl}" PlaceholderText="{i18n:T desktop.login.server_placeholder}"/>
         </StackPanel>
 
         <StackPanel Spacing="4">
-          <TextBlock Text="Username"/>
-          <TextBox Name="UsernameBox" Text="{Binding Username}" PlaceholderText="Username"/>
+          <TextBlock Text="{i18n:T desktop.common.username}"/>
+          <TextBox Name="UsernameBox" Text="{Binding Username}" PlaceholderText="{i18n:T desktop.common.username}"/>
         </StackPanel>
 
         <StackPanel Spacing="4">
-          <TextBlock Text="Password"/>
-          <TextBox Name="PasswordBox" Text="{Binding Password}" PasswordChar="*" PlaceholderText="Password"/>
+          <TextBlock Text="{i18n:T desktop.common.password}"/>
+          <TextBox Name="PasswordBox" Text="{Binding Password}" PasswordChar="*" PlaceholderText="{i18n:T desktop.common.password}"/>
         </StackPanel>
       </StackPanel>
 
       <!-- Schritt 2: Zwei-Faktor-Code -->
       <StackPanel Spacing="16" IsVisible="{Binding IsTwoFactorStep}">
-        <TextBlock Text="Two-factor authentication is active for this account. Enter the code from your chosen method."
+        <TextBlock Text="{i18n:T desktop.login.two_factor_hint}"
                    TextWrapping="Wrap"/>
 
         <StackPanel Spacing="4">
-          <TextBlock Text="Method"/>
+          <TextBlock Text="{i18n:T desktop.login.method}"/>
           <ComboBox ItemsSource="{Binding TwoFactorMethods}"
                     SelectedItem="{Binding SelectedTwoFactorMethod}"
                     HorizontalAlignment="Stretch"/>
         </StackPanel>
 
-        <Button Content="Send code" Command="{Binding SendTwoFactorCodeCommand}"
+        <Button Content="{i18n:T desktop.login.send_code}" Command="{Binding SendTwoFactorCodeCommand}"
                 IsVisible="{Binding SelectedTwoFactorMethod.CanSendCode, FallbackValue=False}"
                 HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
 
         <StackPanel Spacing="4">
-          <TextBlock Text="Code"/>
+          <TextBlock Text="{i18n:T desktop.login.code}"/>
           <TextBox Text="{Binding TwoFactorCode}" PlaceholderText="123456"/>
         </StackPanel>
 
-        <CheckBox Content="Remember this device for 30 days" IsChecked="{Binding TrustDevice}"/>
+        <CheckBox Content="{i18n:T desktop.login.trust_device}" IsChecked="{Binding TrustDevice}"/>
       </StackPanel>
 
       <TextBlock Text="{Binding InfoMessage}"
@@ -57,14 +58,14 @@
                  IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                  TextWrapping="Wrap"/>
 
-      <Button Name="LoginButton" Content="Login" Command="{Binding LoginCommand}"
+      <Button Name="LoginButton" Content="{i18n:T desktop.login.login}" Command="{Binding LoginCommand}"
               IsVisible="{Binding !IsTwoFactorStep}"
               HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
 
       <Grid ColumnDefinitions="*,8,*" IsVisible="{Binding IsTwoFactorStep}">
-        <Button Grid.Column="0" Content="Back" Command="{Binding CancelTwoFactorCommand}"
+        <Button Grid.Column="0" Content="{i18n:T desktop.login.back}" Command="{Binding CancelTwoFactorCommand}"
                 HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
-        <Button Grid.Column="2" Content="Verify" Command="{Binding VerifyTwoFactorCommand}"
+        <Button Grid.Column="2" Content="{i18n:T desktop.login.verify}" Command="{Binding VerifyTwoFactorCommand}"
                 HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
       </Grid>
 

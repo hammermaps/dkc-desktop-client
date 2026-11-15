@@ -163,6 +163,33 @@ public class LiveClientTests
             await WaitUntil(() => app.Vm.DashboardViewModel.IsLoading is false, TimeSpan.FromSeconds(30));
             Screenshot(app.Window, "02_dashboard");
 
+            // ── 1b. Übersetzungen: Abgleich mit dem Server, Sprachwechsel live ───
+            var translations = app.Services.GetRequiredService<DkcDesktopClient.Core.I18n.TranslationService>();
+            var factory = app.Services.GetRequiredService<DkcApiFactory>();
+            var translator = DkcDesktopClient.Core.I18n.Translator.Instance;
+            try
+            {
+                await translations.FollowAccountAsync(factory, app.Services.GetRequiredService<AuthService>().CurrentToken);
+                var cacheFile = Path.Combine(dataDir, "i18n", translator.Language + ".json");
+                Log($"Übersetzungen: Sprache {translator.Language}, Server-Stand geladen={File.Exists(cacheFile)}, " +
+                    $"erneuter Abgleich ändert etwas={await translations.SyncAsync(factory)}");
+                if (!File.Exists(cacheFile)) problems.Add("TRANSLATIONS: kein Server-Stand geladen");
+
+                translations.SetPreference("en");
+                await translations.SyncAsync(factory);
+                Dispatcher.UIThread.RunJobs();
+                var titles = string.Join(", ", app.Vm.NavItems.Select(n => n.Title));
+                Log($"Englisch: {titles}");
+                if (!titles.Contains("Defect reports")) problems.Add("Sprachwechsel auf Englisch nicht in der Navigation angekommen: " + titles);
+                Screenshot(app.Window, "03_dashboard_en");
+            }
+            finally
+            {
+                translations.SetPreference(DkcDesktopClient.Core.I18n.TranslationService.Auto);
+                translator.Use("de", DkcDesktopClient.Core.I18n.Translator.LoadEmbedded("de"));
+                Dispatcher.UIThread.RunJobs();
+            }
+
             // ── 2. Vorladen: nach der Anmeldung, bevor eine Ansicht geöffnet wird ─
             var cache = app.Services.GetRequiredService<DataCacheService>();
             var preloadKeys = new[] { CacheKeys.KlimaStatus, CacheKeys.DashboardData, CacheKeys.NeaDashboard, CacheKeys.MmList,

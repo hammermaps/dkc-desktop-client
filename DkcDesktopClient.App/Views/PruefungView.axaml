@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:i18n="using:DkcDesktopClient.App.I18n"
              xmlns:vm="using:DkcDesktopClient.App.ViewModels"
              xmlns:core="using:DkcDesktopClient.Core.Pruefung"
              x:Class="DkcDesktopClient.App.Views.PruefungView"
@@ -11,13 +12,13 @@
     <StackPanel Grid.Row="0" Spacing="4">
       <StackPanel Orientation="Horizontal" Spacing="8">
         <TextBlock Name="TitleText" Text="{Binding Title}" FontSize="24" FontWeight="Bold" VerticalAlignment="Center"/>
-        <Button Name="RefreshButton" Content="Aktualisieren" Command="{Binding LoadCommand}"/>
-        <Button Name="StartInspectionButton" Content="Neue Prüfung" Command="{Binding StartInspectionCommand}"
-                IsVisible="{Binding CanEdit}" ToolTip.Tip="Prüfung für die gewählte Anlage beginnen"/>
+        <Button Name="RefreshButton" Content="{i18n:T desktop.common.refresh}" Command="{Binding LoadCommand}"/>
+        <Button Name="StartInspectionButton" Content="{i18n:T desktop.pruefung.new_inspection}" Command="{Binding StartInspectionCommand}"
+                IsVisible="{Binding CanEdit}" ToolTip.Tip="{i18n:T desktop.pruefung.new_inspection_tip}"/>
         <Separator Width="1" Background="#CCCCCC" Margin="4,0" IsVisible="{Binding CanAdmin}"/>
-        <Button Name="NewSystemButton" Content="Anlage anlegen" Command="{Binding ShowCreateSystemFormCommand}" IsVisible="{Binding CanAdmin}"/>
-        <Button Content="Anlage bearbeiten" Command="{Binding ShowEditSystemFormCommand}" IsVisible="{Binding CanAdmin}"/>
-        <Button Content="Anlage löschen" Command="{Binding DeleteSystemCommand}" IsVisible="{Binding CanAdmin}" Foreground="#C53030"/>
+        <Button Name="NewSystemButton" Content="{i18n:T desktop.pruefung.create_system}" Command="{Binding ShowCreateSystemFormCommand}" IsVisible="{Binding CanAdmin}"/>
+        <Button Content="{i18n:T desktop.common.edit_system}" Command="{Binding ShowEditSystemFormCommand}" IsVisible="{Binding CanAdmin}"/>
+        <Button Content="{i18n:T desktop.common.delete_system}" Command="{Binding DeleteSystemCommand}" IsVisible="{Binding CanAdmin}" Foreground="#C53030"/>
       </StackPanel>
       <TextBlock Name="SummaryText" Text="{Binding Summary}" Opacity="0.75"/>
     </StackPanel>
@@ -35,28 +36,28 @@
     <Border Grid.Row="2" Name="SystemForm" IsVisible="{Binding IsSystemFormVisible}"
             BorderThickness="1" BorderBrush="#CBD5E0" CornerRadius="4" Padding="12">
       <StackPanel Spacing="8">
-        <TextBlock Text="Anlage" FontSize="15" FontWeight="SemiBold"/>
+        <TextBlock Text="{i18n:T desktop.common.system}" FontSize="15" FontWeight="SemiBold"/>
         <TextBlock Text="{Binding SystemFormError}" Foreground="#C53030"
                    IsVisible="{Binding SystemFormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
         <Grid ColumnDefinitions="120,8,*,16,120,8,*" RowDefinitions="Auto,8,Auto,8,Auto">
-          <TextBlock Grid.Row="0" Grid.Column="0" Text="Bezeichnung *" VerticalAlignment="Center"/>
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="{i18n:T desktop.pruefung.designation_required}" VerticalAlignment="Center"/>
           <TextBox Grid.Row="0" Grid.Column="2" Name="FormNameBox" Text="{Binding FormName}"/>
           <TextBlock Grid.Row="0" Grid.Column="4" Text="{Binding NummerLabel}" VerticalAlignment="Center"/>
           <TextBox Grid.Row="0" Grid.Column="6" Text="{Binding FormNummer}"/>
 
-          <TextBlock Grid.Row="2" Grid.Column="0" Text="Haus *" VerticalAlignment="Center"/>
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="{i18n:T desktop.pruefung.house_required}" VerticalAlignment="Center"/>
           <ComboBox Grid.Row="2" Grid.Column="2" Name="FormHausBox" ItemsSource="{Binding Houses}" SelectedItem="{Binding FormHaus}"
-                    HorizontalAlignment="Stretch" PlaceholderText="Haus wählen"/>
-          <TextBlock Grid.Row="2" Grid.Column="4" Text="Zugehörigkeit" VerticalAlignment="Center"/>
+                    HorizontalAlignment="Stretch" PlaceholderText="{i18n:T desktop.pruefung.choose_house}"/>
+          <TextBlock Grid.Row="2" Grid.Column="4" Text="{i18n:T desktop.common.membership}" VerticalAlignment="Center"/>
           <ComboBox Grid.Row="2" Grid.Column="6" ItemsSource="{Binding ZugehoerigkeitOptions}" SelectedItem="{Binding FormZugehoerigkeit}"
                     HorizontalAlignment="Stretch"/>
 
-          <TextBlock Grid.Row="4" Grid.Column="0" Text="Aktiv" VerticalAlignment="Center"/>
+          <TextBlock Grid.Row="4" Grid.Column="0" Text="{i18n:T desktop.common.enabled}" VerticalAlignment="Center"/>
           <CheckBox Grid.Row="4" Grid.Column="2" IsChecked="{Binding FormActive}"/>
         </Grid>
         <StackPanel Orientation="Horizontal" Spacing="8">
-          <Button Name="SaveSystemButton" Content="Speichern" Command="{Binding SaveSystemCommand}"/>
-          <Button Content="Abbrechen" Command="{Binding CancelSystemFormCommand}"/>
+          <Button Name="SaveSystemButton" Content="{i18n:T desktop.common.save}" Command="{Binding SaveSystemCommand}"/>
+          <Button Content="{i18n:T desktop.common.cancel}" Command="{Binding CancelSystemFormCommand}"/>
         </StackPanel>
       </StackPanel>
     </Border>
@@ -64,13 +65,13 @@
     <!-- Anlagen | Prüfungen | Detail -->
     <Grid Grid.Row="3" ColumnDefinitions="300, 4, 500, 4, *">
       <DockPanel Grid.Column="0">
-        <TextBlock DockPanel.Dock="Top" Text="Anlagen" FontWeight="SemiBold" Margin="0,0,0,4"/>
+        <TextBlock DockPanel.Dock="Top" Text="{i18n:T desktop.common.systems}" FontWeight="SemiBold" Margin="0,0,0,4"/>
         <DataGrid Name="SystemsGrid" ItemsSource="{Binding Systems}" SelectedItem="{Binding SelectedSystem}"
                   IsReadOnly="True" AutoGenerateColumns="False">
           <DataGrid.Columns>
-            <DataGridTextColumn Header="Bezeichnung" Binding="{Binding Name}" Width="*"/>
-            <DataGridTextColumn Header="Nr." Binding="{Binding Nummer}" Width="60"/>
-            <DataGridTextColumn Header="Zuletzt" Binding="{Binding LastInspectionText}" Width="105"/>
+            <DataGridTextColumn Header="{i18n:T desktop.common.designation}" Binding="{Binding Name}" Width="*"/>
+            <DataGridTextColumn Header="{i18n:T desktop.pruefung.number_short}" Binding="{Binding Nummer}" Width="60"/>
+            <DataGridTextColumn Header="{i18n:T desktop.pruefung.last}" Binding="{Binding LastInspectionText}" Width="105"/>
           </DataGrid.Columns>
         </DataGrid>
       </DockPanel>
@@ -79,20 +80,20 @@
 
       <DockPanel Grid.Column="2">
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Margin="0,0,0,4">
-          <TextBlock Text="Prüfungen" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          <TextBlock Text="{i18n:T desktop.pruefung.inspections}" FontWeight="SemiBold" VerticalAlignment="Center"/>
           <NumericUpDown Value="{Binding FilterYear}" Minimum="2000" Maximum="2099" FormatString="0" Width="140"
-                         PlaceholderText="Jahr" ToolTip.Tip="Jahr (leer = alle)"/>
+                         PlaceholderText="{i18n:T desktop.common.year}" ToolTip.Tip="{i18n:T desktop.pruefung.year_tip}"/>
           <ComboBox ItemsSource="{x:Static vm:PruefungViewModel.StatusFilterOptions}" SelectedItem="{Binding FilterStatus}"
-                    Width="120" PlaceholderText="Status" ToolTip.Tip="Status (leer = alle)"/>
-          <Button Content="Filtern" Command="{Binding LoadInspectionsCommand}"/>
+                    Width="120" PlaceholderText="{i18n:T desktop.common.status}" ToolTip.Tip="{i18n:T desktop.pruefung.status_tip}"/>
+          <Button Content="{i18n:T desktop.common.filter}" Command="{Binding LoadInspectionsCommand}"/>
         </StackPanel>
         <DataGrid Name="InspectionsGrid" ItemsSource="{Binding Inspections}" SelectedItem="{Binding SelectedInspection}"
                   IsReadOnly="True" AutoGenerateColumns="False">
           <DataGrid.Columns>
-            <DataGridTextColumn Header="Datum" Binding="{Binding DateText}" Width="155"/>
-            <DataGridTextColumn Header="Anlage" Binding="{Binding SystemName}" Width="*"/>
-            <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="120"/>
-            <DataGridTextColumn Header="Ergebnis" Binding="{Binding ResultText}" Width="115"/>
+            <DataGridTextColumn Header="{i18n:T desktop.common.date}" Binding="{Binding DateText}" Width="155"/>
+            <DataGridTextColumn Header="{i18n:T desktop.common.system}" Binding="{Binding SystemName}" Width="*"/>
+            <DataGridTextColumn Header="{i18n:T desktop.common.status}" Binding="{Binding StatusText}" Width="120"/>
+            <DataGridTextColumn Header="{i18n:T desktop.common.result}" Binding="{Binding ResultText}" Width="115"/>
           </DataGrid.Columns>
         </DataGrid>
       </DockPanel>
@@ -108,11 +109,14 @@
             <Run Text="{Binding Detail.InspectionDate}"/>
           </TextBlock>
           <TextBlock Opacity="0.75" TextWrapping="Wrap">
-            <Run Text="Status: "/><Run Text="{Binding Detail.StatusText}"/>
-            <Run Text=" · Ergebnis: "/><Run Text="{Binding Detail.ResultText}"/>
-            <Run Text=" · Prüfer: "/><Run Text="{Binding Detail.InspectorName}"/>
+            <Run Text="{i18n:T desktop.common.status_label}"/>
+            <Run Text="{Binding Detail.StatusText}"/>
+            <Run Text=" · "/><Run Text="{i18n:T desktop.common.result_label}"/>
+            <Run Text="{Binding Detail.ResultText}"/>
+            <Run Text=" · "/><Run Text="{i18n:T desktop.common.inspector_label}"/>
+            <Run Text="{Binding Detail.InspectorName}"/>
           </TextBlock>
-          <TextBlock Text="Für diesen Prüftyp ist keine Checklisten-Vorlage hinterlegt."
+          <TextBlock Text="{i18n:T desktop.pruefung.no_template}"
                      IsVisible="{Binding !HasChecklist}" Opacity="0.75"/>
 
           <ItemsControl Name="ChecklistList" ItemsSource="{Binding ChecklistItems}" IsEnabled="{Binding IsDetailEditable}">
@@ -125,10 +129,17 @@
                                IsVisible="{Binding Description, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                     <ComboBox Grid.Row="0" Grid.RowSpan="2" Grid.Column="2" ItemsSource="{Binding Choices}"
                               SelectedItem="{Binding Value}" IsVisible="{Binding IsChoice}"
-                              HorizontalAlignment="Stretch" PlaceholderText="Bitte wählen"/>
+                              HorizontalAlignment="Stretch" PlaceholderText="{i18n:T desktop.common.please_choose}">
+                      <!-- Gespeichert wird der sprachunabhängige Wert, angezeigt seine Übersetzung -->
+                      <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                          <TextBlock Text="{Binding Converter={x:Static i18n:Labels.ChecklistChoice}}"/>
+                        </DataTemplate>
+                      </ComboBox.ItemTemplate>
+                    </ComboBox>
                     <TextBox Grid.Row="0" Grid.RowSpan="2" Grid.Column="2" Text="{Binding Value}" IsVisible="{Binding IsFreeText}"/>
                     <TextBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,4,0,0" Text="{Binding Note}"
-                             PlaceholderText="Mängelbeschreibung" IsVisible="{Binding IsDefect}" AcceptsReturn="True"/>
+                             PlaceholderText="{i18n:T desktop.pruefung.defect_description}" IsVisible="{Binding IsDefect}" AcceptsReturn="True"/>
                   </Grid>
                 </Border>
               </DataTemplate>
@@ -138,14 +149,14 @@
           <Border IsVisible="{Binding IsDetailEditable}" BorderBrush="#CBD5E0" BorderThickness="1" CornerRadius="4" Padding="8">
             <StackPanel Spacing="6">
               <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="Ergebnis" VerticalAlignment="Center"/>
+                <TextBlock Text="{i18n:T desktop.common.result}" VerticalAlignment="Center"/>
                 <ComboBox Name="ResultBox" ItemsSource="{x:Static vm:PruefungViewModel.ResultOptions}"
                           SelectedItem="{Binding CompleteResultChoice}" Width="160"/>
               </StackPanel>
-              <TextBox Text="{Binding CompleteNotes}" PlaceholderText="Bemerkungen" AcceptsReturn="True" MinHeight="60"/>
+              <TextBox Text="{Binding CompleteNotes}" PlaceholderText="{i18n:T desktop.common.remarks}" AcceptsReturn="True" MinHeight="60"/>
               <StackPanel Orientation="Horizontal" Spacing="8">
-                <Button Name="SaveChecklistButton" Content="Checkliste speichern" Command="{Binding SaveChecklistCommand}"/>
-                <Button Name="CompleteButton" Content="Prüfung abschließen" Command="{Binding CompleteInspectionCommand}"/>
+                <Button Name="SaveChecklistButton" Content="{i18n:T desktop.nea.save_checklist}" Command="{Binding SaveChecklistCommand}"/>
+                <Button Name="CompleteButton" Content="{i18n:T desktop.pruefung.complete}" Command="{Binding CompleteInspectionCommand}"/>
               </StackPanel>
             </StackPanel>
           </Border>

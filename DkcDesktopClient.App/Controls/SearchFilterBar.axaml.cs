@@ -24,7 +24,7 @@ public partial class SearchFilterBar : UserControl
         AvaloniaXamlLoader.Load(this);
         _searchBox.Width = 260;
         _searchBox.TextChanged += (_, _) => SetCurrentValue(SearchTextProperty, _searchBox.Text);
-        _searchButton.Content = "Suchen";
+        _searchButton.Content = DkcDesktopClient.Core.I18n.Translator.T("desktop.common.search");
         _searchButton.Classes.Add("primary");
         Content = new StackPanel
         {

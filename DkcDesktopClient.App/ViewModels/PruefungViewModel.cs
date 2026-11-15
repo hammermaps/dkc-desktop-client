@@ -5,12 +5,14 @@ using DkcDesktopClient.App.Services;
 using DkcDesktopClient.Core.Protobuf;
 using DkcDesktopClient.Core.Pruefung;
 using DkcDesktopClient.Core.Services;
+using static DkcDesktopClient.Core.I18n.Translator;
 
 namespace DkcDesktopClient.App.ViewModels;
 
 /// <summary>Haus für die Anlagen-Zuordnung (Server: MM_FORM_OPTIONS.streets bzw. aus vorhandenen Anlagen).</summary>
-public sealed record ResultChoice(string Value, string Label)
+public sealed record ResultChoice(string Value, string LabelKey)
 {
+    public string Label => T(LabelKey);
     public override string ToString() => Label;
 }
 
@@ -84,8 +86,8 @@ public abstract partial class PruefungViewModel : ViewModelBase, INavigationTarg
     public IReadOnlyList<string> ZugehoerigkeitOptions => Domain.ZugehoerigkeitOptions;
     public static IReadOnlyList<ResultChoice> ResultOptions { get; } = new[]
     {
-        new ResultChoice(PruefungValues.ResultPassed, "bestanden"),
-        new ResultChoice(PruefungValues.ResultFailed, "nicht bestanden"),
+        new ResultChoice(PruefungValues.ResultPassed, "desktop.pruefung.result_passed"),
+        new ResultChoice(PruefungValues.ResultFailed, "desktop.pruefung.result_failed"),
     };
     public static IReadOnlyList<string> StatusFilterOptions { get; } = new[] { string.Empty, PruefungValues.StatusInProgress, PruefungValues.StatusCompleted };
 
@@ -137,10 +139,16 @@ public abstract partial class PruefungViewModel : ViewModelBase, INavigationTarg
         CompleteResult = ChecklistItems.Any(c => c.IsDefect) ? PruefungValues.ResultFailed : PruefungValues.ResultPassed;
     }
 
+    private bool _missingRequiredShown;
+    private string? _missingRequiredMessage;
+
     private void OnChecklistItemChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(PruefungChecklistEditItem.Value) && ErrorMessage?.Contains("Pflichtpunkt") == true)
+        if (e.PropertyName == nameof(PruefungChecklistEditItem.Value) && _missingRequiredShown && ErrorMessage == _missingRequiredMessage)
+        {
             ErrorMessage = null; // Hinweis auf offene Pflichtpunkte ist nach einer Eingabe überholt
+            _missingRequiredShown = false;
+        }
         if (e.PropertyName == nameof(PruefungChecklistEditItem.IsDefect)) SuggestResult();
     }
     [ObservableProperty] private string _completeNotes = string.Empty;
@@ -179,19 +187,19 @@ public abstract partial class PruefungViewModel : ViewModelBase, INavigationTarg
             try
             {
                 var d = await Domain.GetDashboardAsync(ct);
-                Summary = $"{d.TotalSystems} Anlagen · {d.InspectionsThisWeek} Prüfungen diese Woche · {d.InspectionsThisMonth} diesen Monat"
-                          + (d.Overdue.Count > 0 ? $" · {d.Overdue.Count} fällig" : string.Empty)
-                          + (d.FailedLast30Days > 0 ? $" · {d.FailedLast30Days} nicht bestanden (30 Tage)" : string.Empty);
+                Summary = T("desktop.pruefung.summary", ("systems", d.TotalSystems), ("week", d.InspectionsThisWeek), ("month", d.InspectionsThisMonth))
+                          + (d.Overdue.Count > 0 ? T("desktop.pruefung.summary_due", ("count", d.Overdue.Count)) : string.Empty)
+                          + (d.FailedLast30Days > 0 ? T("desktop.pruefung.summary_failed", ("count", d.FailedLast30Days)) : string.Empty);
             }
             catch (DkcProtobufApiException)
             {
-                Summary = $"{Systems.Count} Anlagen";
+                Summary = T("desktop.pruefung.systems_count", ("count", Systems.Count));
             }
 
             await LoadInspectionsCoreAsync(ct);
         }
         catch (OperationCanceledException) { }
-        catch (Exception ex) { ErrorMessage = $"Laden fehlgeschlagen: {ex.Message}"; }
+        catch (Exception ex) { ErrorMessage = T("desktop.common.load_failed_message", ("message", ex.Message)); }
         finally { IsLoading = false; }
     }
 
@@ -203,7 +211,7 @@ public abstract partial class PruefungViewModel : ViewModelBase, INavigationTarg
         ErrorMessage = null;
         try { await LoadInspectionsCoreAsync(ct); }
         catch (OperationCanceledException) { }
-        catch (Exception ex) { ErrorMessage = $"Prüfungen konnten nicht geladen werden: {ex.Message}"; }
+        catch (Exception ex) { ErrorMessage = T("desktop.common.inspections_failed", ("message", ex.Message)); }
         finally { IsLoading = false; }
     }
 
@@ -239,7 +247,7 @@ public abstract partial class PruefungViewModel : ViewModelBase, INavigationTarg
         {
             Detail = null;
             ClearChecklist();
-            ErrorMessage = $"Prüfung konnte nicht geladen werden: {ex.Message}";
+            ErrorMessage = T("desktop.common.inspection_failed", ("message", ex.Message));
         }
         OnPropertyChanged(nameof(HasChecklist));
         // Freigabe hängt an HasChecklist – erst nach dem Befüllen neu bewerten.
@@ -266,12 +274,12 @@ public abstract partial class PruefungViewModel : ViewModelBase, INavigationTarg
             var id = await Domain.SaveInspectionAsync(new PruefungInspectionInput(0, SelectedSystem.Id,
                 DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), PruefungValues.StatusInProgress, string.Empty, 0,
                 string.Empty, string.Empty, string.Empty));
-            StatusMessage = $"Prüfung #{id} für {SelectedSystem.Name} angelegt.";
+            StatusMessage = T("desktop.pruefung.created", ("id", id), ("system", SelectedSystem.Name));
             await LoadInspectionsAsync();
             SelectedInspection = Inspections.FirstOrDefault(i => i.Id == id);
             if (SelectedInspection == null) await LoadDetailAsync(id);
         }
-        catch (Exception ex) { ErrorMessage = $"Prüfung konnte nicht angelegt werden: {ex.Message}"; }
+        catch (Exception ex) { ErrorMessage = T("desktop.pruefung.create_failed", ("message", ex.Message)); }
         finally { IsSaving = false; }
     }
 
@@ -288,9 +296,9 @@ public abstract partial class PruefungViewModel : ViewModelBase, INavigationTarg
             await Domain.SaveChecklistAsync(Detail.Id, ChecklistItems
                 .Where(c => !string.IsNullOrWhiteSpace(c.Value) || !string.IsNullOrWhiteSpace(c.Note))
                 .Select(c => new PruefungChecklistValue(c.Step.Id, c.Value ?? string.Empty, c.Note ?? string.Empty)));
-            StatusMessage = "Checkliste gespeichert.";
+            StatusMessage = T("desktop.pruefung.checklist_saved");
         }
-        catch (Exception ex) { ErrorMessage = $"Checkliste konnte nicht gespeichert werden: {ex.Message}"; }
+        catch (Exception ex) { ErrorMessage = T("desktop.pruefung.checklist_save_failed", ("message", ex.Message)); }
         finally { IsSaving = false; }
     }
 
@@ -304,8 +312,9 @@ public abstract partial class PruefungViewModel : ViewModelBase, INavigationTarg
         var missing = PruefungValues.MissingRequired(ChecklistItems.Select(c => c.Current));
         if (missing.Count > 0)
         {
-            ErrorMessage = $"Noch {missing.Count} Pflichtpunkt(e) offen: " + string.Join(", ", missing.Take(3).Select(m => m.Title))
-                           + (missing.Count > 3 ? " …" : string.Empty);
+            var items = string.Join(", ", missing.Take(3).Select(m => m.Title)) + (missing.Count > 3 ? " …" : string.Empty);
+            ErrorMessage = _missingRequiredMessage = T("desktop.pruefung.missing_required", ("count", missing.Count), ("items", items));
+            _missingRequiredShown = true;
             return;
         }
 
@@ -317,11 +326,11 @@ public abstract partial class PruefungViewModel : ViewModelBase, INavigationTarg
         {
             var id = Detail.Id;
             await Domain.CompleteInspectionAsync(id, CompleteResult, CompleteNotes ?? string.Empty);
-            StatusMessage = $"Prüfung #{id} abgeschlossen ({ResultLabel(CompleteResult)}).";
+            StatusMessage = T("desktop.pruefung.completed", ("id", id), ("result", ResultLabel(CompleteResult)));
             await LoadInspectionsAsync();
             await LoadDetailAsync(id);
         }
-        catch (Exception ex) { ErrorMessage = $"Prüfung konnte nicht abgeschlossen werden: {ex.Message}"; }
+        catch (Exception ex) { ErrorMessage = T("desktop.pruefung.complete_failed", ("message", ex.Message)); }
         finally { IsSaving = false; }
     }
 
@@ -367,8 +376,8 @@ public abstract partial class PruefungViewModel : ViewModelBase, INavigationTarg
     [RelayCommand]
     public async Task SaveSystemAsync()
     {
-        if (string.IsNullOrWhiteSpace(FormName)) { SystemFormError = "Bezeichnung ist erforderlich."; return; }
-        if (FormHaus == null) { SystemFormError = "Bitte ein Haus wählen."; return; }
+        if (string.IsNullOrWhiteSpace(FormName)) { SystemFormError = T("desktop.pruefung.designation_is_required"); return; }
+        if (FormHaus == null) { SystemFormError = T("desktop.pruefung.choose_house_error"); return; }
         IsSaving = true;
         SystemFormError = null;
         try
@@ -376,11 +385,11 @@ public abstract partial class PruefungViewModel : ViewModelBase, INavigationTarg
             var id = await Domain.SaveSystemAsync(new PruefungSystemInput(_editingSystemId, FormName.Trim(), FormNummer.Trim(),
                 FormHaus.Id, FormZugehoerigkeit, FormActive));
             IsSystemFormVisible = false;
-            StatusMessage = _editingSystemId > 0 ? "Anlage gespeichert." : "Anlage angelegt.";
+            StatusMessage = _editingSystemId > 0 ? T("desktop.pruefung.system_saved") : T("desktop.pruefung.system_created");
             await LoadAsync();
             SelectedSystem = Systems.FirstOrDefault(s => s.Id == id);
         }
-        catch (Exception ex) { SystemFormError = $"Speichern fehlgeschlagen: {ex.Message}"; }
+        catch (Exception ex) { SystemFormError = T("desktop.common.save_failed_message", ("message", ex.Message)); }
         finally { IsSaving = false; }
     }
 
@@ -393,11 +402,11 @@ public abstract partial class PruefungViewModel : ViewModelBase, INavigationTarg
         try
         {
             await Domain.DeleteSystemAsync(s.Id);
-            StatusMessage = $"Anlage {s.Name} gelöscht.";
+            StatusMessage = T("desktop.pruefung.system_deleted", ("name", s.Name));
             SelectedSystem = null;
             await LoadAsync();
         }
-        catch (Exception ex) { ErrorMessage = $"Löschen fehlgeschlagen: {ex.Message}"; }
+        catch (Exception ex) { ErrorMessage = T("desktop.common.delete_failed_message", ("message", ex.Message)); }
     }
 
     /// <summary>
@@ -412,7 +421,7 @@ public abstract partial class PruefungViewModel : ViewModelBase, INavigationTarg
         catch (Exception) { houses = Array.Empty<HausOption>(); }
         if (houses.Count == 0)
             houses = Systems.Where(s => s.HausId > 0).GroupBy(s => s.HausId)
-                .Select(g => new HausOption(g.Key, string.IsNullOrWhiteSpace(g.First().HausName) ? $"Haus {g.Key}" : g.First().HausName))
+                .Select(g => new HausOption(g.Key, string.IsNullOrWhiteSpace(g.First().HausName) ? T("desktop.pruefung.house_n", ("number", g.Key)) : g.First().HausName))
                 .OrderBy(h => h.Name).ToList();
         foreach (var h in houses) Houses.Add(h);
     }

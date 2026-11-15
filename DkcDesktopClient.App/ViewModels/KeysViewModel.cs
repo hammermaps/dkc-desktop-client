@@ -14,6 +14,7 @@ using ProtoKeyDeleteRequest = DkcDesktopClient.Core.Protocol.KeyDeleteRequest;
 using ProtoKeysInventoryRequest = DkcDesktopClient.Core.Protocol.KeysInventoryRequest;
 using KeyTypeOption = DkcDesktopClient.Core.Protocol.KeyTypeItem;
 using KeyCabinetOption = DkcDesktopClient.Core.Protocol.KeyCabinetItem;
+using static DkcDesktopClient.Core.I18n.Translator;
 
 namespace DkcDesktopClient.App.ViewModels;
 
@@ -174,7 +175,7 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
         catch (Exception ex)
         {
             if (!silent)
-                ErrorMessage = $"Error loading keys data: {ex.Message}";
+                ErrorMessage = T("desktop.keys.load_failed", ("message", ex.Message));
         }
         finally
         {
@@ -241,17 +242,17 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
     {
         if (string.IsNullOrWhiteSpace(FormKeyName))
         {
-            KeyFormError = "Name is required.";
+            KeyFormError = T("desktop.common.name_is_required");
             return;
         }
         if (string.IsNullOrWhiteSpace(FormKeyNumber))
         {
-            KeyFormError = "Nummer ist ein Pflichtfeld.";
+            KeyFormError = T("desktop.keys.number_is_required");
             return;
         }
         if (FormKeyType == null)
         {
-            KeyFormError = "Typ ist ein Pflichtfeld.";
+            KeyFormError = T("desktop.keys.type_is_required");
             return;
         }
         IsSavingKey = true;
@@ -284,7 +285,7 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            KeyFormError = $"Error: {ex.Message}";
+            KeyFormError = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -321,12 +322,12 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
         if (SelectedInventoryItem == null) return;
         if (string.IsNullOrWhiteSpace(FormIssuedTo))
         {
-            IssueFormError = "Issued To is required.";
+            IssueFormError = T("desktop.keys.recipient_is_required");
             return;
         }
         if (string.IsNullOrWhiteSpace(FormIssuedAt))
         {
-            IssueFormError = "Date is required.";
+            IssueFormError = T("desktop.keys.date_is_required");
             return;
         }
         IsSavingIssue = true;
@@ -346,7 +347,7 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            IssueFormError = $"Error: {ex.Message}";
+            IssueFormError = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -384,7 +385,7 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
         if (SelectedIssuedItem == null) return;
         if (IsReturnFormVisible && string.IsNullOrWhiteSpace(FormReturnDate))
         {
-            ReturnFormError = "Rückgabedatum ist erforderlich.";
+            ReturnFormError = T("desktop.keys.return_date_is_required");
             return;
         }
         IsSavingReturn = true;
@@ -408,7 +409,7 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error: {ex.Message}";
+            ErrorMessage = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -423,8 +424,8 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
     {
         if (SelectedInventoryItem == null) return;
         var confirmed = await _dialogService.ConfirmAsync(
-            "Schlüsseltyp löschen",
-            $"Soll der Schlüsseltyp „{SelectedInventoryItem.Name}“ wirklich unwiderruflich gelöscht werden?");
+            T("desktop.keys.delete_title"),
+            T("desktop.keys.delete_confirm", ("name", SelectedInventoryItem.Name)));
         if (!confirmed) return;
 
         IsLoading = true;
@@ -437,7 +438,7 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error: {ex.Message}";
+            ErrorMessage = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -475,16 +476,16 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
     {
         var path = await _filePicker.PickSaveFileAsync(
             $"schluessel_inventar_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
-            new[] { ("CSV-Datei", "*.csv") });
+            new[] { (T("desktop.file.csv_file"), "*.csv") });
         if (path == null) return;
 
         var columns = new (string, Func<KeyInventoryItem, string?>)[]
         {
             ("ID",          k => k.Id.ToString()),
-            ("Name",        k => k.Name),
-            ("Beschreibung", k => k.Description),
-            ("Gesamt",      k => k.Total?.ToString()),
-            ("Verfügbar",   k => k.Available?.ToString()),
+            (T("desktop.common.name"),        k => k.Name),
+            (T("desktop.common.description"), k => k.Description),
+            (T("desktop.common.total"),      k => k.Total?.ToString()),
+            (T("desktop.keys.available"),   k => k.Available?.ToString()),
         };
 
         try
@@ -493,7 +494,7 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"CSV-Export fehlgeschlagen: {ex.Message}";
+            ErrorMessage = T("desktop.common.csv_export_failed", ("message", ex.Message));
         }
     }
 
@@ -515,9 +516,9 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
     {
         var key = SelectedInventoryItem;
         if (key == null) return;
-        KeyHistoryTitle = $"Historie: {key.Name}";
+        KeyHistoryTitle = T("desktop.keys.history_title", ("name", key.Name));
         KeyHistory.Clear();
-        KeyHistoryInfo = "Wird geladen …";
+        KeyHistoryInfo = T("desktop.common.loading");
         SelectedTabIndex = HistoryTabIndex;
         try
         {
@@ -526,12 +527,12 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
                 KeyHistory.Add(KeyHistoryRow.From(i));
             var total = r.Page?.Total ?? KeyHistory.Count;
             KeyHistoryInfo = KeyHistory.Count == 0
-                ? "Dieser Schlüssel wurde noch nie ausgegeben."
-                : total > KeyHistory.Count ? $"Neueste {KeyHistory.Count} von {total} Ausgaben." : $"{total} Ausgabe(n).";
+                ? T("desktop.keys.never_issued")
+                : total > KeyHistory.Count ? T("desktop.keys.history_latest", ("shown", KeyHistory.Count), ("total", total)) : T("desktop.keys.history_count", ("total", total));
         }
         catch (Exception ex)
         {
-            KeyHistoryInfo = $"Historie konnte nicht geladen werden: {ex.Message}";
+            KeyHistoryInfo = T("desktop.keys.history_failed", ("message", ex.Message));
         }
     }
 }
@@ -539,7 +540,7 @@ public partial class KeysViewModel : ViewModelBase, INavigationTarget
 /// <summary>Zeile der Ausgabehistorie; „offen“ = noch nicht zurückgegeben.</summary>
 public sealed record KeyHistoryRow(int Id, string Recipient, string IssuedAt, string PlannedReturnAt, string ReturnedAt, string Notes)
 {
-    public string State => string.IsNullOrEmpty(ReturnedAt) ? "ausgegeben" : "zurück";
+    public string State => string.IsNullOrEmpty(ReturnedAt) ? T("desktop.keys.state_issued") : T("desktop.keys.returned");
 
     public static KeyHistoryRow From(DkcDesktopClient.Core.Protocol.KeyIssuedItem i) => new(
         i.Id,

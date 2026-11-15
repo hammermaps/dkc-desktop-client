@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DkcDesktopClient.Core.Services;
+using static DkcDesktopClient.Core.I18n.Translator;
 
 namespace DkcDesktopClient.App.ViewModels;
 
@@ -14,10 +15,10 @@ public sealed record TwoFactorMethodOption(string Value, string Label)
 
     public static TwoFactorMethodOption From(string value) => new(value, value switch
     {
-        "totp"         => "Authenticator app",
-        "email"        => "Code by email",
-        "sms"          => "Code by SMS",
-        "backup_codes" => "Backup code",
+        "totp"         => T("desktop.login.method_totp"),
+        "email"        => T("desktop.login.method_email"),
+        "sms"          => T("desktop.login.method_sms"),
+        "backup_codes" => T("desktop.login.method_backup"),
         _              => value,
     });
 }
@@ -64,12 +65,12 @@ public partial class LoginViewModel : ViewModelBase
             }
             else if (!result.Success)
             {
-                ErrorMessage = result.Error ?? "Login failed.";
+                ErrorMessage = result.Error ?? T("desktop.login.failed");
             }
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Connection error: {ex.Message}";
+            ErrorMessage = T("desktop.login.connection_error", ("message", ex.Message));
         }
         finally
         {
@@ -94,13 +95,13 @@ public partial class LoginViewModel : ViewModelBase
             }
             else
             {
-                ErrorMessage = result.Error ?? "Verification failed.";
+                ErrorMessage = result.Error ?? T("desktop.login.verification_failed");
                 TwoFactorCode = string.Empty;
             }
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Connection error: {ex.Message}";
+            ErrorMessage = T("desktop.login.connection_error", ("message", ex.Message));
         }
         finally
         {
@@ -119,13 +120,13 @@ public partial class LoginViewModel : ViewModelBase
         {
             var result = await _authService.SendTwoFactorCodeAsync(_pendingTicket, SelectedTwoFactorMethod.Value);
             if (result.Success)
-                InfoMessage = "Code sent. It is valid for 10 minutes.";
+                InfoMessage = T("desktop.login.code_sent");
             else
-                ErrorMessage = result.Error ?? "The code could not be sent.";
+                ErrorMessage = result.Error ?? T("desktop.login.code_not_sent");
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Connection error: {ex.Message}";
+            ErrorMessage = T("desktop.login.connection_error", ("message", ex.Message));
         }
         finally
         {

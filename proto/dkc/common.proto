@@ -165,6 +165,9 @@ enum Action {
     // Passive Change Feed / server-sent events
     CHANGE_FEED_SNAPSHOT            = 240;
     CHANGE_FEED_TICKET              = 241;
+
+    // Übersetzungen des Desktop-Clients (desktop.* aus lang/*.json), ohne Anmeldung abrufbar
+    TRANSLATIONS                    = 260;
 }
 
 // Stable error codes. The HTTP status is set to match.

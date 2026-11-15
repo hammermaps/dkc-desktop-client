@@ -5,11 +5,13 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DkcDesktopClient.Core.Api;
 using DkcDesktopClient.Core.Protobuf;
+using DkcDesktopClient.Core.I18n;
 using DkcDesktopClient.Core.Services;
 using Refit;
 using ProtoProjectSaveRequest = DkcDesktopClient.Core.Protocol.ProjectSaveRequest;
 using ProtoUserSaveRequest = DkcDesktopClient.Core.Protocol.UserSaveRequest;
 using ProtoUserDeleteRequest = DkcDesktopClient.Core.Protocol.UserDeleteRequest;
+using static DkcDesktopClient.Core.I18n.Translator;
 
 namespace DkcDesktopClient.App.ViewModels;
 
@@ -19,6 +21,25 @@ public partial class SettingsViewModel : ViewModelBase
     private readonly AuthService _authService;
     private readonly TokenStore _tokenStore;
     private readonly UpdateService _updateService;
+    private readonly TranslationService? _translations;
+
+    // Sprache
+    /// <summary>„Automatisch“ plus alle Sprachen des Servers, jeweils in ihrer eigenen Schreibweise.</summary>
+    public IReadOnlyList<LanguageOption> LanguageOptions { get; } =
+    [
+        new(TranslationService.Auto, null),
+        new("de", "Deutsch"), new("en", "English"), new("fr", "Français"), new("es", "Español"),
+        new("tr", "Türkçe"), new("ru", "Русский"), new("pl", "Polski"),
+    ];
+
+    [ObservableProperty] private LanguageOption _selectedLanguage;
+
+    partial void OnSelectedLanguageChanged(LanguageOption value)
+    {
+        if (_translations == null || value.Code == _translations.Preference) return;
+        _translations.SetPreference(value.Code);
+        _ = _translations.SyncAsync(_apiFactory);
+    }
 
     /// <summary>
     /// project_create/project_update/user_create/user_update/user_delete sind in api.php nie als
@@ -100,8 +121,12 @@ public partial class SettingsViewModel : ViewModelBase
     public string CurrentVersion => UpdateService.CurrentVersion.ToString(3);
     public string? CurrentUsername => _authService.CurrentUser?.Username;
 
-    public SettingsViewModel(DkcApiFactory apiFactory, AuthService authService, TokenStore tokenStore, UpdateService updateService)
+    public SettingsViewModel(DkcApiFactory apiFactory, AuthService authService, TokenStore tokenStore, UpdateService updateService,
+        TranslationService? translations = null)
     {
+        _translations = translations;
+        _selectedLanguage = LanguageOptions.FirstOrDefault(o => o.Code == (translations?.Preference ?? TranslationService.Auto))
+                            ?? LanguageOptions[0];
         _apiFactory = apiFactory;
         _authService = authService;
         _tokenStore = tokenStore;
@@ -125,7 +150,7 @@ public partial class SettingsViewModel : ViewModelBase
         if (!string.IsNullOrWhiteSpace(ServerUrl))
         {
             _tokenStore.SaveServerUrl(ServerUrl);
-            StatusMessage = "Server URL saved.";
+            StatusMessage = T("desktop.settings.server_url_saved");
         }
     }
 
@@ -134,7 +159,7 @@ public partial class SettingsViewModel : ViewModelBase
     {
         if (!LogLevelOptions.Contains(SelectedLogLevel))
         {
-            LoggingMessage = "Ungueltiges Log-Level.";
+            LoggingMessage = T("desktop.settings.invalid_log_level");
             return;
         }
 
@@ -147,12 +172,12 @@ public partial class SettingsViewModel : ViewModelBase
                 WriteIndented = true
             });
             File.WriteAllText(filePath, json);
-            LoggingMessage = "Log-Level gespeichert. Aenderung greift nach App-Neustart.";
-            StatusMessage = "Logging-Einstellungen gespeichert.";
+            LoggingMessage = T("desktop.settings.log_level_saved");
+            StatusMessage = T("desktop.settings.logging_saved");
         }
         catch (Exception ex)
         {
-            LoggingMessage = $"Fehler beim Speichern: {ex.Message}";
+            LoggingMessage = T("desktop.settings.save_error", ("message", ex.Message));
         }
     }
 
@@ -160,7 +185,7 @@ public partial class SettingsViewModel : ViewModelBase
     public void ReloadLoggingSettings()
     {
         LoadLoggingSettings();
-        LoggingMessage = "Logging-Einstellungen neu geladen.";
+        LoggingMessage = T("desktop.settings.logging_reloaded");
     }
 
     [RelayCommand(CanExecute = nameof(CanRunApiStatusCheck))]
@@ -185,11 +210,11 @@ public partial class SettingsViewModel : ViewModelBase
             await CheckEndpointAsync("klima_status", async () => await api.GetKlimaRealtimeStatusAsync(timeoutCts.Token));
             await CheckEndpointAsync("nea_dashboard", async () => await api.GetNeaDashboardAsync(timeoutCts.Token));
 
-            StatusMessage = "API-Statuscheck abgeschlossen.";
+            StatusMessage = T("desktop.settings.status_check_done");
         }
         catch (OperationCanceledException)
         {
-            ErrorMessage = "API-Statuscheck wurde wegen Timeout abgebrochen.";
+            ErrorMessage = T("desktop.settings.status_check_timeout");
         }
         finally
         {
@@ -200,10 +225,10 @@ public partial class SettingsViewModel : ViewModelBase
     /// <summary>Prüfung vor dem Senden; Komplexitätsregeln prüft der Server (Passwortrichtlinie).</summary>
     public static string? ValidatePasswordChange(string current, string next, string repeat)
     {
-        if (string.IsNullOrEmpty(current)) return "Bitte das aktuelle Passwort eingeben.";
-        if (string.IsNullOrEmpty(next)) return "Bitte ein neues Passwort eingeben.";
-        if (next != repeat) return "Die Wiederholung stimmt nicht mit dem neuen Passwort überein.";
-        if (next == current) return "Das neue Passwort muss sich vom aktuellen unterscheiden.";
+        if (string.IsNullOrEmpty(current)) return T("desktop.settings.enter_current_password");
+        if (string.IsNullOrEmpty(next)) return T("desktop.settings.enter_new_password");
+        if (next != repeat) return T("desktop.settings.password_mismatch");
+        if (next == current) return T("desktop.settings.password_same");
         return null;
     }
 
@@ -223,7 +248,7 @@ public partial class SettingsViewModel : ViewModelBase
                 NewPassword = NewPassword,
             });
             CurrentPassword = NewPassword = NewPasswordRepeat = string.Empty;
-            PasswordMessage = "Passwort geändert.";
+            PasswordMessage = T("desktop.settings.password_changed");
         }
         catch (DkcProtobufApiException ex)
         {
@@ -232,7 +257,7 @@ public partial class SettingsViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            PasswordError = $"Passwort konnte nicht geändert werden: {ex.Message}";
+            PasswordError = T("desktop.settings.password_change_failed", ("message", ex.Message));
         }
         finally
         {
@@ -260,7 +285,7 @@ public partial class SettingsViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error loading tokens: {ex.Message}";
+            ErrorMessage = T("desktop.settings.tokens_failed", ("message", ex.Message));
         }
         finally
         {
@@ -280,16 +305,16 @@ public partial class SettingsViewModel : ViewModelBase
             if (result.Success)
             {
                 Tokens.Remove(SelectedToken);
-                StatusMessage = "Token deleted.";
+                StatusMessage = T("desktop.settings.token_deleted");
             }
             else
             {
-                ErrorMessage = result.Error ?? "Failed to delete token.";
+                ErrorMessage = result.Error ?? T("desktop.settings.token_delete_failed");
             }
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error deleting token: {ex.Message}";
+            ErrorMessage = T("desktop.settings.token_delete_error", ("message", ex.Message));
         }
         finally
         {
@@ -314,7 +339,7 @@ public partial class SettingsViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error loading projects: {ex.Message}";
+            ErrorMessage = T("desktop.settings.projects_failed", ("message", ex.Message));
         }
         finally
         {
@@ -357,7 +382,7 @@ public partial class SettingsViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(FormProjectName))
         {
-            ProjectFormError = "Name is required.";
+            ProjectFormError = T("desktop.common.name_is_required");
             return;
         }
         IsSavingProject = true;
@@ -378,11 +403,11 @@ public partial class SettingsViewModel : ViewModelBase
 
             IsProjectFormVisible = false;
             await LoadProjectsAsync();
-            StatusMessage = "Project saved.";
+            StatusMessage = T("desktop.settings.project_saved");
         }
         catch (Exception ex)
         {
-            ProjectFormError = $"Error: {ex.Message}";
+            ProjectFormError = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -401,13 +426,13 @@ public partial class SettingsViewModel : ViewModelBase
             var api = _apiFactory.Create(_authService.CurrentToken);
             var result = await api.SetActiveProjectAsync(new ProjectSetActiveRequest(SelectedProject.Id));
             if (result.Success)
-                StatusMessage = $"Active project set to '{SelectedProject.Name}'.";
+                StatusMessage = T("desktop.settings.active_project_set", ("name", SelectedProject.Name));
             else
-                ErrorMessage = result.Error ?? "Failed to set active project.";
+                ErrorMessage = result.Error ?? T("desktop.settings.active_project_failed");
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error: {ex.Message}";
+            ErrorMessage = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -432,7 +457,7 @@ public partial class SettingsViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error loading users: {ex.Message}";
+            ErrorMessage = T("desktop.settings.users_failed", ("message", ex.Message));
         }
         finally
         {
@@ -483,12 +508,12 @@ public partial class SettingsViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(FormUsername))
         {
-            UserFormError = "Username is required.";
+            UserFormError = T("desktop.settings.username_is_required");
             return;
         }
         if (!IsEditingUser && string.IsNullOrWhiteSpace(FormPassword))
         {
-            UserFormError = "Password is required for new users.";
+            UserFormError = T("desktop.settings.password_required_new_user");
             return;
         }
         IsSavingUser = true;
@@ -513,11 +538,11 @@ public partial class SettingsViewModel : ViewModelBase
 
             IsUserFormVisible = false;
             await LoadUsersAsync();
-            StatusMessage = "User saved.";
+            StatusMessage = T("desktop.settings.user_saved");
         }
         catch (Exception ex)
         {
-            UserFormError = $"Error: {ex.Message}";
+            UserFormError = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -535,11 +560,11 @@ public partial class SettingsViewModel : ViewModelBase
         {
             await ProtoApi.DeleteUserAsync(new ProtoUserDeleteRequest { Id = SelectedUser.Id });
             Users.Remove(SelectedUser);
-            StatusMessage = "User deleted.";
+            StatusMessage = T("desktop.settings.user_deleted");
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error: {ex.Message}";
+            ErrorMessage = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -564,12 +589,12 @@ public partial class SettingsViewModel : ViewModelBase
             else
             {
                 AvailableUpdate = null;
-                StatusMessage = "You are running the latest version.";
+                StatusMessage = T("desktop.settings.up_to_date");
             }
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Update check failed: {ex.Message}";
+            ErrorMessage = T("desktop.settings.update_check_failed", ("message", ex.Message));
         }
         finally
         {
@@ -592,11 +617,11 @@ public partial class SettingsViewModel : ViewModelBase
             var progress = new Progress<double>(p => DownloadProgress = p * 100);
             var success = await _updateService.DownloadAndInstallAsync(AvailableUpdate, _authService.CurrentToken, progress);
             if (!success)
-                ErrorMessage = "Download failed. Please try again or update manually.";
+                ErrorMessage = T("desktop.settings.download_failed");
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Update failed: {ex.Message}";
+            ErrorMessage = T("desktop.settings.update_failed", ("message", ex.Message));
         }
         finally
         {
@@ -618,7 +643,7 @@ public partial class SettingsViewModel : ViewModelBase
         if (!string.IsNullOrWhiteSpace(value))
         {
             _tokenStore.SaveServerUrl(value);
-            StatusMessage = "Server-URL gespeichert.";
+            StatusMessage = T("desktop.settings.server_url_saved");
         }
     }
 
@@ -631,7 +656,7 @@ public partial class SettingsViewModel : ViewModelBase
         if (TryNormalizeLogLevel(fromEnv, out var envLevel))
         {
             SelectedLogLevel = envLevel;
-            LoggingMessage = "Log-Level wird ueber DKC_LOG_LEVEL aus der Umgebung gesteuert.";
+            LoggingMessage = T("desktop.settings.log_level_from_env");
             return;
         }
 
@@ -727,4 +752,11 @@ public partial class SettingsViewModel : ViewModelBase
         DownloadUpdateCommand.NotifyCanExecuteChanged();
     }
     partial void OnAvailableUpdateChanged(UpdateInfo? value) => DownloadUpdateCommand.NotifyCanExecuteChanged();
+}
+
+/// <summary>Eintrag der Sprachauswahl; ohne Namen ist es „Automatisch“ (übersetzt).</summary>
+public sealed record LanguageOption(string Code, string? NativeName)
+{
+    public string Label => NativeName ?? T("desktop.settings.language_auto");
+    public override string ToString() => Label;
 }

@@ -1,4 +1,5 @@
 using DkcDesktopClient.Core.Protobuf;
+using DkcDesktopClient.Core.I18n;
 using DkcDesktopClient.Core.Protocol;
 
 namespace DkcDesktopClient.Core.Pruefung;
@@ -103,19 +104,30 @@ public static class PruefungValues
 
     public static string StatusLabel(string status) => status switch
     {
-        StatusInProgress => "in Bearbeitung",
-        StatusCompleted  => "abgeschlossen",
+        StatusInProgress => Translator.T("desktop.pruefung.status_in_progress"),
+        StatusCompleted  => Translator.T("desktop.pruefung.status_completed"),
         _                => status,
     };
 
     public static string ResultLabel(string result) => result switch
     {
-        ResultPassed => "bestanden",
-        ResultFailed => "nicht bestanden",
+        ResultPassed => Translator.T("desktop.pruefung.result_passed"),
+        ResultFailed => Translator.T("desktop.pruefung.result_failed"),
         _            => result,
     };
 
-    /// <summary>Werte einer Checkbox-Frage, identisch mit template/default/pruefung/wizard.tpl.</summary>
+    /// <summary>Anzeigetext eines gespeicherten Checklisten-Werts (Checkbox-Werte übersetzt, sonst unverändert).</summary>
+    public static string ChoiceLabel(string value) => value switch
+    {
+        CheckboxOk  => Translator.T("desktop.pruefung.check_ok"),
+        CheckboxNok => Translator.T("desktop.pruefung.check_nok"),
+        _           => value,
+    };
+
+    /// <summary>
+    /// Gespeicherte Werte einer Checkbox-Frage, identisch mit template/default/pruefung/wizard.tpl.
+    /// Sprachunabhängig – angezeigt wird <see cref="ChoiceLabel"/>.
+    /// </summary>
     public const string CheckboxOk  = "In Ordnung";
     public const string CheckboxNok = "Nicht in Ordnung";
 
@@ -167,8 +179,8 @@ public sealed class AufzugPruefungApi : IPruefungApi
     public AufzugPruefungApi(Func<IDkcProtobufApi> api) => _api = api;
 
     public string Key => "aufzug";
-    public string Title => "Aufzugprüfung";
-    public string NummerLabel => "Aufzug-Nr.";
+    public string Title => Translator.T("desktop.nav.aufzug");
+    public string NummerLabel => Translator.T("desktop.pruefung.aufzug_number");
     public string DefaultInspectionType => "quarterly_check";
     public IReadOnlyList<string> ZugehoerigkeitOptions { get; } = new[] { "haus", "gw" };
     public string ViewPermission => "aufzug_pruefung_view";
@@ -206,7 +218,7 @@ public sealed class AufzugPruefungApi : IPruefungApi
     public async Task<PruefungInspectionDetail> GetInspectionDetailAsync(int id, CancellationToken ct = default)
     {
         var d = (await _api().GetAufzugInspectionDetailAsync(new AufzugInspectionDetailRequest { Id = id }, ct).ConfigureAwait(false)).Inspection
-                ?? throw new InvalidOperationException("Prüfung nicht gefunden");
+                ?? throw new InvalidOperationException(Translator.T("desktop.pruefung.not_found"));
         return new PruefungInspectionDetail(d.Id, d.AufzugAnlageId, d.SystemName, d.InspectionType, d.InspectionDate,
             d.InspectorName, d.Status, d.OverallResult, d.DurationMinutes, d.DefectsFound, d.CorrectiveActions, d.Notes,
             PruefungMapping.Steps(d.ChecklistSteps));
@@ -250,8 +262,8 @@ public sealed class SprinklerPruefungApi : IPruefungApi
     public SprinklerPruefungApi(Func<IDkcProtobufApi> api) => _api = api;
 
     public string Key => "sprinkler";
-    public string Title => "Sprinklerprüfung";
-    public string NummerLabel => "Anlagen-Nr.";
+    public string Title => Translator.T("desktop.nav.sprinkler");
+    public string NummerLabel => Translator.T("desktop.pruefung.sprinkler_number");
     public string DefaultInspectionType => "weekly_check";
     public IReadOnlyList<string> ZugehoerigkeitOptions { get; } = new[] { "haus", "gw", "gemischt" };
     public string ViewPermission => "sprinkler_pruefung_view";
@@ -289,7 +301,7 @@ public sealed class SprinklerPruefungApi : IPruefungApi
     public async Task<PruefungInspectionDetail> GetInspectionDetailAsync(int id, CancellationToken ct = default)
     {
         var d = (await _api().GetSprinklerInspectionDetailAsync(new SprinklerInspectionDetailRequest { Id = id }, ct).ConfigureAwait(false)).Inspection
-                ?? throw new InvalidOperationException("Prüfung nicht gefunden");
+                ?? throw new InvalidOperationException(Translator.T("desktop.pruefung.not_found"));
         return new PruefungInspectionDetail(d.Id, d.SprinklerAnlageId, d.SystemName, d.InspectionType, d.InspectionDate,
             d.InspectorName, d.Status, d.OverallResult, d.DurationMinutes, d.DefectsFound, d.CorrectiveActions, d.Notes,
             PruefungMapping.Steps(d.ChecklistSteps));

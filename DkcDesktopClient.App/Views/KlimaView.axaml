@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:i18n="using:DkcDesktopClient.App.I18n"
              xmlns:vm="using:DkcDesktopClient.App.ViewModels"
              x:Class="DkcDesktopClient.App.Views.KlimaView"
              x:DataType="vm:KlimaViewModel">
@@ -7,24 +8,24 @@
 
     <!-- Toolbar -->
     <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
-      <TextBlock Text="Climate Control" FontSize="24" FontWeight="Bold" VerticalAlignment="Center"/>
-      <Button Content="Reload Devices" Command="{Binding LoadDataCommand}"/>
-      <Button Content="Refresh Status" Command="{Binding RefreshStatusCommand}"/>
-      <Button Content="Start Polling (10s)" Command="{Binding StartPollingCommand}"
+      <TextBlock Text="{i18n:T desktop.klima.title}" FontSize="24" FontWeight="Bold" VerticalAlignment="Center"/>
+      <Button Content="{i18n:T desktop.klima.reload_devices}" Command="{Binding LoadDataCommand}"/>
+      <Button Content="{i18n:T desktop.klima.refresh_status}" Command="{Binding RefreshStatusCommand}"/>
+      <Button Content="{i18n:T desktop.klima.start_polling}" Command="{Binding StartPollingCommand}"
               IsVisible="{Binding IsPolling, Converter={x:Static BoolConverters.Not}}"/>
-      <Button Content="Stop Polling" Command="{Binding StopPollingCommand}"
+      <Button Content="{i18n:T desktop.klima.stop_polling}" Command="{Binding StopPollingCommand}"
               IsVisible="{Binding IsPolling}"/>
-      <TextBlock IsVisible="{Binding IsPolling}" Text="● LIVE" Foreground="Green" VerticalAlignment="Center" FontWeight="Bold"/>
-      <TextBlock Text="{Binding LastStatusTimestamp, StringFormat='Last: {0}'}" VerticalAlignment="Center" Foreground="#666"/>
+      <TextBlock IsVisible="{Binding IsPolling}" Text="{i18n:T desktop.klima.live}" Foreground="Green" VerticalAlignment="Center" FontWeight="Bold"/>
+      <TextBlock Text="{Binding LastStatusTimestamp, Converter={x:Static i18n:Labels.Format}, ConverterParameter=desktop.klima.last_status|time}" VerticalAlignment="Center" Foreground="#666"/>
     </StackPanel>
 
     <!-- Global control buttons -->
     <Border Grid.Row="1" Background="#9AE6B4" BorderThickness="1" BorderBrush="#68D391" CornerRadius="4" Padding="8">
       <StackPanel Orientation="Horizontal" Spacing="8">
-        <Button Content="Alle AN" Command="{Binding AllDevicesOnCommand}" Background="#48BB78" Foreground="White"/>
-        <Button Content="Alle AUS" Command="{Binding AllDevicesOffCommand}" Background="#FC8181" Foreground="White"/>
-        <Button Content="Status speichern" Command="{Binding SaveStateCommand}"/>
-        <Button Content="Letzten Status" Command="{Binding RestoreLastStateCommand}"/>
+        <Button Content="{i18n:T desktop.klima.all_on}" Command="{Binding AllDevicesOnCommand}" Background="#48BB78" Foreground="White"/>
+        <Button Content="{i18n:T desktop.klima.all_off}" Command="{Binding AllDevicesOffCommand}" Background="#FC8181" Foreground="White"/>
+        <Button Content="{i18n:T desktop.klima.save_state}" Command="{Binding SaveStateCommand}"/>
+        <Button Content="{i18n:T desktop.klima.restore_state}" Command="{Binding RestoreLastStateCommand}"/>
         <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSendingControl}" Width="60" Height="16" VerticalAlignment="Center"/>
         <TextBlock Text="{Binding GlobalControlResult}" VerticalAlignment="Center" Foreground="#2D3748"/>
       </StackPanel>
@@ -39,31 +40,31 @@
     <Border Grid.Row="3" IsVisible="{Binding IsControlPanelVisible}"
             Background="#90CDF4" BorderThickness="1" BorderBrush="#63B3ED" CornerRadius="4" Padding="12">
       <StackPanel Spacing="8">
-        <TextBlock Text="Device Control" FontSize="15" FontWeight="SemiBold"/>
+        <TextBlock Text="{i18n:T desktop.klima.device_control}" FontSize="15" FontWeight="SemiBold"/>
         <TextBlock Text="{Binding ControlError}" Foreground="Red"
                    IsVisible="{Binding ControlError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
         <StackPanel Orientation="Horizontal" Spacing="16">
-          <CheckBox IsChecked="{Binding ControlPower}" Content="Power On"/>
+          <CheckBox IsChecked="{Binding ControlPower}" Content="{i18n:T desktop.klima.power_on}"/>
           <StackPanel Orientation="Horizontal" Spacing="4">
-            <TextBlock Text="Mode" VerticalAlignment="Center"/>
+            <TextBlock Text="{i18n:T desktop.common.mode}" VerticalAlignment="Center"/>
             <ComboBox ItemsSource="{x:Static vm:KlimaViewModel.ModeOptions}"
                       SelectedItem="{Binding ControlMode}" MinWidth="100"/>
           </StackPanel>
           <StackPanel Orientation="Horizontal" Spacing="4">
-            <TextBlock Text="Setpoint °C" VerticalAlignment="Center"/>
+            <TextBlock Text="{i18n:T desktop.klima.setpoint_c}" VerticalAlignment="Center"/>
             <NumericUpDown Value="{Binding ControlSetpoint}" Minimum="16" Maximum="30"
                            Increment="0.5" Width="100"/>
           </StackPanel>
           <StackPanel Orientation="Horizontal" Spacing="4">
-            <TextBlock Text="Fan Speed" VerticalAlignment="Center"/>
+            <TextBlock Text="{i18n:T desktop.klima.fan_speed}" VerticalAlignment="Center"/>
             <ComboBox ItemsSource="{x:Static vm:KlimaViewModel.FanSpeedOptions}"
                       SelectedItem="{Binding ControlFanSpeed}" MinWidth="90"/>
           </StackPanel>
         </StackPanel>
         <StackPanel Orientation="Horizontal" Spacing="8">
-          <Button Content="Apply to Device" Command="{Binding ApplyDeviceControlCommand}"/>
-          <Button Content="Apply to Group" Command="{Binding ApplyGroupControlCommand}"/>
-          <Button Content="Close" Command="{Binding HideDeviceControlCommand}"/>
+          <Button Content="{i18n:T desktop.klima.apply_device}" Command="{Binding ApplyDeviceControlCommand}"/>
+          <Button Content="{i18n:T desktop.klima.apply_group}" Command="{Binding ApplyGroupControlCommand}"/>
+          <Button Content="{i18n:T desktop.common.close}" Command="{Binding HideDeviceControlCommand}"/>
           <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSendingControl}" Width="80" Height="16" VerticalAlignment="Center"/>
         </StackPanel>
       </StackPanel>
@@ -72,46 +73,46 @@
     <!-- Device status list + groups -->
     <Grid Grid.Row="4" ColumnDefinitions="*, 8, 200">
       <StackPanel Grid.Column="0" Spacing="4">
-        <TextBlock Text="Realtime Device Status" FontWeight="SemiBold"/>
+        <TextBlock Text="{i18n:T desktop.klima.realtime_status}" FontWeight="SemiBold"/>
         <DataGrid ItemsSource="{Binding DeviceStatuses}" SelectedItem="{Binding SelectedDeviceStatus}"
                   IsReadOnly="True" AutoGenerateColumns="False">
           <DataGrid.Columns>
-            <DataGridTextColumn Header="Ctrl" Binding="{Binding ControllerId}" Width="45"/>
-            <DataGridTextColumn Header="Addr" Binding="{Binding Address}" Width="50"/>
-            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
-            <DataGridCheckBoxColumn Header="Online" Binding="{Binding Online}" Width="60"/>
-            <DataGridCheckBoxColumn Header="Power" Binding="{Binding Power}" Width="55"/>
-            <DataGridTextColumn Header="Mode" Binding="{Binding Mode}" Width="80"/>
-            <DataGridTextColumn Header="Setpoint" Binding="{Binding Setpoint}" Width="70"/>
-            <DataGridTextColumn Header="Current °C" Binding="{Binding CurrentTemp}" Width="80"/>
-            <DataGridTextColumn Header="Fan" Binding="{Binding FanSpeed}" Width="70"/>
-            <DataGridTextColumn Header="Error" Binding="{Binding ErrorCode}" Width="80"/>
+            <DataGridTextColumn Header="{i18n:T desktop.klima.ctrl}" Binding="{Binding ControllerId}" Width="Auto"/>
+            <DataGridTextColumn Header="{i18n:T desktop.klima.addr}" Binding="{Binding Address}" Width="Auto"/>
+            <DataGridTextColumn Header="{i18n:T desktop.common.name}" Binding="{Binding Name}" Width="*"/>
+            <DataGridCheckBoxColumn Header="{i18n:T desktop.common.online}" Binding="{Binding Online}" Width="Auto"/>
+            <DataGridCheckBoxColumn Header="{i18n:T desktop.klima.power}" Binding="{Binding Power}" Width="Auto"/>
+            <DataGridTextColumn Header="{i18n:T desktop.common.mode}" Binding="{Binding Mode}" Width="Auto"/>
+            <DataGridTextColumn Header="{i18n:T desktop.klima.setpoint}" Binding="{Binding Setpoint}" Width="Auto"/>
+            <DataGridTextColumn Header="{i18n:T desktop.klima.current_c}" Binding="{Binding CurrentTemp}" Width="Auto"/>
+            <DataGridTextColumn Header="{i18n:T desktop.klima.fan}" Binding="{Binding FanSpeed}" Width="Auto"/>
+            <DataGridTextColumn Header="{i18n:T desktop.klima.error}" Binding="{Binding ErrorCode}" Width="Auto"/>
           </DataGrid.Columns>
         </DataGrid>
-        <Button Content="Control Selected Device" Command="{Binding ShowDeviceControlCommand}"
+        <Button Content="{i18n:T desktop.klima.control_selected}" Command="{Binding ShowDeviceControlCommand}"
                 IsEnabled="{Binding SelectedDeviceStatus, Converter={x:Static ObjectConverters.IsNotNull}}"/>
-        <TextBlock Text="Configured Devices" FontWeight="SemiBold" Margin="0,8,0,0"/>
+        <TextBlock Text="{i18n:T desktop.klima.configured_devices}" FontWeight="SemiBold" Margin="0,8,0,0"/>
         <DataGrid ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice}"
                   IsReadOnly="True" AutoGenerateColumns="False">
           <DataGrid.Columns>
-            <DataGridTextColumn Header="Ctrl" Binding="{Binding ControllerId}" Width="45"/>
-            <DataGridTextColumn Header="Address" Binding="{Binding Address}" Width="70"/>
-            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
-            <DataGridCheckBoxColumn Header="Enabled" Binding="{Binding Enabled}" Width="70"/>
+            <DataGridTextColumn Header="{i18n:T desktop.klima.ctrl}" Binding="{Binding ControllerId}" Width="Auto"/>
+            <DataGridTextColumn Header="{i18n:T desktop.common.address}" Binding="{Binding Address}" Width="70"/>
+            <DataGridTextColumn Header="{i18n:T desktop.common.name}" Binding="{Binding Name}" Width="*"/>
+            <DataGridCheckBoxColumn Header="{i18n:T desktop.common.enabled}" Binding="{Binding Enabled}" Width="70"/>
           </DataGrid.Columns>
         </DataGrid>
       </StackPanel>
       <GridSplitter Grid.Column="1" Width="4"/>
       <StackPanel Grid.Column="2" Spacing="4">
-        <TextBlock Text="Groups" FontWeight="SemiBold"/>
+        <TextBlock Text="{i18n:T desktop.common.groups}" FontWeight="SemiBold"/>
         <DataGrid ItemsSource="{Binding Groups}" SelectedItem="{Binding SelectedGroup}"
                   IsReadOnly="True" AutoGenerateColumns="False">
           <DataGrid.Columns>
-            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
-            <DataGridTextColumn Header="# Dev" Binding="{Binding DeviceCount}" Width="50"/>
+            <DataGridTextColumn Header="{i18n:T desktop.common.name}" Binding="{Binding Name}" Width="*"/>
+            <DataGridTextColumn Header="{i18n:T desktop.klima.device_count}" Binding="{Binding DeviceCount}" Width="50"/>
           </DataGrid.Columns>
         </DataGrid>
-        <Button Content="Control Group" Command="{Binding ShowGroupControlCommand}"
+        <Button Content="{i18n:T desktop.klima.control_group}" Command="{Binding ShowGroupControlCommand}"
                 IsEnabled="{Binding SelectedGroup, Converter={x:Static ObjectConverters.IsNotNull}}"/>
       </StackPanel>
     </Grid>

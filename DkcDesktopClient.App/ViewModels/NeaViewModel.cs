@@ -14,6 +14,7 @@ using ProtoNeaInspectionSaveRequest = DkcDesktopClient.Core.Protocol.NeaInspecti
 using ProtoNeaInspectionCompleteRequest = DkcDesktopClient.Core.Protocol.NeaInspectionCompleteRequest;
 using ProtoNeaChecklistUpdateRequest = DkcDesktopClient.Core.Protocol.NeaChecklistUpdateRequest;
 using ProtoNeaChecklistItem = DkcDesktopClient.Core.Protocol.NeaChecklistItem;
+using static DkcDesktopClient.Core.I18n.Translator;
 
 namespace DkcDesktopClient.App.ViewModels;
 
@@ -182,7 +183,7 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
         catch (Exception ex)
         {
             if (!silent)
-                ErrorMessage = $"Error loading NEA systems: {ex.Message}";
+                ErrorMessage = T("desktop.nea.systems_failed", ("message", ex.Message));
         }
         finally
         {
@@ -243,7 +244,7 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
         catch (Exception ex)
         {
             if (!silent)
-                ErrorMessage = $"Error loading inspections: {ex.Message}";
+                ErrorMessage = T("desktop.common.inspections_failed", ("message", ex.Message));
         }
         finally
         {
@@ -265,7 +266,7 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error loading inspection detail: {ex.Message}";
+            ErrorMessage = T("desktop.common.inspection_failed", ("message", ex.Message));
         }
         finally
         {
@@ -325,7 +326,7 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
     {
         if (string.IsNullOrWhiteSpace(FormSystemName))
         {
-            SystemFormError = "Name is required.";
+            SystemFormError = T("desktop.common.name_is_required");
             return;
         }
         IsSavingSystem = true;
@@ -357,7 +358,7 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            SystemFormError = $"Error: {ex.Message}";
+            SystemFormError = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -379,7 +380,7 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error: {ex.Message}";
+            ErrorMessage = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -437,7 +438,7 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
         if (SelectedSystem == null) return;
         if (string.IsNullOrWhiteSpace(FormInspectionDate))
         {
-            InspectionFormError = "Inspection date is required.";
+            InspectionFormError = T("desktop.nea.date_required");
             return;
         }
         IsSavingInspection = true;
@@ -468,7 +469,7 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            InspectionFormError = $"Error: {ex.Message}";
+            InspectionFormError = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -494,7 +495,7 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error: {ex.Message}";
+            ErrorMessage = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -542,7 +543,7 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            ChecklistError = $"Fehler: {ex.Message}";
+            ChecklistError = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -628,20 +629,20 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
     {
         var path = await _filePicker.PickSaveFileAsync(
             $"nea_pruefungen_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
-            new[] { ("CSV-Datei", "*.csv") });
+            new[] { (T("desktop.file.csv_file"), "*.csv") });
         if (path == null) return;
 
         var columns = new (string, Func<NeaInspection, string?>)[]
         {
             ("ID",              i => i.Id.ToString()),
-            ("Anlage",          i => i.SystemName),
-            ("Typ",             i => i.InspectionType),
-            ("Datum",           i => i.InspectionDate),
-            ("Prüfer",          i => i.InspectorName),
-            ("Status",          i => i.Status),
-            ("Ergebnis",        i => i.OverallResult),
-            ("Laufzeit (h)",    i => i.RuntimeHours?.ToString()),
-            ("Notizen",         i => i.Notes),
+            (T("desktop.common.system"),          i => i.SystemName),
+            (T("desktop.common.type"),             i => i.InspectionType),
+            (T("desktop.common.date"),           i => i.InspectionDate),
+            (T("desktop.common.inspector"),          i => i.InspectorName),
+            (T("desktop.common.status"),          i => i.Status),
+            (T("desktop.common.result"),        i => i.OverallResult),
+            (T("desktop.nea.runtime_hours_csv"),    i => i.RuntimeHours?.ToString()),
+            (T("desktop.common.notes"),         i => i.Notes),
         };
 
         try
@@ -650,7 +651,7 @@ public partial class NeaViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"CSV-Export fehlgeschlagen: {ex.Message}";
+            ErrorMessage = T("desktop.common.csv_export_failed", ("message", ex.Message));
         }
     }
 

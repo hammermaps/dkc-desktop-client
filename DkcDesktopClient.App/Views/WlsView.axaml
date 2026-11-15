@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:i18n="using:DkcDesktopClient.App.I18n"
              xmlns:vm="using:DkcDesktopClient.App.ViewModels"
              x:Class="DkcDesktopClient.App.Views.WlsView"
              x:DataType="vm:WlsViewModel">
@@ -8,7 +9,7 @@
 
     <!-- Toolbar -->
     <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
-      <TextBlock Text="WLS – Wohnungsleerstandserfassung" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
+      <TextBlock Text="{i18n:T desktop.wls.title}" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
       <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}" Width="100" Height="3" VerticalAlignment="Center"/>
     </StackPanel>
 
@@ -20,14 +21,14 @@
     <TabControl Grid.Row="2" SelectedIndex="{Binding SelectedTabIndex}">
 
       <!-- ══════════════════════  Tab: Gebäude  ══════════════════════════════ -->
-      <TabItem Header="🏢 Gebäude">
+      <TabItem Header="{i18n:T desktop.wls.buildings_tab}">
         <Grid RowDefinitions="Auto, Auto, *" RowSpacing="8" Margin="4">
 
           <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
-            <Button Content="Laden" Command="{Binding LoadBuildingsCommand}"/>
-            <Button Content="Neu" Command="{Binding ShowCreateBuildingFormCommand}"/>
-            <Button Content="Bearbeiten" Command="{Binding ShowEditBuildingFormCommand}"/>
-            <Button Content="Löschen" Command="{Binding DeleteBuildingCommand}" Foreground="Red"/>
+            <Button Content="{i18n:T desktop.common.load}" Command="{Binding LoadBuildingsCommand}"/>
+            <Button Content="{i18n:T desktop.common.new}" Command="{Binding ShowCreateBuildingFormCommand}"/>
+            <Button Content="{i18n:T desktop.common.edit}" Command="{Binding ShowEditBuildingFormCommand}"/>
+            <Button Content="{i18n:T desktop.common.delete}" Command="{Binding DeleteBuildingCommand}" Foreground="Red"/>
           </StackPanel>
 
           <!-- Building form -->
@@ -35,24 +36,24 @@
                   Background="#F0F4F8" BorderThickness="1" BorderBrush="#CBD5E0" CornerRadius="6" Padding="14">
             <StackPanel Spacing="10">
               <TextBlock FontSize="14" FontWeight="SemiBold"
-                         Text="Neues Gebäude" IsVisible="{Binding IsEditingBuilding, Converter={x:Static BoolConverters.Not}}"/>
+                         Text="{i18n:T desktop.building.new}" IsVisible="{Binding IsEditingBuilding, Converter={x:Static BoolConverters.Not}}"/>
               <TextBlock FontSize="14" FontWeight="SemiBold"
-                         Text="Gebäude bearbeiten" IsVisible="{Binding IsEditingBuilding}"/>
+                         Text="{i18n:T desktop.building.edit}" IsVisible="{Binding IsEditingBuilding}"/>
               <TextBlock Text="{Binding BuildingFormError}" Foreground="Red"
                          IsVisible="{Binding BuildingFormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
               <Grid ColumnDefinitions="120,8,*,24,Auto,8,Auto">
-                <TextBlock Grid.Column="0" Text="Name *" VerticalAlignment="Center"/>
-                <TextBox   Grid.Column="2" Text="{Binding FormBuildingName}" PlaceholderText="Gebäudename"/>
-                <TextBlock Grid.Column="4" Text="Versteckt" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="0" Text="{i18n:T desktop.common.name_required}" VerticalAlignment="Center"/>
+                <TextBox   Grid.Column="2" Text="{Binding FormBuildingName}" PlaceholderText="{i18n:T desktop.wls.building_name}"/>
+                <TextBlock Grid.Column="4" Text="{i18n:T desktop.common.hidden}" VerticalAlignment="Center"/>
                 <CheckBox  Grid.Column="6" IsChecked="{Binding FormBuildingHidden}"/>
               </Grid>
               <Grid ColumnDefinitions="120,8,120">
-                <TextBlock Grid.Column="0" Text="Sortierung" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="0" Text="{i18n:T desktop.common.sorting}" VerticalAlignment="Center"/>
                 <NumericUpDown Grid.Column="2" Value="{Binding FormBuildingSorted}" Minimum="0" Maximum="9999" Increment="1" FormatString="0"/>
               </Grid>
               <StackPanel Orientation="Horizontal" Spacing="8">
-                <Button Content="Speichern" Command="{Binding SaveBuildingCommand}"/>
-                <Button Content="Abbrechen" Command="{Binding CancelBuildingFormCommand}"/>
+                <Button Content="{i18n:T desktop.common.save}" Command="{Binding SaveBuildingCommand}"/>
+                <Button Content="{i18n:T desktop.common.cancel}" Command="{Binding CancelBuildingFormCommand}"/>
                 <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSavingBuilding}" Width="60" Height="14" VerticalAlignment="Center"/>
               </StackPanel>
             </StackPanel>
@@ -65,27 +66,27 @@
                     IsReadOnly="True" AutoGenerateColumns="False"
                     GridLinesVisibility="Horizontal">
             <DataGrid.Columns>
-              <DataGridTextColumn Header="ID"          Binding="{Binding Id}"             Width="60"/>
-              <DataGridTextColumn Header="Name"        Binding="{Binding Name}"           Width="*"/>
-              <DataGridTextColumn Header="Wohnungen"   Binding="{Binding ApartmentsCount}" Width="90"/>
-              <DataGridTextColumn Header="Versteckt"   Binding="{Binding Hidden}"         Width="80"/>
-              <DataGridTextColumn Header="Sortierung"  Binding="{Binding Sorted}"         Width="80"/>
-              <DataGridTextColumn Header="Erstellt"    Binding="{Binding Created}"        Width="140"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.id}"          Binding="{Binding Id}"             Width="60"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.name}"        Binding="{Binding Name}"           Width="*"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.apartments}"   Binding="{Binding ApartmentsCount}" Width="90"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.hidden}"   Binding="{Binding Hidden}"         Width="80"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.sorting}"  Binding="{Binding Sorted}"         Width="80"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.created}"    Binding="{Binding Created}"        Width="140"/>
             </DataGrid.Columns>
           </DataGrid>
         </Grid>
       </TabItem>
 
       <!-- ══════════════════════  Tab: Wohnungen  ════════════════════════════ -->
-      <TabItem Header="🏠 Wohnungen">
+      <TabItem Header="{i18n:T desktop.wls.apartments_tab}">
         <Grid RowDefinitions="Auto, Auto, *" RowSpacing="8" Margin="4">
 
           <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
-            <Button Content="Laden" Command="{Binding LoadApartmentsCommand}"/>
-            <Button Content="Neu" Command="{Binding ShowCreateApartmentFormCommand}"/>
-            <Button Content="Bearbeiten" Command="{Binding ShowEditApartmentFormCommand}"/>
-            <Button Content="Löschen" Command="{Binding DeleteApartmentCommand}" Foreground="Red"/>
-            <TextBlock Text="{Binding SelectedBuilding.Name, StringFormat='Gebäude: {0}'}"
+            <Button Content="{i18n:T desktop.common.load}" Command="{Binding LoadApartmentsCommand}"/>
+            <Button Content="{i18n:T desktop.common.new}" Command="{Binding ShowCreateApartmentFormCommand}"/>
+            <Button Content="{i18n:T desktop.common.edit}" Command="{Binding ShowEditApartmentFormCommand}"/>
+            <Button Content="{i18n:T desktop.common.delete}" Command="{Binding DeleteApartmentCommand}" Foreground="Red"/>
+            <TextBlock Text="{Binding SelectedBuilding.Name, Converter={x:Static i18n:Labels.Format}, ConverterParameter=desktop.wls.building_title|name}"
                        VerticalAlignment="Center" Foreground="#4A5568" FontStyle="Italic"
                        IsVisible="{Binding SelectedBuilding, Converter={x:Static ObjectConverters.IsNotNull}}"/>
           </StackPanel>
@@ -95,26 +96,26 @@
                   Background="#F0F4F8" BorderThickness="1" BorderBrush="#CBD5E0" CornerRadius="6" Padding="14">
             <StackPanel Spacing="10">
               <TextBlock FontSize="14" FontWeight="SemiBold"
-                         Text="Neue Wohnung" IsVisible="{Binding IsEditingApartment, Converter={x:Static BoolConverters.Not}}"/>
+                         Text="{i18n:T desktop.wls.new_apartment}" IsVisible="{Binding IsEditingApartment, Converter={x:Static BoolConverters.Not}}"/>
               <TextBlock FontSize="14" FontWeight="SemiBold"
-                         Text="Wohnung bearbeiten" IsVisible="{Binding IsEditingApartment}"/>
+                         Text="{i18n:T desktop.wls.edit_apartment}" IsVisible="{Binding IsEditingApartment}"/>
               <TextBlock Text="{Binding ApartmentFormError}" Foreground="Red"
                          IsVisible="{Binding ApartmentFormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
               <Grid ColumnDefinitions="120,8,*,16,120,8,*">
-                <TextBlock Grid.Column="0" Text="Wohnungsnr. *" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="0" Text="{i18n:T desktop.wls.apartment_no_required}" VerticalAlignment="Center"/>
                 <TextBox   Grid.Column="2" Text="{Binding FormApartmentValue}" PlaceholderText="z. B. 1a"/>
-                <TextBlock Grid.Column="4" Text="Bezeichnung" VerticalAlignment="Center"/>
-                <TextBox   Grid.Column="6" Text="{Binding FormApartmentName}" PlaceholderText="z. B. Dachgeschoss"/>
+                <TextBlock Grid.Column="4" Text="{i18n:T desktop.common.designation}" VerticalAlignment="Center"/>
+                <TextBox   Grid.Column="6" Text="{Binding FormApartmentName}" PlaceholderText="{i18n:T desktop.wls.apartment_desc_placeholder}"/>
               </Grid>
               <Grid ColumnDefinitions="120,8,120,24,Auto,8,Auto">
-                <TextBlock Grid.Column="0" Text="Sortierung" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="0" Text="{i18n:T desktop.common.sorting}" VerticalAlignment="Center"/>
                 <NumericUpDown Grid.Column="2" Value="{Binding FormApartmentSorted}" Minimum="0" Maximum="9999" Increment="1" FormatString="0"/>
-                <TextBlock Grid.Column="4" Text="Leerstand" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="4" Text="{i18n:T desktop.common.vacancy}" VerticalAlignment="Center"/>
                 <CheckBox  Grid.Column="6" IsChecked="{Binding FormApartmentEmpty}"/>
               </Grid>
               <StackPanel Orientation="Horizontal" Spacing="8">
-                <Button Content="Speichern" Command="{Binding SaveApartmentCommand}"/>
-                <Button Content="Abbrechen" Command="{Binding CancelApartmentFormCommand}"/>
+                <Button Content="{i18n:T desktop.common.save}" Command="{Binding SaveApartmentCommand}"/>
+                <Button Content="{i18n:T desktop.common.cancel}" Command="{Binding CancelApartmentFormCommand}"/>
                 <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSavingApartment}" Width="60" Height="14" VerticalAlignment="Center"/>
               </StackPanel>
             </StackPanel>
@@ -127,40 +128,40 @@
                     IsReadOnly="True" AutoGenerateColumns="False"
                     GridLinesVisibility="Horizontal">
             <DataGrid.Columns>
-              <DataGridTextColumn Header="ID"         Binding="{Binding Id}"      Width="60"/>
-              <DataGridTextColumn Header="Nummer"     Binding="{Binding Number}"  Width="*"/>
-              <DataGridTextColumn Header="Wert"       Binding="{Binding Value}"   Width="100"/>
-              <DataGridTextColumn Header="Bezeichnung" Binding="{Binding Name}"   Width="*"/>
-              <DataGridTextColumn Header="Leerstand"  Binding="{Binding Empty}"   Width="90"/>
-              <DataGridTextColumn Header="Sortierung" Binding="{Binding Sorted}"  Width="80"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.id}"         Binding="{Binding Id}"      Width="60"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.number}"     Binding="{Binding Number}"  Width="*"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.value}"       Binding="{Binding Value}"   Width="100"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.designation}" Binding="{Binding Name}"   Width="*"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.vacancy}"  Binding="{Binding Empty}"   Width="90"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.sorting}" Binding="{Binding Sorted}"  Width="80"/>
             </DataGrid.Columns>
           </DataGrid>
         </Grid>
       </TabItem>
 
       <!-- ══════════════════════  Tab: Erfassungen  ══════════════════════════ -->
-      <TabItem Header="📋 Erfassungen">
+      <TabItem Header="{i18n:T desktop.wls.records_tab}">
         <Grid RowDefinitions="Auto, Auto, Auto, *" RowSpacing="8" Margin="4">
 
           <!-- Toolbar -->
           <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
-            <Button Content="Laden" Command="{Binding LoadRecordsCommand}"/>
-            <Button Content="Neu" Command="{Binding ShowCreateRecordFormCommand}"/>
-            <Button Content="Bearbeiten" Command="{Binding ShowEditRecordFormCommand}"/>
-            <Button Content="Löschen" Command="{Binding DeleteRecordCommand}" Foreground="Red"/>
+            <Button Content="{i18n:T desktop.common.load}" Command="{Binding LoadRecordsCommand}"/>
+            <Button Content="{i18n:T desktop.common.new}" Command="{Binding ShowCreateRecordFormCommand}"/>
+            <Button Content="{i18n:T desktop.common.edit}" Command="{Binding ShowEditRecordFormCommand}"/>
+            <Button Content="{i18n:T desktop.common.delete}" Command="{Binding DeleteRecordCommand}" Foreground="Red"/>
             <Separator Width="1" Background="#CCCCCC" Margin="4,0"/>
-            <Button Content="📥 CSV-Export" Command="{Binding ExportRecordsToCsvCommand}"
-                    ToolTip.Tip="Erfassungen als CSV exportieren"/>
+            <Button Content="{i18n:T desktop.common.csv_export}" Command="{Binding ExportRecordsToCsvCommand}"
+                    ToolTip.Tip="{i18n:T desktop.wls.export_tip}"/>
           </StackPanel>
 
           <!-- Filter bar -->
           <Border Grid.Row="1" Background="#F7F8FA" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="8,6">
             <StackPanel Orientation="Horizontal" Spacing="8">
-              <TextBlock Text="Von:" VerticalAlignment="Center"/>
-              <TextBox Text="{Binding FilterStartDate}" PlaceholderText="YYYY-MM-DD" Width="120"/>
-              <TextBlock Text="Bis:" VerticalAlignment="Center"/>
-              <TextBox Text="{Binding FilterEndDate}" PlaceholderText="YYYY-MM-DD" Width="120"/>
-              <Button Content="Suchen" Command="{Binding LoadRecordsCommand}"/>
+              <TextBlock Text="{i18n:T desktop.common.from_label}" VerticalAlignment="Center"/>
+              <TextBox Text="{Binding FilterStartDate}" PlaceholderText="{i18n:T desktop.common.date_placeholder}" Width="120"/>
+              <TextBlock Text="{i18n:T desktop.common.to_label}" VerticalAlignment="Center"/>
+              <TextBox Text="{Binding FilterEndDate}" PlaceholderText="{i18n:T desktop.common.date_placeholder}" Width="120"/>
+              <Button Content="{i18n:T desktop.common.search}" Command="{Binding LoadRecordsCommand}"/>
             </StackPanel>
           </Border>
 
@@ -169,26 +170,26 @@
                   Background="#F0F4F8" BorderThickness="1" BorderBrush="#CBD5E0" CornerRadius="6" Padding="14">
             <StackPanel Spacing="10">
               <TextBlock FontSize="14" FontWeight="SemiBold"
-                         Text="Neue Erfassung" IsVisible="{Binding IsEditingRecord, Converter={x:Static BoolConverters.Not}}"/>
+                         Text="{i18n:T desktop.wls.new_record}" IsVisible="{Binding IsEditingRecord, Converter={x:Static BoolConverters.Not}}"/>
               <TextBlock FontSize="14" FontWeight="SemiBold"
-                         Text="Erfassung bearbeiten" IsVisible="{Binding IsEditingRecord}"/>
+                         Text="{i18n:T desktop.wls.edit_record}" IsVisible="{Binding IsEditingRecord}"/>
               <TextBlock Text="{Binding RecordFormError}" Foreground="Red"
                          IsVisible="{Binding RecordFormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
               <Grid ColumnDefinitions="120,8,*,16,120,8,*">
-                <TextBlock Grid.Column="0" Text="Startzeit *" VerticalAlignment="Center"/>
-                <TextBox   Grid.Column="2" Text="{Binding FormRecordStartTime}" PlaceholderText="YYYY-MM-DD HH:MM:SS"/>
-                <TextBlock Grid.Column="4" Text="Endzeit" VerticalAlignment="Center"/>
-                <TextBox   Grid.Column="6" Text="{Binding FormRecordEndTime}" PlaceholderText="YYYY-MM-DD HH:MM:SS"/>
+                <TextBlock Grid.Column="0" Text="{i18n:T desktop.wls.start_time_required}" VerticalAlignment="Center"/>
+                <TextBox   Grid.Column="2" Text="{Binding FormRecordStartTime}" PlaceholderText="{i18n:T desktop.common.datetime_placeholder}"/>
+                <TextBlock Grid.Column="4" Text="{i18n:T desktop.common.end_time}" VerticalAlignment="Center"/>
+                <TextBox   Grid.Column="6" Text="{Binding FormRecordEndTime}" PlaceholderText="{i18n:T desktop.common.datetime_placeholder}"/>
               </Grid>
               <Grid ColumnDefinitions="120,8,*,16,120,8,*">
-                <TextBlock Grid.Column="0" Text="Breitengrad" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="0" Text="{i18n:T desktop.common.latitude}" VerticalAlignment="Center"/>
                 <TextBox   Grid.Column="2" Text="{Binding FormRecordLatitude}" PlaceholderText="z. B. 52.1234"/>
-                <TextBlock Grid.Column="4" Text="Längengrad" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="4" Text="{i18n:T desktop.common.longitude}" VerticalAlignment="Center"/>
                 <TextBox   Grid.Column="6" Text="{Binding FormRecordLongitude}" PlaceholderText="z. B. 13.4567"/>
               </Grid>
               <StackPanel Orientation="Horizontal" Spacing="8">
-                <Button Content="Speichern" Command="{Binding SaveRecordCommand}"/>
-                <Button Content="Abbrechen" Command="{Binding CancelRecordFormCommand}"/>
+                <Button Content="{i18n:T desktop.common.save}" Command="{Binding SaveRecordCommand}"/>
+                <Button Content="{i18n:T desktop.common.cancel}" Command="{Binding CancelRecordFormCommand}"/>
                 <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSavingRecord}" Width="60" Height="14" VerticalAlignment="Center"/>
               </StackPanel>
             </StackPanel>
@@ -201,14 +202,14 @@
                     IsReadOnly="True" AutoGenerateColumns="False"
                     GridLinesVisibility="Horizontal">
             <DataGrid.Columns>
-              <DataGridTextColumn Header="ID"         Binding="{Binding Id}"          Width="60"/>
-              <DataGridTextColumn Header="Benutzer"   Binding="{Binding UserName}"    Width="150"/>
-              <DataGridTextColumn Header="Startzeit"  Binding="{Binding StartTime}"   Width="160"/>
-              <DataGridTextColumn Header="Endzeit"    Binding="{Binding EndTime}"     Width="160"/>
-              <DataGridTextColumn Header="Dauer"      Binding="{Binding DurationText}" Width="100"/>
-              <DataGridTextColumn Header="Breitengrad" Binding="{Binding Latitude}"   Width="110"/>
-              <DataGridTextColumn Header="Längengrad"  Binding="{Binding Longitude}"  Width="110"/>
-              <DataGridTextColumn Header="Erstellt"   Binding="{Binding CreatedAt}"   Width="160"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.id}"         Binding="{Binding Id}"          Width="60"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.user}"   Binding="{Binding UserName}"    Width="150"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.start_time}"  Binding="{Binding StartTime}"   Width="160"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.end_time}"    Binding="{Binding EndTime}"     Width="160"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.duration}"      Binding="{Binding DurationText}" Width="100"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.latitude}" Binding="{Binding Latitude}"   Width="110"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.longitude}"  Binding="{Binding Longitude}"  Width="110"/>
+              <DataGridTextColumn Header="{i18n:T desktop.common.created}"   Binding="{Binding CreatedAt}"   Width="160"/>
             </DataGrid.Columns>
           </DataGrid>
         </Grid>

@@ -49,6 +49,11 @@ jobs:
       - name: Test
         run: dotnet test DkcDesktopClient.Tests/DkcDesktopClient.Tests.csproj --configuration Release --no-build --verbosity normal
 
+      # GUI-Tests mit Avalonia.Headless: echte Ansichten, simulierte Mausklicks, kein Display nötig.
+      # LiveClientTests laufen nur mit DKC_LIVE_SERVER/-USER/-PASSWORD und werden hier übersprungen.
+      - name: GUI tests (headless)
+        run: dotnet test DkcDesktopClient.UiTests/DkcDesktopClient.UiTests.csproj --configuration Release --no-build --verbosity normal
+
       - name: Set version
         id: version
         run: |

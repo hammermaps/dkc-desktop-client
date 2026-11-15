@@ -1,5 +1,6 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:i18n="using:DkcDesktopClient.App.I18n"
              x:Class="DkcDesktopClient.App.App"
              RequestedThemeVariant="Light">
 
@@ -18,9 +19,9 @@
                   Clicked="OnTrayIconClicked">
           <TrayIcon.Menu>
             <NativeMenu>
-              <NativeMenuItem Header="Öffnen" Click="OnTrayOpenClicked"/>
+              <NativeMenuItem Header="{i18n:T desktop.tray.open}" Click="OnTrayOpenClicked"/>
               <NativeMenuItemSeparator/>
-              <NativeMenuItem Header="Beenden" Click="OnTrayExitClicked"/>
+              <NativeMenuItem Header="{i18n:T desktop.tray.exit}" Click="OnTrayExitClicked"/>
             </NativeMenu>
           </TrayIcon.Menu>
         </TrayIcon>

@@ -60,6 +60,20 @@ public partial class App : Application
         ConfigureServices(services);
         _serviceProvider = services.BuildServiceProvider();
 
+        // Sprache vor dem ersten Fenster aktivieren (mitgelieferter bzw. zuletzt geladener Stand),
+        // danach im Hintergrund mit dem Server abgleichen und nach der Anmeldung die Kontosprache übernehmen.
+        var translations = _serviceProvider.GetRequiredService<DkcDesktopClient.Core.I18n.TranslationService>();
+        var apiFactory   = _serviceProvider.GetRequiredService<DkcApiFactory>();
+        var auth         = _serviceProvider.GetRequiredService<AuthService>();
+        DkcDesktopClient.Core.I18n.Translator.Notify = action =>
+        {
+            if (Avalonia.Threading.Dispatcher.UIThread.CheckAccess()) action();
+            else Avalonia.Threading.Dispatcher.UIThread.Post(action);
+        };
+        translations.Apply();
+        _ = translations.SyncAsync(apiFactory);
+        auth.AuthStateChanged += (_, _) => _ = translations.FollowAccountAsync(apiFactory, auth.CurrentToken);
+
         // Start hosted background services
         var bgRefresh    = _serviceProvider.GetRequiredService<BackgroundRefreshService>();
         var notifPoll    = _serviceProvider.GetRequiredService<NotificationPollingService>();
@@ -80,7 +94,7 @@ public partial class App : Application
             desktop.MainWindow = splash;
             splash.Opened += async (_, _) =>
             {
-                splash.SetStatus("Auto-Login wird geprüft…");
+                splash.SetStatus(DkcDesktopClient.Core.I18n.Translator.T("desktop.splash.checking_login"));
                 var mainWindow = new MainWindow { DataContext = mainVm };
                 desktop.MainWindow = mainWindow;
                 await mainVm.InitializeAsync();
@@ -168,6 +182,8 @@ public partial class App : Application
 
         // ── Core infrastructure services ──────────────────────────────────────
         services.AddSingleton<TokenStore>();
+        services.AddSingleton(sp => new DkcDesktopClient.Core.I18n.TranslationService(
+            dataDir, sp.GetRequiredService<ILogger<DkcDesktopClient.Core.I18n.TranslationService>>()));
         services.AddSingleton<MaintenanceMonitor>();
         services.AddSingleton<DkcApiFactory>();
         services.AddSingleton<UpdateService>();

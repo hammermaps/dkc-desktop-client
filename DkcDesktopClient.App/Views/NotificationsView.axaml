@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:i18n="using:DkcDesktopClient.App.I18n"
              xmlns:vm="using:DkcDesktopClient.App.ViewModels"
              xmlns:api="using:DkcDesktopClient.Core.Api"
              x:Class="DkcDesktopClient.App.Views.NotificationsView"
@@ -9,13 +10,13 @@
 
     <!-- Toolbar -->
     <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
-      <TextBlock Text="🔔 Benachrichtigungen" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
-      <Button Content="Aktualisieren" Command="{Binding LoadNotificationsCommand}"/>
-      <Button Content="Alle als gelesen" Command="{Binding MarkAllReadCommand}"
+      <TextBlock Text="{i18n:T desktop.notifications.title}" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
+      <Button Content="{i18n:T desktop.common.refresh}" Command="{Binding LoadNotificationsCommand}"/>
+      <Button Content="{i18n:T desktop.notifications.mark_all_read}" Command="{Binding MarkAllReadCommand}"
               IsEnabled="{Binding HasUnreadNotifications}"/>
       <Border Background="#3B82F6" CornerRadius="12" Padding="8,3"
               IsVisible="{Binding HasUnreadNotifications}">
-        <TextBlock Text="{Binding TotalCount, StringFormat='{}{0} ungelesen'}"
+        <TextBlock Text="{Binding TotalCount, Converter={x:Static i18n:Labels.Format}, ConverterParameter=desktop.notifications.unread_count|count}"
                    Foreground="White" FontSize="12" FontWeight="SemiBold"/>
       </Border>
     </StackPanel>
@@ -23,9 +24,9 @@
     <!-- Filter bar -->
     <Border Grid.Row="1" Background="#F7F8FA" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="8,6">
       <StackPanel Orientation="Horizontal" Spacing="8">
-        <TextBlock Text="Nur ungelesene:" VerticalAlignment="Center"/>
+        <TextBlock Text="{i18n:T desktop.notifications.unread_only}" VerticalAlignment="Center"/>
         <CheckBox IsChecked="{Binding ShowUnreadOnly}"/>
-        <TextBlock Text="{Binding Notifications.Count, StringFormat='Angezeigt: {0}'}"
+        <TextBlock Text="{Binding Notifications.Count, Converter={x:Static i18n:Labels.Format}, ConverterParameter=desktop.notifications.shown_count|count}"
                    VerticalAlignment="Center" Foreground="#4A5568"/>
       </StackPanel>
     </Border>
@@ -61,9 +62,9 @@
                 <!-- Read badge -->
                 <StackPanel Grid.Column="2" Spacing="4" IsVisible="{Binding !Read}">
                   <Border CornerRadius="10" Padding="8,3" Background="#3B82F6" HorizontalAlignment="Right">
-                    <TextBlock Text="Neu" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                    <TextBlock Text="{i18n:T desktop.common.new}" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
                   </Border>
-                  <Button Content="Gelesen" FontSize="11" Padding="8,2"
+                  <Button Content="{i18n:T desktop.notifications.read}" FontSize="11" Padding="8,2"
                           Command="{Binding $parent[ItemsControl].((vm:NotificationsViewModel)DataContext).MarkReadCommand}"
                           CommandParameter="{Binding}"/>
                 </StackPanel>

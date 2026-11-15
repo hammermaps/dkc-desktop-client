@@ -5,6 +5,7 @@ using DkcDesktopClient.App.Services;
 using DkcDesktopClient.Core.Api;
 using DkcDesktopClient.Core.Protobuf;
 using DkcDesktopClient.Core.Services;
+using static DkcDesktopClient.Core.I18n.Translator;
 
 namespace DkcDesktopClient.App.ViewModels;
 
@@ -73,12 +74,12 @@ public partial class NotificationsViewModel : ViewModelBase, INavigationTarget
             }
             else if (!result.Success)
             {
-                ErrorMessage = result.Error ?? "Laden der Benachrichtigungen fehlgeschlagen.";
+                ErrorMessage = result.Error ?? T("desktop.notifications.load_failed");
             }
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Fehler: {ex.Message}";
+            ErrorMessage = T("desktop.common.error", ("message", ex.Message));
         }
         finally
         {
@@ -106,7 +107,7 @@ public partial class NotificationsViewModel : ViewModelBase, INavigationTarget
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Als gelesen markieren fehlgeschlagen: {ex.Message}";
+            ErrorMessage = T("desktop.notifications.mark_failed", ("message", ex.Message));
         }
     }
 
