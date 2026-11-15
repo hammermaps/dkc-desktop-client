@@ -25,11 +25,20 @@ namespace DkcDesktopClient.UiTests;
 ///                             Wartungsmodus des Servers umschaltet (sonst entfällt dieser Teil)
 /// Ergebnisse stehen im Testprotokoll (TestContext), Screenshots mit DKC_UI_SCREENSHOTS.
 /// </summary>
-public class LiveClientTests
+public partial class LiveClientTests
 {
     private static string? Env(string name) => Environment.GetEnvironmentVariable(name) is { Length: > 0 } v ? v : null;
 
-    private static void Log(string line) => TestContext.Current.SendDiagnosticMessage(line);
+    private static void Log(string line)
+    {
+        TestContext.Current.SendDiagnosticMessage(line);
+        // Diagnosemeldungen erscheinen im Konsolen-Logger nicht immer – zusätzlich als Datei
+        if (Env("DKC_UI_SCREENSHOTS") is { } dir)
+        {
+            Directory.CreateDirectory(dir);
+            File.AppendAllText(Path.Combine(dir, "live.log"), $"{DateTime.Now:HH:mm:ss} {line}{Environment.NewLine}");
+        }
+    }
 
     private static async Task<bool> WaitUntil(Func<bool> condition, TimeSpan timeout)
     {
