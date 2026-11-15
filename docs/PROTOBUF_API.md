@@ -111,6 +111,24 @@ The HTTP status code mirrors the `ErrorCode` for transport-aware clients
 even when the status is non-2xx, so clients only need one error-handling
 path.
 
+#### Wartungsmodus
+
+Ist der Wartungsmodus des Servers aktiv, kommen zusätzlich (REST und Protobuf):
+
+```
+X-DKC-Maintenance:         allowed | blocked
+X-DKC-Maintenance-Message: <URL-kodierte Nachricht>
+X-DKC-Maintenance-End:     <URL-kodiertes voraussichtliches Ende, optional>
+Retry-After:               300            # nur bei blocked
+```
+
+`allowed`: Benutzer steht in `allowed_users`, die Anfrage läuft normal.
+`blocked`: alle Actions außer `AUTH_LOGIN`, `AUTH_VERIFY_2FA`, `AUTH_SEND_2FA_CODE`,
+`AUTH_LOGOUT` und `AUTH_STATUS` antworten mit `SERVICE_UNAVAILABLE` (HTTP 503),
+`details = {maintenance: "1", estimated_end: …}` und `retry_after_seconds = 300`.
+Fehlt der Header, ist kein Wartungsmodus aktiv. Der Client wertet das in
+`MaintenanceMonitor` aus (Hinweisleiste, automatische Wiederaufnahme).
+
 ### 2.3 Ping / health
 
 The single non-protobuf endpoint:
@@ -277,7 +295,7 @@ Action = `MM_UPDATE_STATUS`; response payload = `Ack`.
 | `RATE_LIMITED`            | 429  | Login or write rate-limit hit                 |
 | `UNSUPPORTED_COMPRESSION` | 400  | Request used an encoding the server cannot decode |
 | `INTERNAL_ERROR`          | 500  | Unhandled server error                        |
-| `SERVICE_UNAVAILABLE`     | 503  | Maintenance / downstream outage               |
+| `SERVICE_UNAVAILABLE`     | 503  | Maintenance (`details.maintenance = "1"`, § 2.2) / downstream outage |
 | `PROTOCOL_VERSION_MISMATCH` | 400 | `protocol_version` not supported              |
 
 The desktop client maps these 1:1 to `DkcProtobufApiException`.

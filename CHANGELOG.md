@@ -8,6 +8,12 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
 ## [Unreleased]
 
 ### Neu
+- Wartungsmodus des Servers: Hinweisleiste (orange = Zugriff als zugelassener Benutzer, rot =
+  gesperrt) aus den Headern `X-DKC-Maintenance*`; gesperrte Benutzer bleiben angemeldet, Ansichten
+  melden „Wartungsmodus – …“ statt eines HTTP-Fehlers. Nach dem Ende werden Rechte, Navigation
+  und aktuelle Ansicht automatisch neu geladen.
+- Live-Test `LiveClientTests` (Umgebungsvariablen `DKC_LIVE_*`): echte App gegen einen Server –
+  Anmeldung, alle Ansichten, Neu laden, Vorladen, Auto-Login nach Neustart, Wartungsmodus.
 - Einstellungen: „Passwort ändern“ (`USER_CHANGE_PASSWORD`, nur mit `edit_profile_password` oder als
   Admin). Eingaben werden vorab geprüft, Meldungen der Passwortrichtlinie kommen vom Server.
 - Schlüssel: „Historie“ zeigt alle Ausgaben des gewählten Schlüssels inklusive bereits
@@ -51,6 +57,11 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
   (`BackgroundRefreshService`) liest Klima über Protobuf.
 
 ### Fix
+- NEA-Prüfungen und Dashboard luden nicht: Betriebsstunden kommen als Dezimalzahl, `cabinet_id`
+  im Schlüsselinventar kann `null` sein. Beim Bearbeiten werden Betriebsstunden nicht mehr abgerundet.
+- Benachrichtigungen kamen nie an (REST-Endpunkt 410 bzw. bei Token-Anmeldung übersprungen); jetzt
+  über Protobuf `NOTIFICATIONS`/`NOTIFICATION_COUNT`.
+- WLS-Aufrufe über `/api.php/…` – die Kurzpfade funktionierten nur auf der WLS-Domain.
 - `fail-fast: false` in `build.yml`: ein Testfehler auf einer Matrix-Plattform (z. B. macOS)
   brach zuvor auch die anderen, bereits laufenden Jobs ab — traf real den Linux-Job mitten im
   `desktop_app_deploy`-Upload (Run #36348034425). Die vier Plattformen laufen jetzt unabhängig.

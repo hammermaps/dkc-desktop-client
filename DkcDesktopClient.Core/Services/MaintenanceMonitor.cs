@@ -84,7 +84,24 @@ public sealed class MaintenanceMonitor
     public void Reset() => Update(MaintenanceState.Off, string.Empty, null);
 }
 
-/// <summary>Meldet jede API-Antwort an den <see cref="MaintenanceMonitor"/>.</summary>
+/// <summary>REST-Anfrage im Wartungsmodus abgewiesen; Nachricht ist für die Anzeige gedacht.</summary>
+public sealed class MaintenanceBlockedException : HttpRequestException
+{
+    public MaintenanceBlockedException(string serverMessage)
+        : base(BuildMessage(serverMessage), null, System.Net.HttpStatusCode.ServiceUnavailable) { }
+
+    public static string BuildMessage(string serverMessage)
+        => string.IsNullOrWhiteSpace(serverMessage)
+            ? "Wartungsmodus – Daten können gerade nicht geladen werden."
+            : $"Wartungsmodus – {serverMessage.Trim()}";
+}
+
+/// <summary>
+/// Meldet jede API-Antwort an den <see cref="MaintenanceMonitor"/>. Eine im Wartungsmodus
+/// abgewiesene REST-Antwort wird zur <see cref="MaintenanceBlockedException"/>, damit Ansichten
+/// statt „Response status code does not indicate success: 503“ einen lesbaren Text zeigen.
+/// Protobuf-Antworten bleiben unverändert (der Envelope trägt Meldung und Details).
+/// </summary>
 public sealed class MaintenanceHandler : DelegatingHandler
 {
     private readonly MaintenanceMonitor _monitor;
@@ -96,6 +113,15 @@ public sealed class MaintenanceHandler : DelegatingHandler
     {
         var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
         _monitor.Observe(response);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable
+            && MaintenanceMonitor.Parse(response.Headers).State == MaintenanceState.Blocked
+            && response.Content.Headers.ContentType?.MediaType != "application/x-protobuf")
+        {
+            var message = MaintenanceMonitor.Parse(response.Headers).Message;
+            response.Dispose();
+            throw new MaintenanceBlockedException(message);
+        }
         return response;
     }
 }

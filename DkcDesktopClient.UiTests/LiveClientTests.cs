@@ -218,6 +218,8 @@ public class LiveClientTests
                 Log($"Wartung (gesperrt): Banner={app.Vm.IsMaintenanceBlocked}, angemeldet={app.Vm.IsLoggedIn}, Fehler={Prop(nea.ViewModel, "ErrorMessage") ?? "-"}");
                 if (!app.Vm.IsMaintenanceBlocked) problems.Add("Wartung (gesperrt): kein Hinweis");
                 if (!app.Vm.IsLoggedIn) problems.Add("Wartung (gesperrt): Benutzer wurde abgemeldet");
+                if (Prop(nea.ViewModel, "ErrorMessage") is string blockedError && !blockedError.Contains("Wartungsmodus"))
+                    problems.Add("Wartung (gesperrt): technische statt lesbarer Meldung: " + blockedError);
                 Screenshot(app.Window, "31_wartung_gesperrt");
 
                 await Maintenance("off");
