@@ -70,6 +70,8 @@ message NeaInspection {
     int32  runtime_hours   = 9;
     string notes           = 10;
     string created_at      = 11;
+    // Betriebsstunden mit Zehnteln (Spalte decimal(10,1)); runtime_hours ist gerundet.
+    double runtime_hours_exact = 12;
 }
 
 message NeaInspectionsResponse {
@@ -98,6 +100,9 @@ message NeaInspectionDetail {
     string created_at          = 15;
     // Free-form JSON for checklist payload (server stores JSON).
     string checklist_json      = 16;
+    // Betriebsstunden mit Zehnteln; runtime_hours/runtime_hours_after sind gerundet.
+    double runtime_hours_exact       = 17;
+    double runtime_hours_after_exact = 18;
 }
 
 message NeaInspectionDetailResponse { NeaInspectionDetail inspection = 1; }
@@ -113,6 +118,8 @@ message NeaInspectionSaveRequest {
     string notes              = 8;
     string defects_found      = 9;
     string corrective_actions = 10;
+    // > 0: Betriebsstunden mit Zehnteln, hat Vorrang vor runtime_hours (das sonst abgerundet würde).
+    double runtime_hours_exact = 11;
 }
 
 message NeaInspectionCreateResponse { int32 id = 1; }

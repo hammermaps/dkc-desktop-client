@@ -61,6 +61,8 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) und 
   (`BackgroundRefreshService`) liest Klima über Protobuf.
 
 ### Fix
+- NEA-Betriebsstunden mit Zehnteln bearbeiten (`runtime_hours_exact`); vorher konnte das Formular
+  nur ganze Stunden und der Server hätte gerundet gespeichert.
 - NEA-Prüfungen und Dashboard luden nicht: Betriebsstunden kommen als Dezimalzahl, `cabinet_id`
   im Schlüsselinventar kann `null` sein. Beim Bearbeiten werden Betriebsstunden nicht mehr abgerundet.
 - Benachrichtigungen kamen nie an (REST-Endpunkt 410 bzw. bei Token-Anmeldung übersprungen); jetzt
