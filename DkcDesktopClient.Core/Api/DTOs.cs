@@ -803,7 +803,9 @@ public record WlsRecordCreateRequest(
     [property: JsonPropertyName("user_id")] int? UserId,
     [property: JsonPropertyName("latitude")] double? Latitude,
     [property: JsonPropertyName("longitude")] double? Longitude,
-    [property: JsonPropertyName("location_accuracy")] double? LocationAccuracy);
+    [property: JsonPropertyName("location_accuracy")] double? LocationAccuracy,
+    // Stabile Client-ID (PHP-008): bleibt über Wiederholungen des Speicherns gleich
+    [property: JsonPropertyName("client_id")] string? ClientId = null);
 
 public record WlsRecordUpdateRequest(
     [property: JsonPropertyName("start_time")] string? StartTime,

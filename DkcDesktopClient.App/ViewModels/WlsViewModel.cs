@@ -60,6 +60,8 @@ public partial class WlsViewModel : ViewModelBase, INavigationTarget
     [ObservableProperty] private string? _recordFormError;
     [ObservableProperty] private bool _isEditingRecord;
     private int? _editingRecordId;
+    /// <summary>Client-ID des gerade gespeicherten neuen Datensatzes; bleibt bei Wiederholungen gleich (PHP-008).</summary>
+    private string? _pendingRecordClientId;
 
     [ObservableProperty] private string _formRecordStartTime = string.Empty;
     [ObservableProperty] private string _formRecordEndTime = string.Empty;
@@ -457,6 +459,7 @@ public partial class WlsViewModel : ViewModelBase, INavigationTarget
     {
         IsEditingRecord      = false;
         _editingRecordId     = null;
+        _pendingRecordClientId = null;
         FormRecordStartTime  = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
         FormRecordEndTime    = string.Empty;
         FormRecordLatitude   = string.Empty;
@@ -522,15 +525,20 @@ public partial class WlsViewModel : ViewModelBase, INavigationTarget
                     RecordFormError = T("desktop.wls.choose_building_apartment");
                     return;
                 }
+                _pendingRecordClientId ??= Guid.NewGuid().ToString("N");
                 var req = new WlsRecordCreateRequest(
                     SelectedApartment.Id,
                     SelectedBuilding.Id,
                     FormRecordStartTime,
                     Nz(FormRecordEndTime),
-                    null, lat, lon, null);
+                    null, lat, lon, null, _pendingRecordClientId);
                 var r = await api.CreateWlsRecordAsync(req);
                 success = r.Success;
                 error   = r.Error;
+                if (success)
+                {
+                    _pendingRecordClientId = null;
+                }
             }
 
             if (success)
